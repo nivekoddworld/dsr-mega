@@ -184,9 +184,22 @@ public class GameFileWriter
                 knownModels.Add(newModel);
             }
 
+            bool modelChanged = !string.Equals(enemy.ModelName, newModel, StringComparison.OrdinalIgnoreCase);
+
             enemy.ModelName    = newModel;
             enemy.NPCParamID   = placement.NewNpcParam;
             enemy.ThinkParamID = placement.NewThinkParam;
+
+            // The original enemy's init/damage anim IDs reference animations
+            // that exist on the OLD model. When the model changes, those IDs
+            // won't resolve and the new model spawns in bind pose (T-pose)
+            // until a hit forces it into the AI's animation graph. -1 lets
+            // the new model fall back to its own defaults.
+            if (modelChanged)
+            {
+                enemy.InitAnimID   = -1;
+                enemy.DamageAnimID = -1;
+            }
         }
     }
 
