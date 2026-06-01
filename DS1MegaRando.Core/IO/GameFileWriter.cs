@@ -142,6 +142,9 @@ public class GameFileWriter
         if (fogResult != null && fogSettings?.GuaranteeStartingEstus == true)
             ApplyStartingEstus(gameData);
 
+        if (enemyResult != null)
+            ApplyAsylumDemonIntroFix(outDir, enemyResult);
+
         string msbOutDir = Path.Combine(outDir, "map", "MapStudio");
         Directory.CreateDirectory(msbOutDir);
 
@@ -210,6 +213,53 @@ public class GameFileWriter
                 Name = "o0500",
                 SibPath = @"N:\FRPG\data\Model\obj\o0500\sib\o0500.SIB",
             });
+        }
+    }
+
+    // Ported from FogMod GameDataWriter.cs:1010-1013. The Asylum Demon's intro
+    // teleports the boss to a ceiling ledge and plays a c2800-specific drop
+    // animation; if the slot was randomized to another model the drop animation
+    // doesn't resolve, so the new boss is stranded on the ledge and never
+    // engages. Stripping the teleport + animation instructions makes any boss
+    // spawn at its post-intro MSB position on the floor instead.
+    private void ApplyAsylumDemonIntroFix(string outDir, EnemyResult enemyResult)
+    {
+        const string asylumMapId = "m18_01_00_00";
+        const int asylumDemonEntity = 1801800;
+        const string asylumDemonModel = "c2800";
+        const long dropEventId = 11810310;
+
+        if (!enemyResult.Placements.TryGetValue(asylumMapId, out var placements)) return;
+        var ad = placements.FirstOrDefault(p => p.EntityId == asylumDemonEntity);
+        if (ad == null) return;
+        if (string.Equals(ad.NewModelId, asylumDemonModel, StringComparison.OrdinalIgnoreCase)) return;
+
+        // Prefer the file already written to outDir by the fog gate writer if
+        // present, so this layers cleanly on top of fog rando's edits.
+        string outPath  = Path.Combine(outDir, "event", "m18_01_00_00.emevd.dcx");
+        string srcPath  = File.Exists(outPath)
+            ? outPath
+            : Path.Combine(_settings.GameDirectory, "event", "m18_01_00_00.emevd.dcx");
+        if (!File.Exists(srcPath)) return;
+
+        EMEVD evd;
+        try { evd = EMEVD.Read(srcPath); }
+        catch { return; }
+
+        var drop = evd.Events.FirstOrDefault(e => e.ID == dropEventId);
+        if (drop == null) return;
+
+        // 2003[18] = ForceAnimationPlayback (the c2800 drop anim).
+        // 2004[41] = the warp that hoists the boss onto the ceiling ledge.
+        drop.Instructions.RemoveAll(instr =>
+            (instr.Bank == 2003 && instr.ID == 18) ||
+            (instr.Bank == 2004 && instr.ID == 41));
+
+        Directory.CreateDirectory(Path.GetDirectoryName(outPath)!);
+        try { evd.Write(outPath); }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"ApplyAsylumDemonIntroFix: failed to write {outPath}: {ex.Message}");
         }
     }
 
