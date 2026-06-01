@@ -49,12 +49,13 @@ public class EnemyPool
                 if (settings.ProtectImportantNPCs)
                 {
                     if (EnemyIds.ProtectedNPCModels.Contains(part.ModelName)) continue;
-                    // Anything outside the catalog is conventionally an NPC in DS1
-                    // (c5xxx merchants and quest characters: Solaire, Lautrec, Petrus,
-                    // Reah, Logan, Crestfallen Warrior, etc.). Many of these stand or
-                    // sit at bonfires; randomizing them puts the wrong model at the
-                    // bonfire's position and breaks their questlines.
-                    if (def == null && !isBoss) continue;
+                    // NPCs in DS1 live in c0xxx (specials), c1xxx (Crestfallen-style),
+                    // c4xxx (Marvelous Chester), and c5xxx+ (Solaire, Lautrec, Petrus,
+                    // merchants, quest characters). Combat enemies and bosses live in
+                    // c2xxx and c3xxx. The catalog only has 79 hand-picked entries so
+                    // uncatalogued c2xxx/c3xxx are still real enemies — let them into
+                    // the pool. Anything else outside the catalog is treated as an NPC.
+                    if (def == null && !isBoss && !IsCombatEnemyModel(part.ModelName)) continue;
                 }
 
                 string area = colAreaMap.TryGetValue(part.CollisionName ?? "", out var a) ? a : mapId;
@@ -83,6 +84,10 @@ public class EnemyPool
 
         return (bosses, minibosses, regular);
     }
+
+    private static bool IsCombatEnemyModel(string model) =>
+        model.StartsWith("c2", StringComparison.OrdinalIgnoreCase) ||
+        model.StartsWith("c3", StringComparison.OrdinalIgnoreCase);
 
     private static Dictionary<string, string> BuildColAreaMap(AnnotationData ann, string mapId)
     {
