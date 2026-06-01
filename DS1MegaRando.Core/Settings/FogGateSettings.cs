@@ -21,6 +21,7 @@ public class FogGateSettings
     public float HealthScalingMax { get; set; } = 3.0f;
     public float DamageScalingMax { get; set; } = 2.0f;
     public bool GuaranteeBlacksmithAccess { get; set; } = true;
+    public bool GuaranteeStartingEstus { get; set; } = true;
     public bool RandomizeStartingArea { get; set; } = false;
     public bool SpoilerLogFogConnections { get; set; } = true;
 }

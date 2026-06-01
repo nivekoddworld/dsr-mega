@@ -99,7 +99,7 @@ public class MegaRandomizer
 
             Emit("Writing randomized files...");
             Progress(85);
-            new GameFileWriter(settings.Global).WriteAll(gameData, result.FogGate, result.Items, result.Enemies, ann);
+            new GameFileWriter(settings.Global).WriteAll(gameData, result.FogGate, result.Items, result.Enemies, ann, settings.FogGate);
         }
 
         if (settings.Global.CreateSpoilerLog)
