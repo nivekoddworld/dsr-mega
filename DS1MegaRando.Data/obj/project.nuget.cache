@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "81F6MMei78Q=",
+  "success": true,
+  "projectFilePath": "S:\\DSR_Mega\\DS1MegaRando.Data\\DS1MegaRando.Data.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\samgr\\.nuget\\packages\\yamldotnet\\15.1.2\\yamldotnet.15.1.2.nupkg.sha512",
+    "C:\\Users\\samgr\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.25\\microsoft.netcore.app.ref.8.0.25.nupkg.sha512",
+    "C:\\Users\\samgr\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.25\\microsoft.windowsdesktop.app.ref.8.0.25.nupkg.sha512",
+    "C:\\Users\\samgr\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.25\\microsoft.aspnetcore.app.ref.8.0.25.nupkg.sha512"
+  ],
+  "logs": []
+}

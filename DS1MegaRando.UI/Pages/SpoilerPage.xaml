@@ -1,0 +1,52 @@
+<UserControl x:Class="DS1MegaRando.UI.Pages.SpoilerPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource DS1Bg}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Text="SPOILER LOG"
+                   Style="{StaticResource DS1Heading}"
+                   FontSize="20"
+                   Margin="0,0,0,12"/>
+
+        <!-- Toolbar -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
+            <Button Style="{StaticResource DS1Button}" Content="OPEN IN EDITOR"
+                    Click="OpenEditor_Click" Margin="0,0,8,0"/>
+            <Button Style="{StaticResource DS1Button}" Content="SAVE AS..."
+                    Click="SaveAs_Click"/>
+        </StackPanel>
+
+        <!-- Spoiler text (amber monospace, DS1 item description style) -->
+        <Border Grid.Row="2"
+                BorderBrush="{StaticResource DS1Gold}"
+                BorderThickness="1"
+                Background="#0A0908">
+            <Border BorderBrush="{StaticResource DS1GoldDim}"
+                    BorderThickness="1"
+                    Margin="3">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer.Resources>
+                        <Style TargetType="ScrollBar" BasedOn="{StaticResource DS1ScrollBar}"/>
+                    </ScrollViewer.Resources>
+                    <TextBox x:Name="SpoilerText"
+                             FontFamily="{StaticResource DS1Mono}"
+                             FontSize="12"
+                             Foreground="{StaticResource DS1Gold}"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             IsReadOnly="True"
+                             TextWrapping="Wrap"
+                             Padding="12"
+                             Text="No spoiler log yet. Run the randomizer to generate one."/>
+                </ScrollViewer>
+            </Border>
+        </Border>
+    </Grid>
+</UserControl>

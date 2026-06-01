@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DS1MegaRando.Core\DS1MegaRando.Core.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Data\DS1MegaRando.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Embedded fonts: set Build Action to Resource -->
+    <Resource Include="Assets\Fonts\OptimusPrinceps.ttf" Condition="Exists('Assets\Fonts\OptimusPrinceps.ttf')" />
+    <Resource Include="Assets\Fonts\OptimusPrincepsSemiBold.ttf" Condition="Exists('Assets\Fonts\OptimusPrincepsSemiBold.ttf')" />
+  </ItemGroup>
+
+</Project>

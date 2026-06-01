@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"S:\\\\FogMod-master\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(xargs grep -l \"stat\\\\|Stat\\\\|level\\\\|Level\")",
+      "Bash(xargs grep -n \"AreaRatios\")"
+    ]
+  }
+}

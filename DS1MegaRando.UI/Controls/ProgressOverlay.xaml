@@ -1,0 +1,118 @@
+<UserControl x:Class="DS1MegaRando.UI.Controls.ProgressOverlay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Full-window dark overlay -->
+    <Grid Background="#D0000000">
+
+        <!-- Centered panel -->
+        <Border HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Width="520"
+                Background="{StaticResource DS1Panel}"
+                BorderBrush="{StaticResource DS1Gold}"
+                BorderThickness="1"
+                Padding="0">
+
+            <!-- Double-border inner frame -->
+            <Border BorderBrush="{StaticResource DS1GoldDim}"
+                    BorderThickness="1"
+                    Margin="4"
+                    Padding="24">
+                <StackPanel>
+
+                    <!-- Title -->
+                    <TextBlock x:Name="TitleText"
+                               Text="RANDOMIZING..."
+                               Style="{StaticResource DS1Heading}"
+                               FontSize="20"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,16"/>
+
+                    <!-- Animated pulsing ring (WPF Ellipse) -->
+                    <Grid Width="60" Height="60"
+                          HorizontalAlignment="Center"
+                          Margin="0,0,0,16">
+                        <Ellipse x:Name="PulseRingOuter"
+                                 Width="60" Height="60"
+                                 Stroke="{StaticResource DS1Gold}"
+                                 StrokeThickness="1"
+                                 Fill="Transparent"
+                                 RenderTransformOrigin="0.5,0.5">
+                            <Ellipse.RenderTransform>
+                                <ScaleTransform x:Name="OuterScale"/>
+                            </Ellipse.RenderTransform>
+                            <Ellipse.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation Storyboard.TargetName="PulseRingOuter"
+                                                             Storyboard.TargetProperty="Opacity"
+                                                             From="0.8" To="0.1"
+                                                             Duration="0:0:1.4"
+                                                             AutoReverse="True"/>
+                                            <DoubleAnimation Storyboard.TargetName="OuterScale"
+                                                             Storyboard.TargetProperty="ScaleX"
+                                                             From="0.7" To="1.2"
+                                                             Duration="0:0:1.4"
+                                                             AutoReverse="True"/>
+                                            <DoubleAnimation Storyboard.TargetName="OuterScale"
+                                                             Storyboard.TargetProperty="ScaleY"
+                                                             From="0.7" To="1.2"
+                                                             Duration="0:0:1.4"
+                                                             AutoReverse="True"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Ellipse.Triggers>
+                        </Ellipse>
+                        <Ellipse Width="20" Height="20"
+                                 Fill="{StaticResource DS1Gold}"
+                                 Opacity="0.6"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <!-- Progress bar -->
+                    <ProgressBar x:Name="ProgressBar"
+                                 Style="{StaticResource DS1ProgressBar}"
+                                 Minimum="0" Maximum="100" Value="0"
+                                 Margin="0,0,0,12"/>
+
+                    <!-- Log output — scrolling amber text -->
+                    <Border BorderBrush="{StaticResource DS1GoldDim}"
+                            BorderThickness="1"
+                            Background="#0A0908"
+                            Height="160"
+                            Margin="0,0,0,16">
+                        <TextBox x:Name="LogText"
+                                 FontFamily="{StaticResource DS1Mono}"
+                                 FontSize="11"
+                                 Foreground="{StaticResource DS1Gold}"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Opacity="0.85"
+                                 Padding="8"
+                                 IsReadOnly="True"
+                                 IsReadOnlyCaretVisible="False"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 VerticalScrollBarVisibility="Auto"
+                                 HorizontalScrollBarVisibility="Disabled"
+                                 SelectionBrush="{StaticResource DS1Gold}"
+                                 CaretBrush="Transparent"
+                                 Cursor="IBeam"/>
+                    </Border>
+
+                    <!-- Result / Close button (hidden until done) -->
+                    <Button x:Name="CloseBtn"
+                            Style="{StaticResource DS1Button}"
+                            Content="CLOSE"
+                            Visibility="Collapsed"
+                            Click="CloseBtn_Click"
+                            HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </Border>
+    </Grid>
+</UserControl>

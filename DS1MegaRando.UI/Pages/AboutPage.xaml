@@ -1,0 +1,62 @@
+<UserControl x:Class="DS1MegaRando.UI.Pages.AboutPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource DS1Bg}">
+    <StackPanel>
+
+        <TextBlock Text="ABOUT" Style="{StaticResource DS1Heading}" FontSize="20" Margin="0,0,0,24"/>
+
+        <Border Style="{StaticResource DS1PanelBorder}" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="DS1 MEGA RANDOMIZER" Style="{StaticResource DS1Heading}" FontSize="24" HorizontalAlignment="Center"/>
+                <TextBlock Text="v1.0.0" Style="{StaticResource DS1Label}" HorizontalAlignment="Center" Margin="0,4,0,16"/>
+
+                <Separator Style="{StaticResource DS1Separator}"/>
+
+                <TextBlock FontFamily="{StaticResource DS1Font}"
+                           Foreground="{StaticResource DS1Text}"
+                           FontSize="13"
+                           TextWrapping="Wrap"
+                           Margin="0,12,0,12"
+                           LineHeight="22">
+A combined fog gate, item, and enemy randomizer for Dark Souls Remastered.&#x0a;
+Combines three randomizers into one tool with 70+ configurable settings.
+                </TextBlock>
+
+                <Separator Style="{StaticResource DS1Separator}"/>
+
+                <TextBlock Text="CREDITS" Style="{StaticResource DS1SectionTitle}" Margin="0,12,0,8"/>
+                <TextBlock FontFamily="{StaticResource DS1Font}" Foreground="{StaticResource DS1Text}"
+                           FontSize="12" TextWrapping="Wrap" LineHeight="20">
+Fog gate logic ported from FogMod by thefifthmatt&#x0a;
+Item logic ported from DS1 Item Randomizer (original community project)&#x0a;
+File format support via SoulsFormats by JKAnderson
+                </TextBlock>
+
+                <Separator Style="{StaticResource DS1Separator}"/>
+
+                <TextBlock Text="QUICK START" Style="{StaticResource DS1SectionTitle}" Margin="0,12,0,8"/>
+                <TextBlock FontFamily="{StaticResource DS1Font}" Foreground="{StaticResource DS1Text}"
+                           FontSize="12" TextWrapping="Wrap" LineHeight="20">
+1. Set your Dark Souls Remastered game directory in GLOBAL settings.&#x0a;
+2. Configure each randomizer module to your preference.&#x0a;
+3. Set or roll a seed (the hexadecimal number in the bottom bar).&#x0a;
+4. Click LINK THE FIRE to run the randomizer.&#x0a;
+5. A .bak backup of your game files is always created before any changes.&#x0a;
+6. Check the SPOILER LOG tab to see where key items were placed.
+                </TextBlock>
+
+                <Separator Style="{StaticResource DS1Separator}"/>
+
+                <TextBlock Text="RESTORING VANILLA FILES" Style="{StaticResource DS1SectionTitle}" Margin="0,12,0,8"/>
+                <TextBlock FontFamily="{StaticResource DS1Font}" Foreground="{StaticResource DS1Text}"
+                           FontSize="12" TextWrapping="Wrap" LineHeight="20">
+Your original files are backed up with a .bak extension.&#x0a;
+Rename them back (remove .bak) to restore vanilla.&#x0a;
+Or verify game files through Steam.
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+    </StackPanel>
+</UserControl>

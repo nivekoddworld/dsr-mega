@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="DS1MegaRando.Core/DS1MegaRando.Core.csproj" />
+  <Project Path="DS1MegaRando.Data/DS1MegaRando.Data.csproj" />
+  <Project Path="DS1MegaRando.UI/DS1MegaRando.UI.csproj" />
+</Solution>

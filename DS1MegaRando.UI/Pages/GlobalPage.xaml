@@ -1,0 +1,111 @@
+<UserControl x:Class="DS1MegaRando.UI.Pages.GlobalPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource DS1Bg}">
+    <StackPanel Margin="0,0,0,24">
+
+        <!-- Page title -->
+        <TextBlock Text="GLOBAL SETTINGS"
+                   Style="{StaticResource DS1Heading}"
+                   FontSize="20"
+                   Margin="0,0,0,20"/>
+
+        <!-- ── Game Setup ────────────────────────────────── -->
+        <Border Style="{StaticResource DS1PanelBorder}" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="GAME SETUP" Style="{StaticResource DS1SectionTitle}" Margin="0,0,0,12"/>
+
+                <TextBlock Text="Game Directory (Dark Souls Remastered)" Style="{StaticResource DS1Label}" Margin="0,0,0,4"/>
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="80"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Style="{StaticResource DS1TextBox}"
+                             Text="{Binding Global.GameDirectory, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Path to the DARK SOULS REMASTERED folder (containing DarkSoulsRemastered.exe)"/>
+                    <Button Grid.Column="1" Style="{StaticResource DS1Button}"
+                            Content="BROWSE" Margin="8,0,0,0"
+                            Click="BrowseGameDir_Click"/>
+                </Grid>
+
+                <TextBlock Text="Output Directory (leave blank to modify in-place)" Style="{StaticResource DS1Label}" Margin="0,0,0,4"/>
+                <Grid Margin="0,0,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="80"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Style="{StaticResource DS1TextBox}"
+                             Text="{Binding Global.OutputDirectory, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="If set, randomized files are written here. If blank, game files are modified in-place (with .bak backup)."/>
+                    <Button Grid.Column="1" Style="{StaticResource DS1Button}"
+                            Content="BROWSE" Margin="8,0,0,0"
+                            Click="BrowseOutputDir_Click"/>
+                </Grid>
+
+                <TextBlock Text="Language" Style="{StaticResource DS1Label}" Margin="0,8,0,4"/>
+                <ComboBox Style="{StaticResource DS1ComboBox}" Width="160" HorizontalAlignment="Left"
+                          SelectedValue="{Binding Global.Language}"
+                          ItemContainerStyle="{StaticResource DS1ComboBoxItem}">
+                    <ComboBoxItem Content="ENGLISH" Tag="ENGLISH"/>
+                    <ComboBoxItem Content="JAPANESE" Tag="JAPANESE"/>
+                    <ComboBoxItem Content="FRENCH" Tag="FRENCH"/>
+                    <ComboBoxItem Content="GERMAN" Tag="GERMAN"/>
+                    <ComboBoxItem Content="ITALIAN" Tag="ITALIAN"/>
+                    <ComboBoxItem Content="SPANISH" Tag="SPANISH"/>
+                </ComboBox>
+            </StackPanel>
+        </Border>
+
+        <!-- ── Seed ─────────────────────────────────────── -->
+        <Border Style="{StaticResource DS1PanelBorder}" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="SEED" Style="{StaticResource DS1SectionTitle}" Margin="0,0,0,12"/>
+
+                <CheckBox Style="{StaticResource DS1CheckBox}"
+                          Content="Use separate seeds per module (Fog / Items / Enemies)"
+                          IsChecked="{Binding Global.UseSeparateSeedsPerModule}"
+                          Margin="0,0,0,12"/>
+
+                <StackPanel x:Name="SeparateSeedsPanel"
+                            Visibility="{Binding Global.UseSeparateSeedsPerModule, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="Fog Gate Seed" Style="{StaticResource DS1Label}" Margin="0,0,0,4"/>
+                    <TextBox Style="{StaticResource DS1TextBox}" Width="120" HorizontalAlignment="Left"
+                             Text="{Binding Global.FogSeed, StringFormat={}{0:X8}}" Margin="0,0,0,8"/>
+                    <TextBlock Text="Item Seed" Style="{StaticResource DS1Label}" Margin="0,0,0,4"/>
+                    <TextBox Style="{StaticResource DS1TextBox}" Width="120" HorizontalAlignment="Left"
+                             Text="{Binding Global.ItemSeed, StringFormat={}{0:X8}}" Margin="0,0,0,8"/>
+                    <TextBlock Text="Enemy Seed" Style="{StaticResource DS1Label}" Margin="0,0,0,4"/>
+                    <TextBox Style="{StaticResource DS1TextBox}" Width="120" HorizontalAlignment="Left"
+                             Text="{Binding Global.EnemySeed, StringFormat={}{0:X8}}" Margin="0,0,0,8"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ── Spoiler Log ───────────────────────────────── -->
+        <Border Style="{StaticResource DS1PanelBorder}" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="SPOILER LOG" Style="{StaticResource DS1SectionTitle}" Margin="0,0,0,12"/>
+                <CheckBox Style="{StaticResource DS1CheckBox}"
+                          Content="Create spoiler log after randomization"
+                          IsChecked="{Binding Global.CreateSpoilerLog}"
+                          Margin="0,0,0,8"/>
+                <TextBlock Text="Custom spoiler log path (leave blank for default)" Style="{StaticResource DS1Label}" Margin="0,0,0,4"/>
+                <TextBox Style="{StaticResource DS1TextBox}"
+                         Text="{Binding Global.SpoilerLogPath, UpdateSourceTrigger=PropertyChanged}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ── Dry Run ───────────────────────────────────── -->
+        <Border Style="{StaticResource DS1PanelBorder}">
+            <StackPanel>
+                <TextBlock Text="ADVANCED" Style="{StaticResource DS1SectionTitle}" Margin="0,0,0,12"/>
+                <CheckBox Style="{StaticResource DS1CheckBox}"
+                          Content="Dry run — validate only, do not write any files"
+                          IsChecked="{Binding Global.DryRun}"
+                          ToolTip="Performs all randomization logic and verification without writing any game files. Useful for testing seeds."/>
+            </StackPanel>
+        </Border>
+
+    </StackPanel>
+</UserControl>

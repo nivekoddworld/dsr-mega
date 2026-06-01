@@ -1,0 +1,110 @@
+# DS1R Enemy collision definitions per area
+# Col: the collision name the enemy is standing on
+# Area: the logical area name it belongs to
+# Includes: other area names whose enemies are included in this col group
+
+Enemies:
+- Col: m10_00_00_00h_0000  # Depths
+  Area: depths
+- Col: m10_00_00_00h_0001
+  Area: depths
+- Col: m10_00_00_00h_0002
+  Area: depths_gaping
+
+- Col: m10_01_00_00h_0000  # Undead Parish
+  Area: parish_church
+- Col: m10_01_00_00h_0001
+  Area: parish_andre
+- Col: m10_01_00_00h_0002
+  Area: burg_upper
+- Col: m10_01_00_00h_0003
+  Area: burg_upper
+- Col: m10_01_00_00h_0004
+  Area: burg_lower
+
+- Col: m10_02_00_00h_0000  # Firelink
+  Area: firelink
+- Col: m10_02_00_00h_0001
+  Area: firelink_gate
+
+- Col: m11_00_00_00h_0000  # Painted World
+  Area: paintedworld
+- Col: m11_00_00_00h_0001
+  Area: paintedworld_annex
+
+- Col: m12_00_00_01h_0000  # Darkroot Garden
+  Area: darkroot
+- Col: m12_00_00_01h_0001
+  Area: darkroot_forest
+- Col: m12_00_00_01h_0002
+  Area: darkroot_stone
+
+- Col: m12_01_00_00h_0000  # DLC - Oolacile
+  Area: dlc_township
+- Col: m12_01_00_00h_0001
+  Area: dlc_forest
+- Col: m12_01_00_00h_0002
+  Area: dlc_sanctuary
+- Col: m12_01_00_00h_0003
+  Area: dlc_hallway
+
+- Col: m13_00_00_00h_0000  # Catacombs
+  Area: catacombs
+- Col: m13_00_00_00h_0001
+  Area: catacombs_start
+
+- Col: m13_01_00_00h_0000  # Tomb of the Giants
+  Area: totg
+- Col: m13_01_00_00h_0001
+  Area: totg_lower
+
+- Col: m13_02_00_00h_0000  # Great Hollow / Ash Lake
+  Area: greathollow
+
+- Col: m14_00_00_00h_0000  # Blighttown
+  Area: blighttown
+- Col: m14_00_00_00h_0001
+  Area: blighttown_upper
+
+- Col: m14_01_00_00h_0000  # Demon Ruins
+  Area: demonruins
+- Col: m14_01_00_00h_0001
+  Area: demonruins_lower
+- Col: m14_01_00_00h_0002
+  Area: demonruins_lava
+
+- Col: m15_00_00_00h_0000  # Sen's Fortress
+  Area: sens
+- Col: m15_00_00_00h_0001
+  Area: sens_mid
+- Col: m15_00_00_00h_0002
+  Area: sens_upper
+
+- Col: m15_01_00_00h_0000  # Anor Londo
+  Area: anorlondo_main
+- Col: m15_01_00_00h_0001
+  Area: anorlondo_building
+- Col: m15_01_00_00h_0002
+  Area: anorlondo_cathedral
+
+- Col: m16_00_00_00h_0000  # New Londo
+  Area: newlondo
+- Col: m16_00_00_00h_0001
+  Area: newlondo_lower
+- Col: m16_00_00_00h_0002
+  Area: newlondo_building
+
+- Col: m17_00_00_00h_0000  # Duke's Archives
+  Area: dukes_library
+- Col: m17_00_00_00h_0001
+  Area: dukes_prison
+- Col: m17_00_00_00h_0002
+  Area: dukes_caves
+
+- Col: m18_00_00_00h_0000  # Kiln
+  Area: kiln
+
+- Col: m18_01_00_00h_0000  # Undead Asylum
+  Area: asylum
+- Col: m18_01_00_00h_0001
+  Area: asylum_outside

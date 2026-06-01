@@ -1,0 +1,41 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ── Core palette ──────────────────────────────────────────────── -->
+    <Color x:Key="DS1GoldColor">#C8A45A</Color>
+    <Color x:Key="DS1GoldBrightColor">#E8C87A</Color>
+    <Color x:Key="DS1GoldDimColor">#8A6A30</Color>
+    <Color x:Key="DS1BgColor">#0D0C0A</Color>
+    <Color x:Key="DS1PanelColor">#1A1916</Color>
+    <Color x:Key="DS1PanelHoverColor">#2A2820</Color>
+    <Color x:Key="DS1PanelActiveColor">#252320</Color>
+    <Color x:Key="DS1DisabledTextColor">#5A5040</Color>
+    <Color x:Key="DS1TextColor">#C8A45A</Color>
+    <Color x:Key="DS1TextDimColor">#8A7040</Color>
+    <Color x:Key="DS1ErrorColor">#C85050</Color>
+    <Color x:Key="DS1SuccessColor">#60A060</Color>
+
+    <!-- ── Brushes ─────────────────────────────────────────────────────── -->
+    <SolidColorBrush x:Key="DS1Gold"           Color="{StaticResource DS1GoldColor}"/>
+    <SolidColorBrush x:Key="DS1GoldBright"     Color="{StaticResource DS1GoldBrightColor}"/>
+    <SolidColorBrush x:Key="DS1GoldDim"        Color="{StaticResource DS1GoldDimColor}"/>
+    <SolidColorBrush x:Key="DS1Bg"             Color="{StaticResource DS1BgColor}"/>
+    <SolidColorBrush x:Key="DS1Panel"          Color="{StaticResource DS1PanelColor}"/>
+    <SolidColorBrush x:Key="DS1PanelHover"     Color="{StaticResource DS1PanelHoverColor}"/>
+    <SolidColorBrush x:Key="DS1PanelActive"    Color="{StaticResource DS1PanelActiveColor}"/>
+    <SolidColorBrush x:Key="DS1DisabledText"   Color="{StaticResource DS1DisabledTextColor}"/>
+    <SolidColorBrush x:Key="DS1Text"           Color="{StaticResource DS1TextColor}"/>
+    <SolidColorBrush x:Key="DS1TextDim"        Color="{StaticResource DS1TextDimColor}"/>
+    <SolidColorBrush x:Key="DS1Error"          Color="{StaticResource DS1ErrorColor}"/>
+    <SolidColorBrush x:Key="DS1Success"        Color="{StaticResource DS1SuccessColor}"/>
+    <SolidColorBrush x:Key="DS1Transparent"    Color="Transparent"/>
+
+    <!-- ── Stone texture background brush (procedural via tiled geometry) ─ -->
+    <!-- Applied programmatically in ProceduralTexture.cs at startup -->
+    <SolidColorBrush x:Key="DS1StoneBg" Color="#100F0D"/>
+
+    <!-- ── Scrollbar ─────────────────────────────────────────────────── -->
+    <SolidColorBrush x:Key="DS1ScrollTrack"  Color="#14130F"/>
+    <SolidColorBrush x:Key="DS1ScrollThumb"  Color="{StaticResource DS1GoldDimColor}"/>
+
+</ResourceDictionary>
