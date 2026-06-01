@@ -1,0 +1,13 @@
+S:\DSR_Mega\SoulsFormats\SoulsFormats\bin\Release\netstandard2.1\SoulsFormats.deps.json
+S:\DSR_Mega\SoulsFormats\SoulsFormats\bin\Release\netstandard2.1\SoulsFormats.dll
+S:\DSR_Mega\SoulsFormats\SoulsFormats\bin\Release\netstandard2.1\SoulsFormats.pdb
+S:\DSR_Mega\SoulsFormats\SoulsFormats\bin\Release\netstandard2.1\SoulsFormats.xml
+S:\DSR_Mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.csproj.AssemblyReference.cache
+S:\DSR_Mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.GeneratedMSBuildEditorConfig.editorconfig
+S:\DSR_Mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.AssemblyInfoInputs.cache
+S:\DSR_Mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.AssemblyInfo.cs
+S:\DSR_Mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.csproj.CoreCompileInputs.cache
+S:\DSR_Mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.sourcelink.json
+S:\DSR_Mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.dll
+S:\DSR_Mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.xml
+S:\DSR_Mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.pdb
