@@ -170,15 +170,23 @@ public class GameFileWriter
 
             string newModel = placement.NewModelId;
 
-            // Register the model in the MSB model list if not already present
+            // Register the model in the MSB model list if not already present.
+            // SibPath must follow FromSoft's editor convention or DSR won't stream
+            // the chrbnd into this map at load time — produces an instant crash
+            // when the area loads (including death-respawn and save-reload).
             if (!knownModels.Contains(newModel))
             {
-                msb.Models.Enemies.Add(new MSB1.Model.Enemy { Name = newModel });
+                msb.Models.Enemies.Add(new MSB1.Model.Enemy
+                {
+                    Name = newModel,
+                    SibPath = $@"N:\FRPG\data\Model\chr\{newModel}\sib\{newModel}.SIB",
+                });
                 knownModels.Add(newModel);
             }
 
-            enemy.ModelName  = newModel;
-            enemy.NPCParamID = placement.NewNpcParam;
+            enemy.ModelName    = newModel;
+            enemy.NPCParamID   = placement.NewNpcParam;
+            enemy.ThinkParamID = placement.NewThinkParam;
         }
     }
 
