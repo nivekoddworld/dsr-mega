@@ -1,3 +1,4 @@
+using System.Numerics;
 using DS1MegaRando.Core.Annotations;
 using DS1MegaRando.Core.Enemies;
 using DS1MegaRando.Core.FogGate;
@@ -24,7 +25,8 @@ public class GameFileWriter
         FogGateResult? fogResult,
         ItemResult? itemResult,
         EnemyResult? enemyResult,
-        AnnotationData? ann = null)
+        AnnotationData? ann = null,
+        FogGateSettings? fogSettings = null)
     {
         string outDir = string.IsNullOrEmpty(_settings.OutputDirectory)
             ? _settings.GameDirectory
@@ -36,7 +38,7 @@ public class GameFileWriter
             WriteItemParams(outDir, gameData, itemResult);
 
         if (fogResult != null || enemyResult != null)
-            WriteMapFiles(outDir, gameData, fogResult, enemyResult, ann);
+            WriteMapFiles(outDir, gameData, fogResult, enemyResult, ann, fogSettings);
     }
 
     // ── Items ──────────────────────────────────────────────────────────────
@@ -122,7 +124,8 @@ public class GameFileWriter
         GameData gameData,
         FogGateResult? fogResult,
         EnemyResult? enemyResult,
-        AnnotationData? ann)
+        AnnotationData? ann,
+        FogGateSettings? fogSettings)
     {
         // Apply fog gate changes to MSBs (adds trigger regions + player spawns)
         if (fogResult != null && ann != null)
@@ -130,6 +133,13 @@ public class GameFileWriter
             string distEventDir = FogGateWriter.DefaultDistEventDir;
             new FogGateWriter(distEventDir).Write(outDir, gameData, fogResult, ann);
         }
+
+        // Vanilla DS1 gives the player their starting Estus Flask via Oscar's
+        // death scene. A randomized fog gate between the cell and Oscar's cell
+        // would lock the flask away. Drop a corpse with the flask in the
+        // starter area so the player always gets it before any fog gate.
+        if (fogResult != null && fogSettings?.GuaranteeStartingEstus == true)
+            ApplyStartingEstus(gameData);
 
         string msbOutDir = Path.Combine(outDir, "map", "MapStudio");
         Directory.CreateDirectory(msbOutDir);
@@ -153,6 +163,55 @@ public class GameFileWriter
         }
     }
 
+    // Ported from FogMod GameDataWriter.cs:798-816. Drops an Estus Flask
+    // corpse-treasure in the asylum starter area so the player gets the flask
+    // even if a randomized fog gate blocks the path to Oscar.
+    private static void ApplyStartingEstus(GameData gameData)
+    {
+        const string asylumMapId = "m18_01_00_00";
+        if (!gameData.Maps.TryGetValue(asylumMapId, out var msb)) return;
+
+        // Idempotent on re-rolls.
+        if (msb.Parts.Objects.Any(p => p.Name == "o0500_0050")) return;
+
+        // Any of the asylum starter-treasure objects works as a template — cloning
+        // it preserves the existing draw/disp groups and collision linkage so the
+        // new corpse spawns and renders correctly on map load.
+        var templateIds = new HashSet<int> { 1811613, 1811616, 1811619, 1811622 };
+        var template = msb.Parts.Objects.FirstOrDefault(o => templateIds.Contains(o.EntityID));
+        if (template == null) return;
+
+        var estus = (MSB1.Part.Object)template.DeepCopy();
+        estus.Name       = "o0500_0050";
+        estus.ModelName  = "o0500";
+        estus.InitAnimID = 50;
+        estus.Position   = new Vector3(13.279f, 202.015f, 20.8f);
+        estus.Rotation   = new Vector3(0, 0, 0);
+        estus.EntityID   = -1;
+        msb.Parts.Objects.Add(estus);
+
+        var treasure = new MSB1.Event.Treasure
+        {
+            Name             = "New Estus",
+            EventID          = 69,
+            EntityID         = -1,
+            TreasurePartName = "o0500_0050",
+        };
+        treasure.ItemLots[0] = 1082; // Estus Flask row in ItemLotParam
+        msb.Events.Treasures.Add(treasure);
+
+        // o0500 (corpse) should already be in the asylum's model list in vanilla,
+        // but add it if missing so the objbnd streams in at load time.
+        if (!msb.Models.Objects.Any(m => string.Equals(m.Name, "o0500", StringComparison.OrdinalIgnoreCase)))
+        {
+            msb.Models.Objects.Add(new MSB1.Model.Object
+            {
+                Name = "o0500",
+                SibPath = @"N:\FRPG\data\Model\obj\o0500\sib\o0500.SIB",
+            });
+        }
+    }
+
     private static void ApplyEnemyChanges(MSB1 msb, string mapId, EnemyResult enemyResult)
     {
         if (!enemyResult.Placements.TryGetValue(mapId, out var placements)) return;
@@ -170,15 +229,36 @@ public class GameFileWriter
 
             string newModel = placement.NewModelId;
 
-            // Register the model in the MSB model list if not already present
+            // Register the model in the MSB model list if not already present.
+            // SibPath must follow FromSoft's editor convention or DSR won't stream
+            // the chrbnd into this map at load time — produces an instant crash
+            // when the area loads (including death-respawn and save-reload).
             if (!knownModels.Contains(newModel))
             {
-                msb.Models.Enemies.Add(new MSB1.Model.Enemy { Name = newModel });
+                msb.Models.Enemies.Add(new MSB1.Model.Enemy
+                {
+                    Name = newModel,
+                    SibPath = $@"N:\FRPG\data\Model\chr\{newModel}\sib\{newModel}.SIB",
+                });
                 knownModels.Add(newModel);
             }
 
-            enemy.ModelName  = newModel;
-            enemy.NPCParamID = placement.NewNpcParam;
+            bool modelChanged = !string.Equals(enemy.ModelName, newModel, StringComparison.OrdinalIgnoreCase);
+
+            enemy.ModelName    = newModel;
+            enemy.NPCParamID   = placement.NewNpcParam;
+            enemy.ThinkParamID = placement.NewThinkParam;
+
+            // The original enemy's init/damage anim IDs reference animations
+            // that exist on the OLD model. When the model changes, those IDs
+            // won't resolve and the new model spawns in bind pose (T-pose)
+            // until a hit forces it into the AI's animation graph. -1 lets
+            // the new model fall back to its own defaults.
+            if (modelChanged)
+            {
+                enemy.InitAnimID   = -1;
+                enemy.DamageAnimID = -1;
+            }
         }
     }
 
