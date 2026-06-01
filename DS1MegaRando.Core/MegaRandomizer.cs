@@ -158,6 +158,8 @@ public class MegaRandomizer
             enemyResult = er.Randomize(settings.Enemies, ann, gameData, fogResult, rng);
         }
 
+        MimicRandomizer.Randomize(gameData, new Random((int)(settings.Global.Seed + 3)));
+
         Emit("Verifying — checking for softlocks...");
         Progress(75);
         var verification = new SoftlockChecker().Verify(fogResult, itemResult, ann, settings);

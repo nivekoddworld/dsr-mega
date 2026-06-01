@@ -37,8 +37,9 @@ public class GameFileWriter
         if (itemResult != null)
             WriteItemParams(outDir, gameData, itemResult);
 
-        if (fogResult != null || enemyResult != null)
-            WriteMapFiles(outDir, gameData, fogResult, enemyResult, ann, fogSettings);
+        // Maps are always written: in-memory MSB mutations can come from
+        // sources outside of fog/enemy results (e.g. mimic position shuffles).
+        WriteMapFiles(outDir, gameData, fogResult, enemyResult, ann, fogSettings);
     }
 
     // ── Items ──────────────────────────────────────────────────────────────
