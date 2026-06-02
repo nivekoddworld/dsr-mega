@@ -136,9 +136,6 @@
                 <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,8,0,0"
                           Content="Fashion Souls (randomize starting armor per class)"
                           IsChecked="{Binding Items.FashionSouls}"/>
-                <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,8,0,0"
-                          Content="Randomize starting gift (each class gets a random bonus consumable)"
-                          IsChecked="{Binding Items.RandomizeStartingGift}"/>
                 <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,4,0,0"
                           Content="Adjust stats to meet weapon requirements (boosts STR/DEX/INT/FTH + soul level as needed)"
                           IsChecked="{Binding Items.AdjustStatsForWeapons}"/>
