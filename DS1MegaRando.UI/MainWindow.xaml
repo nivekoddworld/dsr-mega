@@ -172,6 +172,17 @@
 
                     <RadioButton Style="{StaticResource DS1NavItem}"
                                  GroupName="Nav"
+                                 x:Name="NavDebug"
+                                 Checked="NavItem_Checked"
+                                 Tag="Debug">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔍 " FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="DEBUG INFO" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <RadioButton Style="{StaticResource DS1NavItem}"
+                                 GroupName="Nav"
                                  x:Name="NavAbout"
                                  Checked="NavItem_Checked"
                                  Tag="About">

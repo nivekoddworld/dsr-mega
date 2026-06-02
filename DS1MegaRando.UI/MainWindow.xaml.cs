@@ -12,7 +12,9 @@ public partial class MainWindow : Window
 {
     public MainViewModel Settings { get; } = new();
 
-    private string? _lastSpoilerLog;
+    private string?       _lastSpoilerLog;
+    private MegaResult?   _lastResult;
+    private MegaSettings? _lastSettings;
 
     public MainWindow()
     {
@@ -52,9 +54,18 @@ public partial class MainWindow : Window
             "Items"   => new ItemPage    { DataContext = Settings },
             "Enemies" => new EnemyPage   { DataContext = Settings },
             "Spoiler" => new SpoilerPage { Log = _lastSpoilerLog },
+            "Debug"   => BuildDebugPage(),
             "About"   => new AboutPage(),
             _         => PageContent.Content,
         };
+    }
+
+    private DebugPage BuildDebugPage()
+    {
+        var page = new DebugPage();
+        if (_lastResult != null && _lastSettings != null)
+            page.SetResult(_lastResult, _lastSettings);
+        return page;
     }
 
     private void RollSeed_Click(object sender, RoutedEventArgs e)
@@ -86,6 +97,8 @@ public partial class MainWindow : Window
         {
             var result = await rando.RandomizeAsync(ms);
             _lastSpoilerLog = result.SpoilerLog?.FullText;
+            _lastResult   = result;
+            _lastSettings = ms;
             ProgressOverlay.SetComplete(success: true, "Randomization complete!");
             StatusLabel.Text = $"Done — Seed {ms.Global.Seed:X8}";
         }

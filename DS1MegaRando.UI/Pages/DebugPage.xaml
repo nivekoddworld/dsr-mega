@@ -1,0 +1,68 @@
+<UserControl x:Class="DS1MegaRando.UI.Pages.DebugPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource DS1Bg}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>   <!-- Title + toolbar -->
+            <RowDefinition Height="*"/>      <!-- Tab content -->
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="DEBUG INFO"
+                       Style="{StaticResource DS1Heading}"
+                       FontSize="20"
+                       Margin="0,0,0,8"/>
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="CopyBtn" Style="{StaticResource DS1Button}"
+                        Content="COPY ALL" Click="Copy_Click" Margin="0,0,8,0"/>
+                <Button x:Name="RefreshBtn" Style="{StaticResource DS1Button}"
+                        Content="REFRESH" Click="Refresh_Click"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Tab strip + content -->
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Tab buttons -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                <RadioButton x:Name="TabOverview"  Style="{StaticResource DS1TabButton}" Content="OVERVIEW"   GroupName="DbgTab" IsChecked="True"  Checked="Tab_Checked" Tag="Overview"/>
+                <RadioButton x:Name="TabFog"       Style="{StaticResource DS1TabButton}" Content="FOG GATES"  GroupName="DbgTab" IsChecked="False" Checked="Tab_Checked" Tag="Fog"/>
+                <RadioButton x:Name="TabItems"     Style="{StaticResource DS1TabButton}" Content="ITEMS"      GroupName="DbgTab" IsChecked="False" Checked="Tab_Checked" Tag="Items"/>
+                <RadioButton x:Name="TabEnemies"   Style="{StaticResource DS1TabButton}" Content="ENEMIES"    GroupName="DbgTab" IsChecked="False" Checked="Tab_Checked" Tag="Enemies"/>
+                <RadioButton x:Name="TabRaw"       Style="{StaticResource DS1TabButton}" Content="RAW DUMP"   GroupName="DbgTab" IsChecked="False" Checked="Tab_Checked" Tag="Raw"/>
+            </StackPanel>
+
+            <!-- Tab content area -->
+            <Border Grid.Row="1"
+                    BorderBrush="{StaticResource DS1Gold}"
+                    BorderThickness="1"
+                    Background="#0A0908">
+                <Border BorderBrush="{StaticResource DS1GoldDim}"
+                        BorderThickness="1" Margin="3">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <ScrollViewer.Resources>
+                            <Style TargetType="ScrollBar" BasedOn="{StaticResource DS1ScrollBar}"/>
+                        </ScrollViewer.Resources>
+                        <TextBox x:Name="Content"
+                                 FontFamily="{StaticResource DS1Mono}"
+                                 FontSize="12"
+                                 Foreground="{StaticResource DS1Gold}"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 IsReadOnly="True"
+                                 TextWrapping="Wrap"
+                                 Padding="14"
+                                 Text="No randomization has been run yet."/>
+                    </ScrollViewer>
+                </Border>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
