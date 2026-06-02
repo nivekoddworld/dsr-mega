@@ -11,8 +11,7 @@ namespace DS1MegaRando.Core.Items;
 /// </summary>
 public readonly record struct StartingLoadout(
     int RightHand, int LeftHand, int SubRightHand,
-    int Helm, int Chest, int Gauntlets, int Legs,
-    int GiftItemId = -2, int GiftCount = 0)
+    int Helm, int Chest, int Gauntlets, int Legs)
 {
     /// <summary>Sentinel for an empty equip slot (matches the CharaInitParam default).</summary>
     public const int Empty = -1;
@@ -74,17 +73,6 @@ public class StartingLoadoutRandomizer
     private const int ArmorGauntOffset = 2000;
     private const int ArmorLegOffset   = 3000;
 
-    // (itemId, count) pairs drawn from the vanilla DS1 starting-gift pool.
-    // IDs are DSR EquipParamGoods row IDs.
-    private static readonly (int ItemId, int Count)[] GiftPool =
-    {
-        (ItemIds.BlackFirebomb,    5),
-        (ItemIds.FirebombItem,    10),
-        (ItemIds.TitaniteShard,    3),
-        (ItemIds.SmoothSilkyStone, 3),
-        (ItemIds.LloydsTalisman,   3),
-        (ItemIds.RepairBox,        1),
-    };
 
     /// <summary>
     /// Rolls an independent starting loadout for every player class. Weapons are rolled
@@ -101,31 +89,23 @@ public class StartingLoadoutRandomizer
             result.Add(RollOne(settings.StartingLoadoutMode,
                 randomizeWeapons: settings.RandomizeStartingLoadout,
                 randomizeArmor:   settings.FashionSouls,
-                randomizeGift:    settings.RandomizeStartingGift,
                 rng));
         return result;
     }
 
     private static StartingLoadout RollOne(
-        StartingLoadoutMode mode, bool randomizeWeapons, bool randomizeArmor,
-        bool randomizeGift, Random rng)
+        StartingLoadoutMode mode, bool randomizeWeapons, bool randomizeArmor, Random rng)
     {
         var (rightHand, leftHand, subRightHand) = randomizeWeapons
             ? RollWeapons(mode, rng)
             : (StartingLoadout.Keep, StartingLoadout.Keep, StartingLoadout.Keep);
 
-        (int giftId, int giftCount) = randomizeGift
-            ? GiftPool[rng.Next(GiftPool.Length)]
-            : (StartingLoadout.Keep, 0);
-
         return new StartingLoadout(
             rightHand, leftHand, subRightHand,
-            Helm:       randomizeArmor ? RollArmorPiece(ArmorHelmOffset,  rng) : StartingLoadout.Keep,
-            Chest:      randomizeArmor ? RollArmorPiece(ArmorChestOffset, rng) : StartingLoadout.Keep,
-            Gauntlets:  randomizeArmor ? RollArmorPiece(ArmorGauntOffset, rng) : StartingLoadout.Keep,
-            Legs:       randomizeArmor ? RollArmorPiece(ArmorLegOffset,   rng) : StartingLoadout.Keep,
-            GiftItemId: giftId,
-            GiftCount:  giftCount);
+            Helm:      randomizeArmor ? RollArmorPiece(ArmorHelmOffset,  rng) : StartingLoadout.Keep,
+            Chest:     randomizeArmor ? RollArmorPiece(ArmorChestOffset, rng) : StartingLoadout.Keep,
+            Gauntlets: randomizeArmor ? RollArmorPiece(ArmorGauntOffset, rng) : StartingLoadout.Keep,
+            Legs:      randomizeArmor ? RollArmorPiece(ArmorLegOffset,   rng) : StartingLoadout.Keep);
     }
 
     private static (int right, int left, int subRight) RollWeapons(StartingLoadoutMode mode, Random rng)

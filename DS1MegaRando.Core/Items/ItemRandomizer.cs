@@ -41,10 +41,18 @@ public class ItemRandomizer
         }
 
         List<StartingLoadout> startingLoadouts = new();
-        if (settings.RandomizeStartingLoadout || settings.FashionSouls || settings.RandomizeStartingGift)
+        if (settings.RandomizeStartingLoadout || settings.FashionSouls)
         {
             Emit("Randomizing starting loadout...");
             startingLoadouts = new StartingLoadoutRandomizer().RandomizePerClass(settings, rng);
+        }
+
+        var giftLotAssignments = new Dictionary<int, (int, int, int)>();
+        if (settings.RandomizeStartingGift)
+        {
+            Emit("Randomizing starting gifts...");
+            giftLotAssignments = new GiftLotRandomizer().Randomize(
+                gameData.ItemLotParam, itemPool, rng);
         }
 
         var keyPlacements = BuildKeyItemSpoiler(keyAssignments, ann, locationPool);
@@ -52,12 +60,13 @@ public class ItemRandomizer
 
         return new ItemResult
         {
-            LotAssignments       = allAssignments,
-            ShopAssignments      = shopItems,
-            ShopPrices           = shopPrices,
-            StartingLoadouts     = startingLoadouts,
-            KeyItemPlacements    = keyPlacements,
+            LotAssignments        = allAssignments,
+            ShopAssignments       = shopItems,
+            ShopPrices            = shopPrices,
+            StartingLoadouts      = startingLoadouts,
+            KeyItemPlacements     = keyPlacements,
             AdjustStatsForWeapons = settings.AdjustStatsForWeapons,
+            GiftLotAssignments    = giftLotAssignments,
         };
     }
 

@@ -60,6 +60,7 @@ public class GameFileWriter
         if (gameData.ParamBnd == null) return;
 
         ApplyLotAssignments(gameData.ItemLotParam, itemResult);
+        ApplyGiftLotAssignments(gameData.ItemLotParam, itemResult);
         ApplyShopAssignments(gameData.ShopLineupParam, itemResult);
         ApplyStartingLoadout(gameData.CharaInitParam, itemResult);
 
@@ -96,6 +97,30 @@ public class GameFileWriter
                 TrySetCell(row, $"lotItemCategory{i:D2}", 0);
                 TrySetCell(row, $"lotItemBasePoint{i:D2}", 0);
                 TrySetCell(row, $"lotItemNum{i:D2}", (byte)0);
+            }
+        }
+    }
+
+    private static void ApplyGiftLotAssignments(PARAM? param, ItemResult itemResult)
+    {
+        if (param == null || param.AppliedParamdef == null) return;
+
+        foreach (var (rowId, (itemId, category, count)) in itemResult.GiftLotAssignments)
+        {
+            var row = param.Rows.FirstOrDefault(r => r.ID == rowId);
+            if (row == null) continue;
+
+            TrySetCell(row, "lotItemId01",        itemId);
+            TrySetCell(row, "lotItemCategory01",  category);
+            TrySetCell(row, "lotItemBasePoint01", 1000);   // guaranteed delivery
+            TrySetCell(row, "lotItemNum01",       (byte)Math.Clamp(count, 1, 99));
+            // Clear slots 2–8 so only the randomized item can drop
+            for (int i = 2; i <= 8; i++)
+            {
+                TrySetCell(row, $"lotItemId{i:D2}",        0);
+                TrySetCell(row, $"lotItemCategory{i:D2}",  0);
+                TrySetCell(row, $"lotItemBasePoint{i:D2}", 0);
+                TrySetCell(row, $"lotItemNum{i:D2}",       (byte)0);
             }
         }
     }
@@ -233,25 +258,6 @@ public class GameFileWriter
         SetSlotUnlessKeep(row, "equip_Armer",        loadout.Chest);
         SetSlotUnlessKeep(row, "equip_Gaunt",        loadout.Gauntlets);
         SetSlotUnlessKeep(row, "equip_Leg",          loadout.Legs);
-
-        // Write the gift to the first vacant item slot (item_num0X == -1).
-        if (loadout.GiftItemId != StartingLoadout.Keep && loadout.GiftItemId != StartingLoadout.Empty)
-        {
-            for (int slot = 1; slot <= 10; slot++)
-            {
-                string idField    = $"item_num{slot:D2}";
-                string countField = $"itemNum{slot}";
-                var idCell = row[idField];
-                if (idCell == null) break;
-                int existing = Convert.ToInt32(idCell.Value);
-                if (existing == -1)
-                {
-                    TrySetCell(row, idField,    loadout.GiftItemId);
-                    TrySetCell(row, countField, (sbyte)Math.Clamp(loadout.GiftCount, 1, 99));
-                    break;
-                }
-            }
-        }
     }
 
     private static void BoostStatsForWeapons(PARAM param, int rowId, StartingLoadout loadout)
