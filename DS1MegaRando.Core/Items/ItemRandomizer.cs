@@ -40,11 +40,11 @@ public class ItemRandomizer
             (shopItems, shopPrices) = new ShopRandomizer().Randomize(settings, gameData, allAssignments, rng);
         }
 
-        List<int> startingItems = new();
+        List<StartingLoadout> startingLoadouts = new();
         if (settings.RandomizeStartingLoadout)
         {
             Emit("Randomizing starting loadout...");
-            startingItems = new StartingLoadoutRandomizer().Randomize(settings, gameData, rng);
+            startingLoadouts = new StartingLoadoutRandomizer().RandomizePerClass(settings, rng);
         }
 
         var keyPlacements = BuildKeyItemSpoiler(keyAssignments, ann, locationPool);
@@ -55,7 +55,7 @@ public class ItemRandomizer
             LotAssignments  = allAssignments,
             ShopAssignments = shopItems,
             ShopPrices      = shopPrices,
-            StartingItems   = startingItems,
+            StartingLoadouts = startingLoadouts,
             KeyItemPlacements = keyPlacements,
         };
     }
