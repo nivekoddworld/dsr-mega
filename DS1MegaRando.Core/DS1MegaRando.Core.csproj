@@ -7,13 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="YamlDotNet" Version="15.1.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\DS1MegaRando.Data\DS1MegaRando.Data.csproj" />
-    <ProjectReference Include="..\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Settings\DS1MegaRando.Settings.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Annotations\DS1MegaRando.Annotations.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Graph\DS1MegaRando.Graph.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.IO\DS1MegaRando.IO.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.FogGate\DS1MegaRando.FogGate.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Items\DS1MegaRando.Items.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Enemies\DS1MegaRando.Enemies.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Verification\DS1MegaRando.Verification.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Spoiler\DS1MegaRando.Spoiler.csproj" />
   </ItemGroup>
 
 </Project>
