@@ -347,15 +347,17 @@ public class FogGateWriter
     // Injects FogMod event 8950 into common.emevd to warp the player from the
     // Asylum to a randomly chosen CustomStart location at new-game start.
     //
-    // Event 8950 signature (from FogMod dist):
-    //   InitializeEvent(0, 8950, destArea:byte, destBlock:byte, asylumSoftWarp:int, destSpawn:int)
+    // Event 8950's parameter mapping (decoded from FogMod's dist common.emevd):
+    //   p0 (byte 0)      → WARP_PLAYER area byte
+    //   p1 (byte 1)      → WARP_PLAYER block byte
+    //   p2 (bytes 4-7)   → WARP_PLAYER target entity  (where the player lands)
+    //   p3 (bytes 8-11)  → SetPlayerRespawn entity     (where the player respawns)
     //
-    // We create two new player-spawn entities:
-    //   asylumSoftWarp — a fallback spawn in the Asylum (event 8950 uses this as an
-    //                    anchor while the warp triggers; we place it at the vanilla
-    //                    asylum spawn position so the brief moment visible is safe)
-    //   destSpawn      — the actual spawn in the destination map at the coordinates
-    //                    specified in the CustomStart entry
+    // Both p2 and p3 must reference an entity that actually lives in the
+    // destination map — otherwise the engine falls back to a default spawn
+    // (consistently Firelink/Parish in practice). Earlier we created a
+    // "soft warp" Player in the Asylum and passed its ID as p2, which is
+    // why the warp never landed at the requested CustomStart.
     private static void TryAddStartAreaWarp(
         WorldGraph graph,
         Dictionary<(string, string), WarpPoint> warpPoints,
@@ -384,55 +386,33 @@ public class FogGateWriter
                 System.Globalization.CultureInfo.InvariantCulture, out float pz)) return;
         var destPos = new Vector3(px, py, pz);
 
-        // ── Asylum soft-warp anchor ─────────────────────────────────────────
-        int softWarpId = mk++;
-        if (gameData.Maps.TryGetValue("m18_01_00_00", out var asylumMsb))
-        {
-            int pIdx = playerCounters.GetValueOrDefault("asylum", 50);
-            playerCounters["asylum"] = pIdx + 1;
+        if (!gameData.Maps.TryGetValue(destMapId, out var destMsb)) return;
 
-            Vector3 asylumPos = asylumMsb.Parts.Players.Count > 0
-                ? asylumMsb.Parts.Players[0].Position
-                : new Vector3(-0.44f, 200.6f, 94.7f);
-
-            asylumMsb.Parts.Players.Add(new MSB1.Part.Player
-            {
-                Name      = $"c0000_{pIdx:d4}",
-                ModelName = "c0000",
-                EntityID  = softWarpId,
-                Position  = asylumPos,
-                Rotation  = Vector3.Zero,
-                Scale     = Vector3.One,
-            });
-        }
-
-        // ── Destination spawn ───────────────────────────────────────────────
+        // One Player part in the destination map at the CustomStart position.
+        // Reused as both the warp target (p2) and respawn point (p3).
         int destSpawnId = mk++;
-        if (gameData.Maps.TryGetValue(destMapId, out var destMsb))
-        {
-            int pIdx = playerCounters.GetValueOrDefault(start.MapId, 50);
-            playerCounters[start.MapId] = pIdx + 1;
+        int pIdx = playerCounters.GetValueOrDefault(start.MapId, 50);
+        playerCounters[start.MapId] = pIdx + 1;
 
-            destMsb.Parts.Players.Add(new MSB1.Part.Player
-            {
-                Name      = $"c0000_{pIdx:d4}",
-                ModelName = "c0000",
-                EntityID  = destSpawnId,
-                Position  = destPos,
-                Rotation  = Vector3.Zero,
-                Scale     = Vector3.One,
-            });
-        }
+        destMsb.Parts.Players.Add(new MSB1.Part.Player
+        {
+            Name      = $"c0000_{pIdx:d4}",
+            ModelName = "c0000",
+            EntityID  = destSpawnId,
+            Position  = destPos,
+            Rotation  = Vector3.Zero,
+            Scale     = Vector3.One,
+        });
 
         // Slot 0: there is only ever one start-area warp event.
         warpEvents.Add(new List<object>
         {
             0,            // slot 0 — unique among 8950 instances
             (uint)8950,
-            da,           // destination map area byte  (e.g. 15 for m15_xx)
-            db,           // destination map block byte (e.g. 0 for m15_00, 1 for m15_01)
-            softWarpId,   // fallback player spawn entity in asylum
-            destSpawnId,  // player spawn entity at destination coordinates
+            da,           // p0: destination map area byte  (e.g. 15 for m15_xx)
+            db,           // p1: destination map block byte (e.g. 0 for m15_00, 1 for m15_01)
+            destSpawnId,  // p2: WARP_PLAYER target — where the warp lands
+            destSpawnId,  // p3: SetPlayerRespawn target — where the player respawns
         });
     }
 
