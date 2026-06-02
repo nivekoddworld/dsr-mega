@@ -5,39 +5,31 @@ namespace DS1MegaRando.Core.Items;
 /// <summary>
 /// Randomizes the items given by the character-creation starting-gift choices.
 ///
-/// Seven of the nine non-None gift options are delivered through <c>ItemLotParam</c>
-/// rows keyed by a specific <c>getItemFlagId</c>.  The other two (Binoculars,
-/// Old Witch's Ring) have no valid DSR lot rows and remain vanilla.
+/// Gift lot row IDs confirmed from DarkSoulsItemRandomizer-master/items_setup.py
+/// (the PTDE Python randomizer in this repo), cross-checked against DSR-Gadget:
 ///
-/// Confirmed flag → vanilla gift mapping (verified against DSR-Gadget item IDs):
-///   50000010 → Tiny Being's Ring      (ring 111)
-///   50000082 → Black Firebombs ×5    (goods 201 legacy / ~297 DSR)
-///   50000090 → Mysterious Humanity   (goods 500)
-///   50001060 → Firekeeper Soul       (goods 390)
-///   50001070 → Pendant               (goods 376)
-///   50004066 → Master Key            (goods 2100)
-///   50006371 → Twin Humanities ×2    (goods 501)
+///   1010 → Tiny Being's Ring  (ring 111)
+///   1082 → Black Firebombs ×5 (goods 201)
+///   2060 → Firekeeper Soul    (goods 390)
+///   2070 → Pendant            (goods 376)
+///   4073 → Master Key         (goods 2100)
+///   6371 → Twin Humanities ×2 (goods 501)
+///
+/// Humanity (single), Binoculars, and Old Witch's Ring are delivered
+/// engine-side and cannot be changed through ItemLotParam.
 /// </summary>
 public class GiftLotRandomizer
 {
-    private static readonly HashSet<int> GiftFlags = new()
+    private static readonly HashSet<int> GiftLotIds = new()
     {
-        50000010, // Tiny Being's Ring
-        50000082, // Black Firebombs ×5
-        50000090, // Mysterious Humanity
-        50001060, // Firekeeper Soul
-        50001070, // Pendant
-        50004066, // Master Key
-        50006371, // Twin Humanities ×2
+        1010, // Tiny Being's Ring
+        1082, // Black Firebombs ×5
+        2060, // Firekeeper Soul
+        2070, // Pendant
+        4073, // Master Key
+        6371, // Twin Humanities ×2
     };
 
-    /// <summary>
-    /// Scans <paramref name="itemLotParam"/> for the known gift-delivery rows and
-    /// replaces each one's item with a random pick from <paramref name="itemPool"/>
-    /// (excluding key items and boss souls).
-    /// Returns a <c>lotRowId → (itemId, lotCategory, count)</c> map ready to be
-    /// written back by <see cref="IO.GameFileWriter"/>.
-    /// </summary>
     public event EventHandler<string>? Log;
 
     public Dictionary<int, (int ItemId, int Category, int Count)> Randomize(
@@ -47,35 +39,40 @@ public class GiftLotRandomizer
     {
         var result = new Dictionary<int, (int, int, int)>();
 
-        if (itemLotParam == null)        { Log?.Invoke(this,"GiftLot: ItemLotParam is null — skipping"); return result; }
-        if (itemLotParam.AppliedParamdef == null) { Log?.Invoke(this,"GiftLot: ItemLotParam has no paramdef applied — skipping"); return result; }
+        if (itemLotParam == null)
+        {
+            Log?.Invoke(this, "GiftLot: ItemLotParam is null — skipping");
+            return result;
+        }
+        if (itemLotParam.AppliedParamdef == null)
+        {
+            Log?.Invoke(this, "GiftLot: ItemLotParam has no paramdef applied — skipping");
+            return result;
+        }
 
-        Log?.Invoke(this,$"GiftLot: scanning {itemLotParam.Rows.Count} rows for gift flags...");
+        Log?.Invoke(this, $"GiftLot: targeting {GiftLotIds.Count} known gift lot row IDs...");
 
         var giftable = itemPool
             .Where(i => !i.IsKey && !i.IsBoss)
             .ToList();
 
-        if (giftable.Count == 0) { Log?.Invoke(this,"GiftLot: item pool is empty — skipping"); return result; }
+        if (giftable.Count == 0)
+        {
+            Log?.Invoke(this, "GiftLot: item pool is empty — skipping");
+            return result;
+        }
 
         foreach (var row in itemLotParam.Rows)
         {
-            int flag = GetCell(row, "getItemFlagId");
-            if (!GiftFlags.Contains(flag))
+            if (!GiftLotIds.Contains((int)row.ID))
                 continue;
 
             var pick = giftable[rng.Next(giftable.Count)];
             result[(int)row.ID] = (pick.ItemId, pick.LotCategory, Math.Max(1, pick.Count));
-            Log?.Invoke(this,$"GiftLot: row {row.ID} (flag {flag}) → item {pick.ItemId} cat {pick.LotCategory} ×{pick.Count}");
+            Log?.Invoke(this, $"GiftLot: row {row.ID} → item {pick.ItemId} cat {pick.LotCategory} ×{pick.Count}");
         }
 
-        Log?.Invoke(this,$"GiftLot: {result.Count} gift lot(s) will be replaced.");
+        Log?.Invoke(this, $"GiftLot: {result.Count}/{GiftLotIds.Count} gift lot(s) found and replaced.");
         return result;
-    }
-
-    private static int GetCell(PARAM.Row row, string name)
-    {
-        try { return Convert.ToInt32(row[name]?.Value ?? 0); }
-        catch { return 0; }
     }
 }
