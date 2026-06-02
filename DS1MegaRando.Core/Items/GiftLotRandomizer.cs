@@ -38,19 +38,25 @@ public class GiftLotRandomizer
     /// Returns a <c>lotRowId → (itemId, lotCategory, count)</c> map ready to be
     /// written back by <see cref="IO.GameFileWriter"/>.
     /// </summary>
+    public event EventHandler<string>? Log;
+
     public Dictionary<int, (int ItemId, int Category, int Count)> Randomize(
         PARAM? itemLotParam,
         List<PoolItem> itemPool,
         Random rng)
     {
         var result = new Dictionary<int, (int, int, int)>();
-        if (itemLotParam?.AppliedParamdef == null) return result;
+
+        if (itemLotParam == null)        { Log?.Invoke(this,"GiftLot: ItemLotParam is null — skipping"); return result; }
+        if (itemLotParam.AppliedParamdef == null) { Log?.Invoke(this,"GiftLot: ItemLotParam has no paramdef applied — skipping"); return result; }
+
+        Log?.Invoke(this,$"GiftLot: scanning {itemLotParam.Rows.Count} rows for gift flags...");
 
         var giftable = itemPool
             .Where(i => !i.IsKey && !i.IsBoss)
             .ToList();
 
-        if (giftable.Count == 0) return result;
+        if (giftable.Count == 0) { Log?.Invoke(this,"GiftLot: item pool is empty — skipping"); return result; }
 
         foreach (var row in itemLotParam.Rows)
         {
@@ -60,8 +66,10 @@ public class GiftLotRandomizer
 
             var pick = giftable[rng.Next(giftable.Count)];
             result[(int)row.ID] = (pick.ItemId, pick.LotCategory, Math.Max(1, pick.Count));
+            Log?.Invoke(this,$"GiftLot: row {row.ID} (flag {flag}) → item {pick.ItemId} cat {pick.LotCategory} ×{pick.Count}");
         }
 
+        Log?.Invoke(this,$"GiftLot: {result.Count} gift lot(s) will be replaced.");
         return result;
     }
 

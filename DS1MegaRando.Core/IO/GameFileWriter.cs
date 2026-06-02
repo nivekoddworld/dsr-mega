@@ -71,6 +71,8 @@ public class GameFileWriter
 
         string dest = Path.Combine(outDir, @"param\GameParam\GameParam.parambnd.dcx");
         Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+        System.Diagnostics.Debug.WriteLine($"[GameFileWriter] Writing GameParam to: {dest}");
+        Console.WriteLine($"[GameFileWriter] Writing GameParam to: {dest}");
         gameData.ParamBnd.Write(dest, gameData.ParamBndCompression);
     }
 
