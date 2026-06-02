@@ -101,3 +101,5 @@ Z:\Bonejam\VideoGameShop\dsr-mega\DS1MegaRando.UI\obj\Debug\net8.0-windows\refin
 Z:\Bonejam\VideoGameShop\dsr-mega\DS1MegaRando.UI\obj\Debug\net8.0-windows\DS1MegaRando.UI.pdb
 Z:\Bonejam\VideoGameShop\dsr-mega\DS1MegaRando.UI\obj\Debug\net8.0-windows\DS1MegaRando.UI.genruntimeconfig.cache
 Z:\Bonejam\VideoGameShop\dsr-mega\DS1MegaRando.UI\obj\Debug\net8.0-windows\ref\DS1MegaRando.UI.dll
+Z:\Bonejam\VideoGameShop\dsr-mega\DS1MegaRando.UI\obj\Debug\net8.0-windows\Pages\DebugPage.baml
+Z:\Bonejam\VideoGameShop\dsr-mega\DS1MegaRando.UI\obj\Debug\net8.0-windows\Pages\DebugPage.g.cs

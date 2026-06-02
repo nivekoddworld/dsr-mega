@@ -1,51 +1,54 @@
-using System.Xml;
 using SoulsFormats;
 
-// Inspect the real DSR ItemLotParam for the lots that ground-pickup Treasure
-// events actually reference. Question: do these lots carry a deliverable item +
-// non-zero weight/count, and what is their getItemFlagId?
+// Check live game output files for:
+// 1. Is event 8950 in the common.emevd?
+// 2. What destination map/entity does it encode?
+// 3. Are any new player spawns in the relevant MSBs?
 
-string bndPath = @"Z:\Bonejam\VideoGameShop\dsr-mega\FogMod-master\dist\DS1R\param\GameParam\GameParam.parambnd.dcx";
-string layoutXml = @"Z:\Bonejam\VideoGameShop\dsr-mega\DS1MegaRando.Data\Params\ITEMLOT_PARAM_ST.xml";
+string gameEventDir = @"D:\SteamLibrary\steamapps\common\DARK SOULS REMASTERED\event";
+string gameMsbDir   = @"D:\SteamLibrary\steamapps\common\DARK SOULS REMASTERED\map\MapStudio";
 
-var bnd = BND3.Read(bndPath);
-PARAM? itemLot = null;
-string paramType = "";
-int detected = 0;
-foreach (var f in bnd.Files)
+// Check common.emevd for event 8950 injection
+var common = EMEVD.Read(Path.Combine(gameEventDir, "common.emevd.dcx"));
+var evt0 = common.Events.First(e => e.ID == 0);
+
+Console.WriteLine("=== common.emevd event 0 — 8950 calls ===");
+bool found8950 = false;
+foreach (var instr in evt0.Instructions.Where(i => i.Bank == 2000 && i.ID == 0 && i.ArgData.Length >= 8))
 {
-    if (Path.GetFileNameWithoutExtension(f.Name) != "ItemLotParam") continue;
-    itemLot = PARAM.Read(f.Bytes);
-    paramType = itemLot.ParamType;
-    detected = (int)itemLot.DetectedSize;
-    break;
+    int evtId = BitConverter.ToInt32(instr.ArgData, 4);
+    if (evtId != 8950) continue;
+    found8950 = true;
+    // Args: slot(4), eventId(4), destArea(1), destBlock(1), pad(2), softWarpId(4), destSpawnId(4)
+    byte destArea  = instr.ArgData[8];
+    byte destBlock = instr.ArgData[9];
+    int  softWarp  = instr.ArgData.Length >= 16 ? BitConverter.ToInt32(instr.ArgData, 12) : -1;
+    int  destSpawn = instr.ArgData.Length >= 20 ? BitConverter.ToInt32(instr.ArgData, 16) : -1;
+    Console.WriteLine($"  Found 8950: destArea={destArea} destBlock={destBlock} → m{destArea:D2}_{destBlock:D2}_00_00  softWarp={softWarp}  destSpawn={destSpawn}");
 }
-if (itemLot == null) { Console.WriteLine("ItemLotParam not found"); return; }
-Console.WriteLine($"ItemLotParam: ParamType='{paramType}', DetectedSize={detected}, rows={itemLot.Rows.Count}");
+if (!found8950) Console.WriteLine("  NOT FOUND — event 8950 was never injected");
 
-// Build a PARAM.Layout from the embedded XML the same way GameFileReader does.
-var layout = PARAM.Layout.ReadXMLFile(layoutXml);
-Console.WriteLine($"Embedded ITEMLOT layout: Size={layout.Size}  (match={(layout.Size == detected)})");
-if (layout.Size != detected) { Console.WriteLine("*** SIZE MISMATCH -> paramdef would NOT apply -> ItemPool returns empty!"); }
-
-var paramdef = layout.ToParamdef(paramType, out _);
-itemLot.ApplyParamdef(paramdef);
-
-int[] probe = { 1010000, 1010010, 1010020, 1300000, 1000000, 1200000, 1300010 };
-Console.WriteLine();
-foreach (var id in probe)
+// Check all relevant MSBs for new player spawns (entity IDs >= 5900100)
+Console.WriteLine("\n=== Player spawns with high entity IDs (added by randomizer) ===");
+foreach (var path in Directory.GetFiles(gameMsbDir, "*.msb").OrderBy(x => x))
 {
-    var row = itemLot.Rows.FirstOrDefault(r => r.ID == id);
-    if (row == null) { Console.WriteLine($"lot {id}: (no such row)"); continue; }
-    Console.WriteLine(
-        $"lot {id}: id01={Cell(row,"lotItemId01")} cat01={Cell(row,"lotItemCategory01")} " +
-        $"base01={Cell(row,"lotItemBasePoint01")} num01={Cell(row,"lotItemNum01")} " +
-        $"flag01={Cell(row,"getItemFlagId01")}");
+    var msb = MSB1.Read(path);
+    var added = msb.Parts.Players.Where(p => p.EntityID >= 5900100).ToList();
+    if (added.Count == 0) continue;
+    Console.WriteLine($"  {Path.GetFileName(path)}:");
+    foreach (var p in added)
+        Console.WriteLine($"    {p.Name} entity={p.EntityID} pos=({p.Position.X:F3}, {p.Position.Y:F3}, {p.Position.Z:F3})");
 }
 
-// How many lots would ItemPool include (id01 != 0)?
-int withItem = itemLot.Rows.Count(r => Conv(r["lotItemId01"]?.Value) != 0);
-Console.WriteLine($"\nLots with lotItemId01 != 0 (would enter pool): {withItem} / {itemLot.Rows.Count}");
-
-static string Cell(PARAM.Row r, string n) => r[n]?.Value?.ToString() ?? "<null>";
-static long Conv(object? v) { try { return v == null ? 0 : System.Convert.ToInt64(v); } catch { return 0; } }
+// Also show all player spawns in each of the 6 target maps
+Console.WriteLine("\n=== All player spawns in target maps ===");
+string[] targetMaps = { "m15_00_00_00", "m12_00_00_01", "m15_01_00_00", "m12_01_00_00", "m11_00_00_00" };
+foreach (var mapId in targetMaps)
+{
+    string path = Path.Combine(gameMsbDir, mapId + ".msb");
+    if (!File.Exists(path)) { Console.WriteLine($"  {mapId}: not found"); continue; }
+    var msb = MSB1.Read(path);
+    Console.WriteLine($"  {mapId}: {msb.Parts.Players.Count} spawns");
+    foreach (var p in msb.Parts.Players)
+        Console.WriteLine($"    {p.Name} entity={p.EntityID} pos=({p.Position.X:F3}, {p.Position.Y:F3}, {p.Position.Z:F3})");
+}

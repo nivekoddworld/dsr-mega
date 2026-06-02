@@ -60,7 +60,7 @@ namespace DS1MegaRando.UI.Pages {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/DS1MegaRando.UI;component/pages/spoilerpage.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/DS1MegaRando.UI;V1.0.0.0;component/pages/spoilerpage.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Pages\SpoilerPage.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

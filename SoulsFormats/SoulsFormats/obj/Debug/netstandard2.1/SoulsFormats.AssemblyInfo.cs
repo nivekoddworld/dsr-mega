@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCopyrightAttribute("Copyright © Joseph Anderson 2019")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("A .NET library for reading and writing FromSoftware file formats.")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+39f5b83ee41e3f5a6216efea84d22ef1d964f386")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f6a7bf1271a11b744624e73c441d3570ed8e0c26")]
 [assembly: System.Reflection.AssemblyProductAttribute("SoulsFormats")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SoulsFormats")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

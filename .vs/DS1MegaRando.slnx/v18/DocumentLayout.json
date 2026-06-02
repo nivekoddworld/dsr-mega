@@ -1,7 +1,32 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{CB225D9F-63CA-D6D3-3186-3FE513C16CC6}|DS1MegaRando.Core\\DS1MegaRando.Core.csproj|z:\\bonejam\\videogameshop\\dsr-mega\\ds1megarando.core\\foggate\\foggatewriter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CB225D9F-63CA-D6D3-3186-3FE513C16CC6}|DS1MegaRando.Core\\DS1MegaRando.Core.csproj|solutionrelative:ds1megarando.core\\foggate\\foggatewriter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CB225D9F-63CA-D6D3-3186-3FE513C16CC6}|DS1MegaRando.Core\\DS1MegaRando.Core.csproj|z:\\bonejam\\videogameshop\\dsr-mega\\ds1megarando.core\\io\\gamefilewriter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CB225D9F-63CA-D6D3-3186-3FE513C16CC6}|DS1MegaRando.Core\\DS1MegaRando.Core.csproj|solutionrelative:ds1megarando.core\\io\\gamefilewriter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CB225D9F-63CA-D6D3-3186-3FE513C16CC6}|DS1MegaRando.Core\\DS1MegaRando.Core.csproj|z:\\bonejam\\videogameshop\\dsr-mega\\ds1megarando.core\\foggate\\foggaterandomizer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CB225D9F-63CA-D6D3-3186-3FE513C16CC6}|DS1MegaRando.Core\\DS1MegaRando.Core.csproj|solutionrelative:ds1megarando.core\\foggate\\foggaterandomizer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EF929393-B630-42E1-BE6A-C9FE4E522227}|DS1MegaRando.Data\\DS1MegaRando.Data.csproj|z:\\bonejam\\videogameshop\\dsr-mega\\ds1megarando.data\\annotations\\ds1-fog.yaml||{06C066C6-04A2-4E5D-8202-439FD4234EF1}",
+      "RelativeMoniker": "D:0:0:{EF929393-B630-42E1-BE6A-C9FE4E522227}|DS1MegaRando.Data\\DS1MegaRando.Data.csproj|solutionrelative:ds1megarando.data\\annotations\\ds1-fog.yaml||{06C066C6-04A2-4E5D-8202-439FD4234EF1}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CB225D9F-63CA-D6D3-3186-3FE513C16CC6}|DS1MegaRando.Core\\DS1MegaRando.Core.csproj|z:\\bonejam\\videogameshop\\dsr-mega\\ds1megarando.core\\enemies\\mimicrandomizer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CB225D9F-63CA-D6D3-3186-3FE513C16CC6}|DS1MegaRando.Core\\DS1MegaRando.Core.csproj|solutionrelative:ds1megarando.core\\enemies\\mimicrandomizer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CB225D9F-63CA-D6D3-3186-3FE513C16CC6}|DS1MegaRando.Core\\DS1MegaRando.Core.csproj|z:\\bonejam\\videogameshop\\dsr-mega\\ds1megarando.core\\foggate\\foggateresult.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CB225D9F-63CA-D6D3-3186-3FE513C16CC6}|DS1MegaRando.Core\\DS1MegaRando.Core.csproj|solutionrelative:ds1megarando.core\\foggate\\foggateresult.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
@@ -9,7 +34,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": -1,
+          "SelectedChildIndex": 8,
           "Children": [
             {
               "$type": "Bookmark",
@@ -26,6 +51,84 @@
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ds1-fog.yaml",
+              "DocumentMoniker": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Data\\Annotations\\ds1-fog.yaml",
+              "RelativeDocumentMoniker": "DS1MegaRando.Data\\Annotations\\ds1-fog.yaml",
+              "ToolTip": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Data\\Annotations\\ds1-fog.yaml",
+              "RelativeToolTip": "DS1MegaRando.Data\\Annotations\\ds1-fog.yaml",
+              "ViewState": "AgIAAK0LAAAAAAAAAAAjwKAHAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003775|",
+              "WhenOpened": "2026-06-02T07:04:37.5Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "MimicRandomizer.cs",
+              "DocumentMoniker": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Core\\Enemies\\MimicRandomizer.cs",
+              "RelativeDocumentMoniker": "DS1MegaRando.Core\\Enemies\\MimicRandomizer.cs",
+              "ToolTip": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Core\\Enemies\\MimicRandomizer.cs",
+              "RelativeToolTip": "DS1MegaRando.Core\\Enemies\\MimicRandomizer.cs",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-02T05:51:46.252Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "GameFileWriter.cs",
+              "DocumentMoniker": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Core\\IO\\GameFileWriter.cs",
+              "RelativeDocumentMoniker": "DS1MegaRando.Core\\IO\\GameFileWriter.cs",
+              "ToolTip": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Core\\IO\\GameFileWriter.cs",
+              "RelativeToolTip": "DS1MegaRando.Core\\IO\\GameFileWriter.cs",
+              "ViewState": "AgIAAFEBAAAAAAAAAAAWwGMBAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-02T05:29:45.533Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "FogGateResult.cs",
+              "DocumentMoniker": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Core\\FogGate\\FogGateResult.cs",
+              "RelativeDocumentMoniker": "DS1MegaRando.Core\\FogGate\\FogGateResult.cs",
+              "ToolTip": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Core\\FogGate\\FogGateResult.cs",
+              "RelativeToolTip": "DS1MegaRando.Core\\FogGate\\FogGateResult.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-02T05:28:53.881Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "FogGateWriter.cs",
+              "DocumentMoniker": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Core\\FogGate\\FogGateWriter.cs",
+              "RelativeDocumentMoniker": "DS1MegaRando.Core\\FogGate\\FogGateWriter.cs",
+              "ToolTip": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Core\\FogGate\\FogGateWriter.cs",
+              "RelativeToolTip": "DS1MegaRando.Core\\FogGate\\FogGateWriter.cs",
+              "ViewState": "AgIAAGgBAAAAAAAAAADwv3cBAAAyAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-02T05:28:50.449Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "FogGateRandomizer.cs",
+              "DocumentMoniker": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Core\\FogGate\\FogGateRandomizer.cs",
+              "RelativeDocumentMoniker": "DS1MegaRando.Core\\FogGate\\FogGateRandomizer.cs",
+              "ToolTip": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Core\\FogGate\\FogGateRandomizer.cs",
+              "RelativeToolTip": "DS1MegaRando.Core\\FogGate\\FogGateRandomizer.cs",
+              "ViewState": "AgIAADMAAAAAAAAAAAAowAwAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-02T05:28:11.38Z",
+              "EditorCaption": ""
             }
           ]
         }

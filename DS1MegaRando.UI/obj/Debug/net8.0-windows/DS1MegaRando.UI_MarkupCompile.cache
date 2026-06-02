@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 Z:\Bonejam\VideoGameShop\dsr-mega\DS1MegaRando.UI\App.xaml
-11-1582416935
+12400370065
 
-131161916872
+141094461493
 204-1015834906
-Controls\ProgressOverlay.xaml;MainWindow.xaml;Pages\AboutPage.xaml;Pages\EnemyPage.xaml;Pages\FogGatePage.xaml;Pages\GlobalPage.xaml;Pages\ItemPage.xaml;Pages\SpoilerPage.xaml;Themes\DS1Colors.xaml;Themes\DS1Fonts.xaml;Themes\DS1ResourceDictionary.xaml;
+Controls\ProgressOverlay.xaml;MainWindow.xaml;Pages\AboutPage.xaml;Pages\DebugPage.xaml;Pages\EnemyPage.xaml;Pages\FogGatePage.xaml;Pages\GlobalPage.xaml;Pages\ItemPage.xaml;Pages\SpoilerPage.xaml;Themes\DS1Colors.xaml;Themes\DS1Fonts.xaml;Themes\DS1ResourceDictionary.xaml;
 
 False
 

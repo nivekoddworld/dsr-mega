@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DS1MegaRando.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+39f5b83ee41e3f5a6216efea84d22ef1d964f386")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+10c8100857ffddfb7728bf1973910737c6881062")]
 [assembly: System.Reflection.AssemblyProductAttribute("DS1MegaRando.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DS1MegaRando.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

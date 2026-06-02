@@ -100,7 +100,7 @@ namespace DS1MegaRando.UI.Controls {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/DS1MegaRando.UI;component/controls/progressoverlay.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/DS1MegaRando.UI;V1.0.0.0;component/controls/progressoverlay.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Controls\ProgressOverlay.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
