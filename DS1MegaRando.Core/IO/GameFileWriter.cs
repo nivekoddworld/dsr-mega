@@ -145,22 +145,23 @@ public class GameFileWriter
         var row = param.Rows.FirstOrDefault(r => r.ID == rowId);
         if (row == null) return;
 
-        // Right hand always holds a real weapon. Left hand holds the shield, or
-        // StartingLoadout.Empty (-1) for modes that can roll "no shield" — -1 is the
-        // CharaInitParam value for an empty slot.
-        TrySetCell(row, "equip_Wep_Right", loadout.RightHand);
-        TrySetCell(row, "equip_Wep_Left",  loadout.LeftHand);
+        // Each slot is written unless it's StartingLoadout.Keep (which means "leave the
+        // class's vanilla value"). A value of StartingLoadout.Empty (-1) IS written — that
+        // explicitly clears the slot (e.g. the "no shield" roll, or an unused off-hand).
+        // equip_Armer is the chest slot.
+        SetSlotUnlessKeep(row, "equip_Wep_Right",    loadout.RightHand);
+        SetSlotUnlessKeep(row, "equip_Wep_Left",     loadout.LeftHand);
+        SetSlotUnlessKeep(row, "equip_Subwep_Right", loadout.SubRightHand);
+        SetSlotUnlessKeep(row, "equip_Helm",         loadout.Helm);
+        SetSlotUnlessKeep(row, "equip_Armer",        loadout.Chest);
+        SetSlotUnlessKeep(row, "equip_Gaunt",        loadout.Gauntlets);
+        SetSlotUnlessKeep(row, "equip_Leg",          loadout.Legs);
+    }
 
-        // Only the 2H mode fills the right off-hand slot. Leave it untouched
-        // otherwise so caster classes keep their starting catalyst/flame there.
-        if (loadout.SubRightHand != StartingLoadout.Empty)
-            TrySetCell(row, "equip_Subwep_Right", loadout.SubRightHand);
-
-        // Armor (equip_Armer is the chest slot). Each piece is rolled independently.
-        if (loadout.Helm      != StartingLoadout.Empty) TrySetCell(row, "equip_Helm",  loadout.Helm);
-        if (loadout.Chest     != StartingLoadout.Empty) TrySetCell(row, "equip_Armer", loadout.Chest);
-        if (loadout.Gauntlets != StartingLoadout.Empty) TrySetCell(row, "equip_Gaunt", loadout.Gauntlets);
-        if (loadout.Legs      != StartingLoadout.Empty) TrySetCell(row, "equip_Leg",   loadout.Legs);
+    private static void SetSlotUnlessKeep(PARAM.Row row, string field, int value)
+    {
+        if (value != StartingLoadout.Keep)
+            TrySetCell(row, field, value);
     }
 
     // ── Maps ───────────────────────────────────────────────────────────────

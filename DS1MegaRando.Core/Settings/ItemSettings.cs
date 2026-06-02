@@ -21,6 +21,7 @@ public class ItemSettings
     public int ShopPriceRandomMax { get; set; } = 20000;
     public bool RandomizeStartingLoadout { get; set; } = true;
     public StartingLoadoutMode StartingLoadoutMode { get; set; } = StartingLoadoutMode.ShieldAnd1H;
+    /// <summary>Randomize each starting class's armor (helm/chest/gauntlets/legs) per piece.</summary>
     public bool FashionSouls { get; set; } = false;
     public bool RandomizeNPCDropArmor { get; set; } = false;
     public bool ProtectNPCQuestItems { get; set; } = true;

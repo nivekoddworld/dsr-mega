@@ -5,8 +5,9 @@ namespace DS1MegaRando.Core.Items;
 
 /// <summary>
 /// A single character's starting loadout. The slot values map directly onto the
-/// CharaInitParam equip fields. <see cref="Empty"/> (-1) is the value DS1 uses for
-/// an unequipped slot.
+/// CharaInitParam equip fields.
+///   <see cref="Empty"/> (-1): explicitly unequip the slot (DS1's empty-slot value).
+///   <see cref="Keep"/>  (-2): leave the slot's vanilla value untouched.
 /// </summary>
 public readonly record struct StartingLoadout(
     int RightHand, int LeftHand, int SubRightHand,
@@ -14,6 +15,9 @@ public readonly record struct StartingLoadout(
 {
     /// <summary>Sentinel for an empty equip slot (matches the CharaInitParam default).</summary>
     public const int Empty = -1;
+
+    /// <summary>Sentinel meaning "don't write this slot — keep the class's vanilla value".</summary>
+    public const int Keep = -2;
 }
 
 public class StartingLoadoutRandomizer
@@ -70,27 +74,36 @@ public class StartingLoadoutRandomizer
     private const int ArmorLegOffset   = 3000;
 
     /// <summary>
-    /// Rolls an independent starting loadout (weapons + armor) for every player class.
-    /// Each class in the character creator gets its own random gear instead of one
-    /// shared roll being copied onto all ten rows.
+    /// Rolls an independent starting loadout for every player class. Weapons are rolled
+    /// only when <see cref="ItemSettings.RandomizeStartingLoadout"/> is set; armor only
+    /// when <see cref="ItemSettings.FashionSouls"/> is set. Slots for a group that isn't
+    /// being randomized are left as <see cref="StartingLoadout.Keep"/> so the class's
+    /// vanilla gear in that group is preserved.
     /// </summary>
     public List<StartingLoadout> RandomizePerClass(ItemSettings settings, Random rng)
     {
         var result = new List<StartingLoadout>(PlayerClassCount);
         for (int i = 0; i < PlayerClassCount; i++)
-            result.Add(RollOne(settings.StartingLoadoutMode, rng));
+            result.Add(RollOne(settings.StartingLoadoutMode,
+                randomizeWeapons: settings.RandomizeStartingLoadout,
+                randomizeArmor:   settings.FashionSouls,
+                rng));
         return result;
     }
 
-    private static StartingLoadout RollOne(StartingLoadoutMode mode, Random rng)
+    private static StartingLoadout RollOne(
+        StartingLoadoutMode mode, bool randomizeWeapons, bool randomizeArmor, Random rng)
     {
-        var (rightHand, leftHand, subRightHand) = RollWeapons(mode, rng);
+        var (rightHand, leftHand, subRightHand) = randomizeWeapons
+            ? RollWeapons(mode, rng)
+            : (StartingLoadout.Keep, StartingLoadout.Keep, StartingLoadout.Keep);
+
         return new StartingLoadout(
             rightHand, leftHand, subRightHand,
-            Helm:      RollArmorPiece(ArmorHelmOffset,  rng),
-            Chest:     RollArmorPiece(ArmorChestOffset, rng),
-            Gauntlets: RollArmorPiece(ArmorGauntOffset, rng),
-            Legs:      RollArmorPiece(ArmorLegOffset,   rng));
+            Helm:      randomizeArmor ? RollArmorPiece(ArmorHelmOffset,  rng) : StartingLoadout.Keep,
+            Chest:     randomizeArmor ? RollArmorPiece(ArmorChestOffset, rng) : StartingLoadout.Keep,
+            Gauntlets: randomizeArmor ? RollArmorPiece(ArmorGauntOffset, rng) : StartingLoadout.Keep,
+            Legs:      randomizeArmor ? RollArmorPiece(ArmorLegOffset,   rng) : StartingLoadout.Keep);
     }
 
     private static (int right, int left, int subRight) RollWeapons(StartingLoadoutMode mode, Random rng)
@@ -98,7 +111,8 @@ public class StartingLoadoutRandomizer
         switch (mode)
         {
             case StartingLoadoutMode.ShieldAnd1H:
-                return (Pick(OneHandedWeapons, rng), Pick(Shields, rng), StartingLoadout.Empty);
+                // Keep the off-hand slot so caster classes retain their catalyst/flame.
+                return (Pick(OneHandedWeapons, rng), Pick(Shields, rng), StartingLoadout.Keep);
 
             case StartingLoadoutMode.ShieldAnd1HAnd2H:
                 // The 2H weapon goes in the right off-hand slot so the player actually
@@ -111,11 +125,11 @@ public class StartingLoadoutRandomizer
                 var combined = OneHandedWeapons.Concat(TwoHandedWeapons).ToArray();
                 int weapon = combined[rng.Next(combined.Length)];
                 int shield = rng.Next(2) == 0 ? Pick(Shields, rng) : StartingLoadout.Empty;
-                return (weapon, shield, StartingLoadout.Empty);
+                return (weapon, shield, StartingLoadout.Keep);
             }
 
             default:
-                return (ItemIds.Longsword, ItemIds.WoodenShield, StartingLoadout.Empty);
+                return (ItemIds.Longsword, ItemIds.WoodenShield, StartingLoadout.Keep);
         }
     }
 

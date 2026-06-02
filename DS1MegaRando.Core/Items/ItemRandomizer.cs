@@ -41,7 +41,7 @@ public class ItemRandomizer
         }
 
         List<StartingLoadout> startingLoadouts = new();
-        if (settings.RandomizeStartingLoadout)
+        if (settings.RandomizeStartingLoadout || settings.FashionSouls)
         {
             Emit("Randomizing starting loadout...");
             startingLoadouts = new StartingLoadoutRandomizer().RandomizePerClass(settings, rng);

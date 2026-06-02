@@ -133,6 +133,9 @@
                 <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="StartLoadout"
                              Content="Combined Pool  —  Any weapon, shield is optional"
                              IsChecked="{Binding Items.StartingLoadoutMode, Converter={StaticResource EnumEquals}, ConverterParameter=CombinedPool}"/>
+                <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,8,0,0"
+                          Content="Fashion Souls (randomize starting armor per class)"
+                          IsChecked="{Binding Items.FashionSouls}"/>
             </StackPanel>
         </Border>
 
@@ -141,9 +144,6 @@
             <StackPanel>
                 <TextBlock Text="NPC &amp; GUARANTEES" Style="{StaticResource DS1SectionTitle}" Margin="0,0,0,12"/>
                 <UniformGrid Columns="2">
-                    <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,4"
-                              Content="Fashion Souls (randomize NPC starting armor)"
-                              IsChecked="{Binding Items.FashionSouls}"/>
                     <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,4"
                               Content="Randomize NPC Armor Drops (Laundromat)"
                               IsChecked="{Binding Items.RandomizeNPCDropArmor}"/>

@@ -234,7 +234,7 @@ public partial class DebugPage : UserControl
             {
                 var lo = items.StartingLoadouts[i];
                 sb.AppendLine($"  Class {3000 + i}: right={lo.RightHand}  left={lo.LeftHand}"
-                    + (lo.SubRightHand != StartingLoadout.Empty ? $"  rightOffhand={lo.SubRightHand}" : "")
+                    + (lo.SubRightHand != StartingLoadout.Keep ? $"  rightOffhand={lo.SubRightHand}" : "")
                     + $"  armor=[{lo.Helm}, {lo.Chest}, {lo.Gauntlets}, {lo.Legs}]");
             }
         else
