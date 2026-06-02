@@ -5,6 +5,7 @@ using DS1MegaRando.Core.FogGate;
 using DS1MegaRando.Core.Items;
 using DS1MegaRando.Core.Settings;
 using DS1MegaRando.Data.Enemies;
+using DS1MegaRando.Data.Items;
 using SoulsFormats;
 
 namespace DS1MegaRando.Core.IO;
@@ -118,6 +119,75 @@ public class GameFileWriter
         }
     }
 
+    // Minimum stat requirements (STR, DEX, INT, FTH) for every weapon that can appear
+    // in a randomized starting loadout. Used when AdjustStatsForWeapons is enabled.
+    // These are the one-hand requirements; two-handed weapons in SubRightHand use the
+    // two-hand rule: effective STR = floor(baseSTR × 1.5), so minimum base = ceil(req × 2/3).
+    private static readonly Dictionary<int, (int Str, int Dex, int Int, int Fth)> WeaponRequirements = new()
+    {
+        // One-handed weapons
+        [ItemIds.Dagger]           = ( 5,  9, 0, 0),
+        [ItemIds.BanditsKnife]     = ( 6, 12, 0, 0),
+        [ItemIds.Shortsword]       = ( 7, 10, 0, 0),
+        [ItemIds.Longsword]        = (10, 10, 0, 0),
+        [ItemIds.Broadsword]       = (10, 10, 0, 0),
+        [ItemIds.BalderSideSword]  = (10, 14, 0, 0),
+        [ItemIds.Scimitar]         = ( 7, 13, 0, 0),
+        [ItemIds.Falchion]         = ( 9, 13, 0, 0),
+        [ItemIds.Shotel]           = ( 9, 14, 0, 0),
+        [ItemIds.Uchigatana]       = (14, 14, 0, 0),
+        [ItemIds.Iaito]            = (14, 14, 0, 0),
+        [ItemIds.MailBreaker]      = ( 5, 12, 0, 0),
+        [ItemIds.Rapier]           = ( 7, 12, 0, 0),
+        [ItemIds.Estoc]            = (10, 12, 0, 0),
+        [ItemIds.HandAxe]          = ( 7,  9, 0, 0),
+        [ItemIds.BattleAxe]        = (10,  8, 0, 0),
+        [ItemIds.Club]             = (10,  0, 0, 0),
+        [ItemIds.Mace]             = (12,  0, 0, 0),
+        [ItemIds.MorningStar]      = (11,  9, 0, 0),
+        [ItemIds.ReinforcedClub]   = (12,  0, 0, 0),
+        [ItemIds.Caestus]          = ( 5,  6, 0, 0),
+        [ItemIds.Claw]             = ( 6, 14, 0, 0),
+        [ItemIds.Spear]            = (11, 10, 0, 0),
+        [ItemIds.WingedSpear]      = (13, 11, 0, 0),
+        [ItemIds.Whip]             = ( 7, 14, 0, 0),
+        // Two-handed / heavy weapons
+        [ItemIds.BastardSword]         = (16, 10, 0, 0),
+        [ItemIds.Claymore]             = (16, 10, 0, 0),
+        [ItemIds.ManSerpentGreatsword] = (22, 10, 0, 0),
+        [ItemIds.Flamberge]            = (14, 14, 0, 0),
+        [ItemIds.Zweihander]           = (24, 14, 0, 0),
+        [ItemIds.Greatsword]           = (28, 10, 0, 0),
+        [ItemIds.Murakumo]             = (28, 13, 0, 0),
+        [ItemIds.Greataxe]             = (30,  8, 0, 0),
+        [ItemIds.GreatClub]            = (28,  0, 0, 0),
+        [ItemIds.LargeClub]            = (26,  0, 0, 0),
+        [ItemIds.Pike]                 = (24, 14, 0, 0),
+        [ItemIds.Halberd]              = (16, 12, 0, 0),
+        [ItemIds.Lucerne]              = (15, 12, 0, 0),
+        [ItemIds.Scythe]               = (14, 12, 0, 0),
+        [ItemIds.GreatScythe]          = (14, 14, 0, 0),
+        // Shields
+        [ItemIds.EastWestShield]      = ( 6,  0, 0, 0),
+        [ItemIds.WoodenShield]        = ( 7,  0, 0, 0),
+        [ItemIds.LargeLeatherShield]  = ( 7,  0, 0, 0),
+        [ItemIds.SmallLeatherShield]  = ( 5,  0, 0, 0),
+        [ItemIds.TargetShield]        = ( 8, 11, 0, 0),
+        [ItemIds.BucklerShield]       = ( 7, 13, 0, 0),
+        [ItemIds.CrackedRoundShield]  = ( 6,  0, 0, 0),
+        [ItemIds.LeatherShield]       = ( 6,  0, 0, 0),
+        [ItemIds.PlankShield]         = ( 7,  0, 0, 0),
+        [ItemIds.HeaterShield]        = ( 8,  0, 0, 0),
+        [ItemIds.KnightShield]        = (10,  0, 0, 0),
+        [ItemIds.TowerKiteShield]     = (10,  0, 0, 0),
+        [ItemIds.GrassCrestShield]    = (10,  0, 0, 0),
+        [ItemIds.HollowSoldierShield] = (11,  0, 0, 0),
+        [ItemIds.SpiderShield]        = (10,  0, 0, 0),
+        [ItemIds.SpikedShield]        = (10, 12, 0, 0),
+        [ItemIds.EagleShield]         = (14,  0, 0, 0),
+        [ItemIds.TowerShield]         = (22,  0, 0, 0),
+    };
+
     private static void ApplyStartingLoadout(PARAM? param, ItemResult itemResult)
     {
         if (param == null || param.AppliedParamdef == null) return;
@@ -135,8 +205,15 @@ public class GameFileWriter
         // the actual spawn match.
         for (int classIdx = 0; classIdx < loadouts.Count; classIdx++)
         {
-            ApplyLoadoutToClassRow(param, 3000 + classIdx, loadouts[classIdx]);
-            ApplyLoadoutToClassRow(param, 2000 + classIdx, loadouts[classIdx]);
+            var loadout = loadouts[classIdx];
+            ApplyLoadoutToClassRow(param, 3000 + classIdx, loadout);
+            ApplyLoadoutToClassRow(param, 2000 + classIdx, loadout);
+
+            if (itemResult.AdjustStatsForWeapons)
+            {
+                BoostStatsForWeapons(param, 3000 + classIdx, loadout);
+                BoostStatsForWeapons(param, 2000 + classIdx, loadout);
+            }
         }
     }
 
@@ -156,6 +233,78 @@ public class GameFileWriter
         SetSlotUnlessKeep(row, "equip_Armer",        loadout.Chest);
         SetSlotUnlessKeep(row, "equip_Gaunt",        loadout.Gauntlets);
         SetSlotUnlessKeep(row, "equip_Leg",          loadout.Legs);
+
+        // Write the gift to the first vacant item slot (item_num0X == -1).
+        if (loadout.GiftItemId != StartingLoadout.Keep && loadout.GiftItemId != StartingLoadout.Empty)
+        {
+            for (int slot = 1; slot <= 10; slot++)
+            {
+                string idField    = $"item_num{slot:D2}";
+                string countField = $"itemNum{slot}";
+                var idCell = row[idField];
+                if (idCell == null) break;
+                int existing = Convert.ToInt32(idCell.Value);
+                if (existing == -1)
+                {
+                    TrySetCell(row, idField,    loadout.GiftItemId);
+                    TrySetCell(row, countField, (sbyte)Math.Clamp(loadout.GiftCount, 1, 99));
+                    break;
+                }
+            }
+        }
+    }
+
+    private static void BoostStatsForWeapons(PARAM param, int rowId, StartingLoadout loadout)
+    {
+        var row = param.Rows.FirstOrDefault(r => r.ID == rowId);
+        if (row == null) return;
+
+        int baseStr = GetStatCell(row, "baseStr");
+        int baseDex = GetStatCell(row, "baseDex");
+        int baseInt = GetStatCell(row, "baseMag");
+        int baseFth = GetStatCell(row, "baseFai");
+        int soulLv  = Convert.ToInt32(row["soulLv"]?.Value ?? 0);
+
+        int newStr = baseStr, newDex = baseDex, newInt = baseInt, newFth = baseFth;
+
+        // RightHand and LeftHand: one-hand requirements.
+        foreach (int wepId in new[] { loadout.RightHand, loadout.LeftHand })
+        {
+            if (wepId <= 0) continue;
+            if (!WeaponRequirements.TryGetValue(wepId, out var req)) continue;
+            newStr = Math.Max(newStr, req.Str);
+            newDex = Math.Max(newDex, req.Dex);
+            newInt = Math.Max(newInt, req.Int);
+            newFth = Math.Max(newFth, req.Fth);
+        }
+
+        // SubRightHand is typically a two-handed weapon — apply the 2H rule:
+        //   effective STR = floor(base × 1.5), so minimum base = ceil(req × 2/3).
+        if (loadout.SubRightHand > 0 &&
+            WeaponRequirements.TryGetValue(loadout.SubRightHand, out var twoHReq))
+        {
+            int minStr2H = (int)Math.Ceiling(twoHReq.Str * 2.0 / 3.0);
+            newStr = Math.Max(newStr, minStr2H);
+            newDex = Math.Max(newDex, twoHReq.Dex);
+            newInt = Math.Max(newInt, twoHReq.Int);
+            newFth = Math.Max(newFth, twoHReq.Fth);
+        }
+
+        int totalBoost = (newStr - baseStr) + (newDex - baseDex)
+                       + (newInt - baseInt) + (newFth - baseFth);
+        if (totalBoost <= 0) return;
+
+        TrySetCell(row, "baseStr", (sbyte)Math.Clamp(newStr, 1, 99));
+        TrySetCell(row, "baseDex", (sbyte)Math.Clamp(newDex, 1, 99));
+        TrySetCell(row, "baseMag", (sbyte)Math.Clamp(newInt, 1, 99));
+        TrySetCell(row, "baseFai", (sbyte)Math.Clamp(newFth, 1, 99));
+        TrySetCell(row, "soulLv",  (short)Math.Clamp(soulLv + totalBoost, 1, 713));
+    }
+
+    private static int GetStatCell(PARAM.Row row, string name)
+    {
+        try { return Convert.ToInt32(row[name]?.Value ?? 0); }
+        catch { return 0; }
     }
 
     private static void SetSlotUnlessKeep(PARAM.Row row, string field, int value)

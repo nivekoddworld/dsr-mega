@@ -41,7 +41,7 @@ public class ItemRandomizer
         }
 
         List<StartingLoadout> startingLoadouts = new();
-        if (settings.RandomizeStartingLoadout || settings.FashionSouls)
+        if (settings.RandomizeStartingLoadout || settings.FashionSouls || settings.RandomizeStartingGift)
         {
             Emit("Randomizing starting loadout...");
             startingLoadouts = new StartingLoadoutRandomizer().RandomizePerClass(settings, rng);
@@ -52,11 +52,12 @@ public class ItemRandomizer
 
         return new ItemResult
         {
-            LotAssignments  = allAssignments,
-            ShopAssignments = shopItems,
-            ShopPrices      = shopPrices,
-            StartingLoadouts = startingLoadouts,
-            KeyItemPlacements = keyPlacements,
+            LotAssignments       = allAssignments,
+            ShopAssignments      = shopItems,
+            ShopPrices           = shopPrices,
+            StartingLoadouts     = startingLoadouts,
+            KeyItemPlacements    = keyPlacements,
+            AdjustStatsForWeapons = settings.AdjustStatsForWeapons,
         };
     }
 
