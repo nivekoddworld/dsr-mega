@@ -51,6 +51,13 @@ public class ItemRandomizer
         var keyPlacements = BuildKeyItemSpoiler(keyAssignments, ann, locationPool);
         Emit($"Item randomization complete. {allAssignments.Count} lots assigned.");
 
+        var giftLots = new Dictionary<int, (int, int, int)>();
+        if (settings.RandomizeStartingGift)
+        {
+            Emit("Randomizing starting gifts...");
+            giftLots = new GiftLotRandomizer().Randomize(gameData.ItemLotParam, itemPool, rng);
+        }
+
         return new ItemResult
         {
             LotAssignments        = allAssignments,
@@ -59,6 +66,7 @@ public class ItemRandomizer
             StartingLoadouts      = startingLoadouts,
             KeyItemPlacements     = keyPlacements,
             AdjustStatsForWeapons = settings.AdjustStatsForWeapons,
+            GiftLotAssignments    = giftLots,
         };
     }
 
