@@ -1,11 +1,24 @@
-using DS1MegaRando.Core.IO;
 using DS1MegaRando.Core.Settings;
 using DS1MegaRando.Data.Items;
 
 namespace DS1MegaRando.Core.Items;
 
+/// <summary>
+/// A single character's starting weapon loadout. The slot values map directly
+/// onto the CharaInitParam equip fields. <see cref="Empty"/> (-1) is the value
+/// DS1 uses for an unequipped slot.
+/// </summary>
+public readonly record struct StartingLoadout(int RightHand, int LeftHand, int SubRightHand)
+{
+    /// <summary>Sentinel for an empty equip slot (matches the CharaInitParam default).</summary>
+    public const int Empty = -1;
+}
+
 public class StartingLoadoutRandomizer
 {
+    /// <summary>Number of player-selectable classes in the character creator (CharaInitParam rows 3000-3009).</summary>
+    public const int PlayerClassCount = 10;
+
     private static readonly int[] OneHandedWeapons =
     {
         ItemIds.Longsword, ItemIds.Shortsword, ItemIds.BroadswordId, ItemIds.MailBreaker,
@@ -26,28 +39,50 @@ public class StartingLoadoutRandomizer
         ItemIds.GrassCrestShield, ItemIds.TowerKiteShield,
     };
 
-    public List<int> Randomize(ItemSettings settings, GameData gameData, Random rng)
+    /// <summary>
+    /// Rolls an independent starting loadout for every player class. Each class in
+    /// the character creator gets its own random gear instead of one shared roll
+    /// being copied onto all of them.
+    /// </summary>
+    public List<StartingLoadout> RandomizePerClass(ItemSettings settings, Random rng)
     {
-        return settings.StartingLoadoutMode switch
-        {
-            StartingLoadoutMode.ShieldAnd1H => new List<int>
-            {
-                OneHandedWeapons[rng.Next(OneHandedWeapons.Length)],
-                Shields[rng.Next(Shields.Length)],
-            },
-            StartingLoadoutMode.ShieldAnd1HAnd2H => new List<int>
-            {
-                OneHandedWeapons[rng.Next(OneHandedWeapons.Length)],
-                TwoHandedWeapons[rng.Next(TwoHandedWeapons.Length)],
-                Shields[rng.Next(Shields.Length)],
-            },
-            StartingLoadoutMode.CombinedPool => new List<int>
-            {
-                OneHandedWeapons.Concat(TwoHandedWeapons).ToArray()[
-                    rng.Next(OneHandedWeapons.Length + TwoHandedWeapons.Length)],
-                rng.Next(2) == 0 ? Shields[rng.Next(Shields.Length)] : 0,
-            },
-            _ => new List<int> { ItemIds.Longsword, ItemIds.WoodenShield },
-        };
+        var result = new List<StartingLoadout>(PlayerClassCount);
+        for (int i = 0; i < PlayerClassCount; i++)
+            result.Add(RollOne(settings.StartingLoadoutMode, rng));
+        return result;
     }
+
+    private static StartingLoadout RollOne(StartingLoadoutMode mode, Random rng)
+    {
+        switch (mode)
+        {
+            case StartingLoadoutMode.ShieldAnd1H:
+                return new StartingLoadout(
+                    RightHand:    Pick(OneHandedWeapons, rng),
+                    LeftHand:     Pick(Shields, rng),
+                    SubRightHand: StartingLoadout.Empty);
+
+            case StartingLoadoutMode.ShieldAnd1HAnd2H:
+                // The 2H weapon goes in the right off-hand slot so the player
+                // actually receives it (the old flat-list code dropped it entirely).
+                return new StartingLoadout(
+                    RightHand:    Pick(OneHandedWeapons, rng),
+                    LeftHand:     Pick(Shields, rng),
+                    SubRightHand: Pick(TwoHandedWeapons, rng));
+
+            case StartingLoadoutMode.CombinedPool:
+            {
+                // Weighted toward 1H simply because that pool is larger.
+                var combined = OneHandedWeapons.Concat(TwoHandedWeapons).ToArray();
+                int weapon = combined[rng.Next(combined.Length)];
+                int shield = rng.Next(2) == 0 ? Pick(Shields, rng) : StartingLoadout.Empty;
+                return new StartingLoadout(weapon, shield, StartingLoadout.Empty);
+            }
+
+            default:
+                return new StartingLoadout(ItemIds.Longsword, ItemIds.WoodenShield, StartingLoadout.Empty);
+        }
+    }
+
+    private static int Pick(int[] pool, Random rng) => pool[rng.Next(pool.Length)];
 }
