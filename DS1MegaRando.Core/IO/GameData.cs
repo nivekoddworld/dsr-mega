@@ -26,6 +26,14 @@ public class GameData
     /// <summary>MapId → original source path (used to write back in the same format).</summary>
     public Dictionary<string, string> MapSourcePaths { get; set; } = new();
 
+    /// <summary>
+    /// All enemy model IDs that appear in at least one vanilla MSB (e.g. "c2500").
+    /// Populated by GameFileReader.  Only models in this set are safe to reference
+    /// in modified MSBs — every model here is guaranteed to have a chrbnd.dcx file
+    /// in the game directory.
+    /// </summary>
+    public HashSet<string> KnownEnemyModels { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>The BND3 containing all game params — held open so we can repack it on write.</summary>
     public BND3? ParamBnd { get; set; }
 

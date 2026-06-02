@@ -4,6 +4,7 @@ using DS1MegaRando.Core.Enemies;
 using DS1MegaRando.Core.FogGate;
 using DS1MegaRando.Core.Items;
 using DS1MegaRando.Core.Settings;
+using DS1MegaRando.Data.Enemies;
 using SoulsFormats;
 
 namespace DS1MegaRando.Core.IO;
@@ -71,13 +72,20 @@ public class GameFileWriter
             var row = param.Rows.FirstOrDefault(r => r.ID == rowId);
             if (row == null) continue;
 
-            TrySetCell(row, "lotItemId01",       entry.ItemId);
-            TrySetCell(row, "lotItemCategory01", entry.Category);
-            // Zero out slots 2-8 so the lot is clean
+            TrySetCell(row, "lotItemId01",        entry.ItemId);
+            TrySetCell(row, "lotItemCategory01",  entry.Category);
+            // The game rolls a slot weighted by lotItemBasePointNN, then delivers
+            // lotItemNumNN copies of that slot's item. Without a non-zero weight AND
+            // count on slot 1 the lot delivers nothing — no pickup, no interact prompt.
+            TrySetCell(row, "lotItemBasePoint01", 100);
+            TrySetCell(row, "lotItemNum01",       (byte)1);
+            // Zero out slots 2-8 so the lot is clean and slot 1 is the guaranteed roll
             for (int i = 2; i <= 8; i++)
             {
                 TrySetCell(row, $"lotItemId{i:D2}", 0);
                 TrySetCell(row, $"lotItemCategory{i:D2}", 0);
+                TrySetCell(row, $"lotItemBasePoint{i:D2}", 0);
+                TrySetCell(row, $"lotItemNum{i:D2}", (byte)0);
             }
         }
     }
@@ -106,15 +114,24 @@ public class GameFileWriter
         if (param == null || param.AppliedParamdef == null) return;
         if (itemResult.StartingItems.Count == 0) return;
 
-        // Rows 1000-1009 are the 10 player-selectable starting classes (Knight, Wanderer, etc.)
+        int weapon = itemResult.StartingItems[0];
+        // Last item in the list is the shield (modes with a shield always put it last)
+        int shield = itemResult.StartingItems.Count >= 2
+            ? itemResult.StartingItems[itemResult.StartingItems.Count - 1]
+            : 0;
+
+        // Rows 3000-3009 are the 10 player-selectable starting classes shown in the
+        // character creator (3000=Warrior, 3001=Knight, … 3009=Deprived). Rows 1000-1009
+        // are NOT player classes. Writing equip here makes the creator preview the gear
+        // AND the player spawn with it. Apply the same randomized gear to every class.
         for (int classIdx = 0; classIdx < 10; classIdx++)
         {
-            var row = param.Rows.FirstOrDefault(r => r.ID == 1000 + classIdx);
+            var row = param.Rows.FirstOrDefault(r => r.ID == 3000 + classIdx);
             if (row == null) continue;
 
-            // Replace right-hand weapon with the randomized starting weapon (if provided)
-            if (classIdx < itemResult.StartingItems.Count)
-                TrySetCell(row, "equip_Wep_Right", itemResult.StartingItems[classIdx]);
+            TrySetCell(row, "equip_Wep_Right", weapon);
+            if (shield != 0)
+                TrySetCell(row, "equip_Wep_Left", shield);
         }
     }
 
@@ -132,7 +149,7 @@ public class GameFileWriter
         if (fogResult != null && ann != null)
         {
             string distEventDir = FogGateWriter.DefaultDistEventDir;
-            new FogGateWriter(distEventDir).Write(outDir, gameData, fogResult, ann);
+            new FogGateWriter(distEventDir).Write(outDir, gameData, fogResult, ann, fogSettings);
         }
 
         // Vanilla DS1 gives the player their starting Estus Flask via Oscar's
@@ -142,8 +159,14 @@ public class GameFileWriter
         if (fogResult != null && fogSettings?.GuaranteeStartingEstus == true)
             ApplyStartingEstus(gameData);
 
+        // Patch EMEVD intro sequences for all bosses that received new models.
+        // This replaces the old single-boss ApplyAsylumDemonIntroFix; the
+        // BossEmevdPatcher covers Asylum + every other boss with an intro event.
         if (enemyResult != null)
-            ApplyAsylumDemonIntroFix(outDir, enemyResult);
+            BossEmevdPatcher.PatchAll(
+                enemyResult.Placements.Values.SelectMany(x => x),
+                _settings.GameDirectory,
+                outDir);
 
         string msbOutDir = Path.Combine(outDir, "map", "MapStudio");
         Directory.CreateDirectory(msbOutDir);
@@ -197,7 +220,7 @@ public class GameFileWriter
         var treasure = new MSB1.Event.Treasure
         {
             Name             = "New Estus",
-            EventID          = 69,
+            EventID          = -1,   // let SoulsFormats assign; avoids vanilla ID collisions
             EntityID         = -1,
             TreasurePartName = "o0500_0050",
         };
@@ -216,98 +239,68 @@ public class GameFileWriter
         }
     }
 
-    // Ported from FogMod GameDataWriter.cs:1010-1013. The Asylum Demon's intro
-    // teleports the boss to a ceiling ledge and plays a c2800-specific drop
-    // animation; if the slot was randomized to another model the drop animation
-    // doesn't resolve, so the new boss is stranded on the ledge and never
-    // engages. Stripping the teleport + animation instructions makes any boss
-    // spawn at its post-intro MSB position on the floor instead.
-    private void ApplyAsylumDemonIntroFix(string outDir, EnemyResult enemyResult)
-    {
-        const string asylumMapId = "m18_01_00_00";
-        const int asylumDemonEntity = 1801800;
-        const string asylumDemonModel = "c2800";
-        const long dropEventId = 11810310;
-
-        if (!enemyResult.Placements.TryGetValue(asylumMapId, out var placements)) return;
-        var ad = placements.FirstOrDefault(p => p.EntityId == asylumDemonEntity);
-        if (ad == null) return;
-        if (string.Equals(ad.NewModelId, asylumDemonModel, StringComparison.OrdinalIgnoreCase)) return;
-
-        // Prefer the file already written to outDir by the fog gate writer if
-        // present, so this layers cleanly on top of fog rando's edits.
-        string outPath  = Path.Combine(outDir, "event", "m18_01_00_00.emevd.dcx");
-        string srcPath  = File.Exists(outPath)
-            ? outPath
-            : Path.Combine(_settings.GameDirectory, "event", "m18_01_00_00.emevd.dcx");
-        if (!File.Exists(srcPath)) return;
-
-        EMEVD evd;
-        try { evd = EMEVD.Read(srcPath); }
-        catch { return; }
-
-        var drop = evd.Events.FirstOrDefault(e => e.ID == dropEventId);
-        if (drop == null) return;
-
-        // 2003[18] = ForceAnimationPlayback (the c2800 drop anim).
-        // 2004[41] = the warp that hoists the boss onto the ceiling ledge.
-        drop.Instructions.RemoveAll(instr =>
-            (instr.Bank == 2003 && instr.ID == 18) ||
-            (instr.Bank == 2004 && instr.ID == 41));
-
-        Directory.CreateDirectory(Path.GetDirectoryName(outPath)!);
-        try { evd.Write(outPath); }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"ApplyAsylumDemonIntroFix: failed to write {outPath}: {ex.Message}");
-        }
-    }
-
     private static void ApplyEnemyChanges(MSB1 msb, string mapId, EnemyResult enemyResult)
     {
         if (!enemyResult.Placements.TryGetValue(mapId, out var placements)) return;
 
-        var placementByEntity = placements
-            .GroupBy(p => p.EntityId)
-            .ToDictionary(g => g.Key, g => g.First());
+        // Primary index: by part index (covers ALL enemies, including EntityID=0).
+        // Secondary: by entity ID for any placements that lack a valid part index.
+        var byPartIndex = new Dictionary<int, EnemyPlacement>();
+        var byEntityId  = new Dictionary<int, EnemyPlacement>();
+
+        foreach (var p in placements)
+        {
+            if (p.PartIndex >= 0)
+                byPartIndex[p.PartIndex] = p;
+            else if (p.EntityId > 0)
+                byEntityId.TryAdd(p.EntityId, p);
+        }
 
         // Collect model names already declared in this MSB
-        var knownModels = msb.Models.Enemies.Select(m => m.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var knownModels = msb.Models.Enemies
+            .Select(m => m.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var enemy in msb.Parts.Enemies)
+        var enemyList = msb.Parts.Enemies;
+        for (int i = 0; i < enemyList.Count; i++)
         {
-            if (!placementByEntity.TryGetValue(enemy.EntityID, out var placement)) continue;
+            var enemy = enemyList[i];
 
-            string newModel = placement.NewModelId;
+            // Resolve placement: prefer part-index match, fall back to entity-ID match.
+            if (!byPartIndex.TryGetValue(i, out var placement))
+            {
+                if (enemy.EntityID <= 0 || !byEntityId.TryGetValue(enemy.EntityID, out placement))
+                    continue;
+            }
+
+            string newModel     = placement.NewModelId;
+            bool   modelChanged = !string.Equals(enemy.ModelName, newModel,
+                                      StringComparison.OrdinalIgnoreCase);
 
             // Register the model in the MSB model list if not already present.
             // SibPath must follow FromSoft's editor convention or DSR won't stream
-            // the chrbnd into this map at load time — produces an instant crash
-            // when the area loads (including death-respawn and save-reload).
+            // the chrbnd into this map at load time — instant crash on area load.
             if (!knownModels.Contains(newModel))
             {
                 msb.Models.Enemies.Add(new MSB1.Model.Enemy
                 {
-                    Name = newModel,
+                    Name    = newModel,
                     SibPath = $@"N:\FRPG\data\Model\chr\{newModel}\sib\{newModel}.SIB",
                 });
                 knownModels.Add(newModel);
             }
 
-            bool modelChanged = !string.Equals(enemy.ModelName, newModel, StringComparison.OrdinalIgnoreCase);
-
             enemy.ModelName    = newModel;
             enemy.NPCParamID   = placement.NewNpcParam;
             enemy.ThinkParamID = placement.NewThinkParam;
 
-            // The original enemy's init/damage anim IDs reference animations
-            // that exist on the OLD model. When the model changes, those IDs
-            // won't resolve and the new model spawns in bind pose (T-pose)
-            // until a hit forces it into the AI's animation graph. -1 lets
-            // the new model fall back to its own defaults.
             if (modelChanged)
             {
-                enemy.InitAnimID   = -1;
+                // Use a validated idle anim from the reference data if available,
+                // otherwise -1 tells the game to use the model's own default.
+                // This prevents T-pose spawns when the original InitAnimID
+                // references an animation that only exists on the old model.
+                enemy.InitAnimID   = placement.NewInitAnimId;
                 enemy.DamageAnimID = -1;
             }
         }
@@ -318,6 +311,10 @@ public class GameFileWriter
     private static void RepackParamIntoBnd(BND3 bnd, string paramName, PARAM? param)
     {
         if (param == null) return;
+        // Only repack params that have a fully applied paramdef.
+        // Writing an unapplied PARAM can produce corrupt output that breaks the game.
+        if (param.AppliedParamdef == null) return;
+
         var entry = bnd.Files.FirstOrDefault(f =>
             Path.GetFileNameWithoutExtension(f.Name)
                 .Equals(paramName, StringComparison.OrdinalIgnoreCase));

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "S:\\DSR_Mega\\DS1MegaRando.Core\\DS1MegaRando.Core.csproj": {}
+    "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Core\\DS1MegaRando.Core.csproj": {}
   },
   "projects": {
-    "S:\\DSR_Mega\\DS1MegaRando.Core\\DS1MegaRando.Core.csproj": {
+    "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Core\\DS1MegaRando.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "S:\\DSR_Mega\\DS1MegaRando.Core\\DS1MegaRando.Core.csproj",
+        "projectUniqueName": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Core\\DS1MegaRando.Core.csproj",
         "projectName": "DS1MegaRando.Core",
-        "projectPath": "S:\\DSR_Mega\\DS1MegaRando.Core\\DS1MegaRando.Core.csproj",
+        "projectPath": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Core\\DS1MegaRando.Core.csproj",
         "packagesPath": "C:\\Users\\samgr\\.nuget\\packages\\",
-        "outputPath": "S:\\DSR_Mega\\DS1MegaRando.Core\\obj\\",
+        "outputPath": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Core\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\samgr\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -29,11 +29,11 @@
           "net8.0-windows7.0": {
             "targetAlias": "net8.0-windows",
             "projectReferences": {
-              "S:\\DSR_Mega\\DS1MegaRando.Data\\DS1MegaRando.Data.csproj": {
-                "projectPath": "S:\\DSR_Mega\\DS1MegaRando.Data\\DS1MegaRando.Data.csproj"
+              "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Data\\DS1MegaRando.Data.csproj": {
+                "projectPath": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Data\\DS1MegaRando.Data.csproj"
               },
-              "S:\\DSR_Mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj": {
-                "projectPath": "S:\\DSR_Mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj"
+              "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj": {
+                "projectPath": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj"
               }
             }
           }
@@ -97,14 +97,14 @@
         }
       }
     },
-    "S:\\DSR_Mega\\DS1MegaRando.Data\\DS1MegaRando.Data.csproj": {
+    "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Data\\DS1MegaRando.Data.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "S:\\DSR_Mega\\DS1MegaRando.Data\\DS1MegaRando.Data.csproj",
+        "projectUniqueName": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Data\\DS1MegaRando.Data.csproj",
         "projectName": "DS1MegaRando.Data",
-        "projectPath": "S:\\DSR_Mega\\DS1MegaRando.Data\\DS1MegaRando.Data.csproj",
+        "projectPath": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Data\\DS1MegaRando.Data.csproj",
         "packagesPath": "C:\\Users\\samgr\\.nuget\\packages\\",
-        "outputPath": "S:\\DSR_Mega\\DS1MegaRando.Data\\obj\\",
+        "outputPath": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Data\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\samgr\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -179,14 +179,14 @@
         }
       }
     },
-    "S:\\DSR_Mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj": {
+    "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "S:\\DSR_Mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj",
+        "projectUniqueName": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj",
         "projectName": "SoulsFormats",
-        "projectPath": "S:\\DSR_Mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj",
+        "projectPath": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj",
         "packagesPath": "C:\\Users\\samgr\\.nuget\\packages\\",
-        "outputPath": "S:\\DSR_Mega\\SoulsFormats\\SoulsFormats\\obj\\",
+        "outputPath": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\SoulsFormats\\SoulsFormats\\obj\\",
         "projectStyle": "PackageReference",
         "crossTargeting": true,
         "configFilePaths": [

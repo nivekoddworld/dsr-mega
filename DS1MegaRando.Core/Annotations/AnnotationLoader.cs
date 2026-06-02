@@ -21,7 +21,24 @@ public static class AnnotationLoader
         using var stream = dataAsm.GetManifestResourceStream(resourceName)
             ?? throw new FileNotFoundException($"Embedded resource not found: {resourceName}");
         using var reader = new StreamReader(stream);
-        return _deserializer.Deserialize<AnnotationData>(reader);
+
+        try
+        {
+            return _deserializer.Deserialize<AnnotationData>(reader);
+        }
+        catch (Exception ex)
+        {
+            // Flatten the exception chain into one message so the UI can display it
+            var msgs = new List<string> { ex.Message };
+            var inner = ex.InnerException;
+            while (inner != null)
+            {
+                msgs.Add(inner.Message);
+                inner = inner.InnerException;
+            }
+            throw new InvalidDataException(
+                $"Failed to load annotation '{resourceName}': {string.Join(" | ", msgs)}", ex);
+        }
     }
 
     public static AnnotationData LoadFromFile(string path)

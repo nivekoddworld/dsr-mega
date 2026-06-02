@@ -9,6 +9,7 @@ public enum DS1Area
     Depths,
     LowerUndeadBurg,
     DarkrootGarden,
+    DarkrootGardenOld,
     DarkrootBasin,
     DarkrootForest,
     Oolacile,

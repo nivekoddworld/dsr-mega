@@ -11,3 +11,16 @@ S:\DSR_Mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.so
 S:\DSR_Mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.dll
 S:\DSR_Mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.xml
 S:\DSR_Mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.pdb
+Z:\Bonejam\VideoGameShop\dsr-mega\SoulsFormats\SoulsFormats\bin\Release\netstandard2.1\SoulsFormats.deps.json
+Z:\Bonejam\VideoGameShop\dsr-mega\SoulsFormats\SoulsFormats\bin\Release\netstandard2.1\SoulsFormats.dll
+Z:\Bonejam\VideoGameShop\dsr-mega\SoulsFormats\SoulsFormats\bin\Release\netstandard2.1\SoulsFormats.pdb
+Z:\Bonejam\VideoGameShop\dsr-mega\SoulsFormats\SoulsFormats\bin\Release\netstandard2.1\SoulsFormats.xml
+Z:\Bonejam\VideoGameShop\dsr-mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.csproj.AssemblyReference.cache
+Z:\Bonejam\VideoGameShop\dsr-mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.GeneratedMSBuildEditorConfig.editorconfig
+Z:\Bonejam\VideoGameShop\dsr-mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.AssemblyInfoInputs.cache
+Z:\Bonejam\VideoGameShop\dsr-mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.AssemblyInfo.cs
+Z:\Bonejam\VideoGameShop\dsr-mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.csproj.CoreCompileInputs.cache
+Z:\Bonejam\VideoGameShop\dsr-mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.sourcelink.json
+Z:\Bonejam\VideoGameShop\dsr-mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.dll
+Z:\Bonejam\VideoGameShop\dsr-mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.xml
+Z:\Bonejam\VideoGameShop\dsr-mega\SoulsFormats\SoulsFormats\obj\Release\netstandard2.1\SoulsFormats.pdb

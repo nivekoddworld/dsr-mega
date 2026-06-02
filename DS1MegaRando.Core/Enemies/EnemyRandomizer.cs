@@ -20,33 +20,30 @@ public class EnemyRandomizer
         var pool = new EnemyPool();
         var (bosses, minibosses, regular) = pool.Collect(gameData, ann, settings);
 
+        Emit($"  Found: {bosses.Count} boss slots, {minibosses.Count} minibosses, {regular.Count} regular enemies");
+        Emit($"  Known game models: {gameData.KnownEnemyModels.Count}");
+
         var allPlacements = new List<EnemyPlacement>();
 
-        if (settings.RandomizeBosses && settings.EnemyPlacementMode != EnemyPlacementMode.BossOnly)
+        if (settings.RandomizeBosses)
         {
-            Emit($"Randomizing {bosses.Count} boss encounters...");
+            Emit($"Randomizing {bosses.Count} boss encounters ({settings.BossRandomizationMode})...");
             var bossRando = new BossRandomizer();
-            allPlacements.AddRange(bossRando.Randomize(settings, bosses, rng));
-        }
-        else if (settings.EnemyPlacementMode == EnemyPlacementMode.BossOnly)
-        {
-            Emit($"Boss-only mode: shuffling {bosses.Count} bosses...");
-            var bossRando = new BossRandomizer();
-            allPlacements.AddRange(bossRando.Randomize(settings, bosses, rng));
+            allPlacements.AddRange(bossRando.Randomize(settings, bosses, gameData.KnownEnemyModels, rng));
         }
 
         if (settings.RandomizeMinibosses)
         {
             Emit($"Randomizing {minibosses.Count} miniboss encounters...");
             var placer = new EnemyPlacer();
-            allPlacements.AddRange(placer.Place(settings, minibosses, rng));
+            allPlacements.AddRange(placer.Place(settings, minibosses, gameData.KnownEnemyModels, rng));
         }
 
         if (settings.EnemyPlacementMode != EnemyPlacementMode.BossOnly)
         {
             Emit($"Randomizing {regular.Count} regular enemies...");
             var placer = new EnemyPlacer();
-            allPlacements.AddRange(placer.Place(settings, regular, rng));
+            allPlacements.AddRange(placer.Place(settings, regular, gameData.KnownEnemyModels, rng));
         }
 
         Dictionary<int, (float HP, float Damage)> statMods = new();
@@ -57,26 +54,27 @@ public class EnemyRandomizer
             statMods = scaler.Scale(allPlacements, fogResult?.AreaRatios, settings, gameData);
         }
 
-        // Group placements by map
-        var byMap = new Dictionary<string, List<EnemyPlacement>>();
-        var allEntities = bosses.Concat(minibosses).Concat(regular)
+        // Build entity → area lookup for the spoiler log (EntityID=0 enemies show "?").
+        var entityArea = bosses.Concat(minibosses).Concat(regular)
             .Where(e => e.EntityId > 0)
             .GroupBy(e => e.EntityId)
-            .ToDictionary(g => g.Key, g => g.First());
+            .ToDictionary(g => g.Key, g => g.First().Area);
+
+        // Group placements by map for the writer.
+        // Use placement.MapId directly — this works for ALL enemies including
+        // those with EntityID=0 that were previously excluded.
+        var byMap = new Dictionary<string, List<EnemyPlacement>>();
         foreach (var p in allPlacements)
         {
-            if (!allEntities.TryGetValue(p.EntityId, out var entity)) continue;
-            if (!byMap.TryGetValue(entity.MapId, out var list))
-                byMap[entity.MapId] = list = new List<EnemyPlacement>();
+            if (string.IsNullOrEmpty(p.MapId)) continue;
+            if (!byMap.TryGetValue(p.MapId, out var list))
+                byMap[p.MapId] = list = new List<EnemyPlacement>();
             list.Add(p);
         }
 
         var spoiler = allPlacements
-            .Select(p =>
-            {
-                allEntities.TryGetValue(p.EntityId, out var e);
-                return (p.OldModelId, p.NewModelId, e?.Area ?? "?");
-            })
+            .Select(p => (p.OldModelId, p.NewModelId,
+                          entityArea.TryGetValue(p.EntityId, out var a) ? a : "?"))
             .Where(x => x.OldModelId != x.NewModelId)
             .ToList();
 
@@ -84,9 +82,9 @@ public class EnemyRandomizer
 
         return new EnemyResult
         {
-            Placements       = byMap,
+            Placements        = byMap,
             StatModifications = statMods,
-            SpoilerLog       = spoiler,
+            SpoilerLog        = spoiler,
         };
     }
 

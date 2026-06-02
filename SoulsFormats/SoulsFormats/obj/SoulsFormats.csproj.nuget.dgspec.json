@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "S:\\DSR_Mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj": {}
+    "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj": {}
   },
   "projects": {
-    "S:\\DSR_Mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj": {
+    "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "S:\\DSR_Mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj",
+        "projectUniqueName": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj",
         "projectName": "SoulsFormats",
-        "projectPath": "S:\\DSR_Mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj",
+        "projectPath": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj",
         "packagesPath": "C:\\Users\\samgr\\.nuget\\packages\\",
-        "outputPath": "S:\\DSR_Mega\\SoulsFormats\\SoulsFormats\\obj\\",
+        "outputPath": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\SoulsFormats\\SoulsFormats\\obj\\",
         "projectStyle": "PackageReference",
         "crossTargeting": true,
         "configFilePaths": [

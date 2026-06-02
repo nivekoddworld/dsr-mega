@@ -95,6 +95,13 @@ public class GameFileReader
                 var msb = MSB1.Read(msbPath);
                 data.Maps[mapId] = msb;
                 data.MapSourcePaths[mapId] = msbPath;
+
+                // Collect every enemy model referenced in this map.
+                // Any model name present in a vanilla MSB is guaranteed to have a
+                // matching chrbnd.dcx on disk — safe to use as a replacement target.
+                foreach (var part in msb.Parts.Enemies)
+                    if (!string.IsNullOrEmpty(part.ModelName))
+                        data.KnownEnemyModels.Add(part.ModelName);
             }
             catch (Exception ex)
             {

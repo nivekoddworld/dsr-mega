@@ -91,7 +91,16 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            ProgressOverlay.SetComplete(success: false, ex.Message);
+            // Build a full message including inner exceptions so YAML parse errors
+            // show their line/column context rather than just the outer wrapper.
+            var sb = new System.Text.StringBuilder(ex.Message);
+            var inner = ex.InnerException;
+            while (inner != null)
+            {
+                sb.Append("\n  → ").Append(inner.Message);
+                inner = inner.InnerException;
+            }
+            ProgressOverlay.SetComplete(success: false, sb.ToString());
             StatusLabel.Text = "Error!";
         }
     }

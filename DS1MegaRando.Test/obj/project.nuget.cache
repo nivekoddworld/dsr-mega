@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "vq35DuQpovA=",
+  "dgSpecHash": "4eYo7M8yp9Y=",
   "success": true,
-  "projectFilePath": "S:\\DSR_Mega\\DS1MegaRando.Test\\DS1MegaRando.Test.csproj",
+  "projectFilePath": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\DS1MegaRando.Test\\DS1MegaRando.Test.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\samgr\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
     "C:\\Users\\samgr\\.nuget\\packages\\system.text.encoding.codepages\\8.0.0\\system.text.encoding.codepages.8.0.0.nupkg.sha512",

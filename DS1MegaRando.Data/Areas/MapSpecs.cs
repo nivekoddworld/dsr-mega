@@ -10,6 +10,7 @@ public static class MapSpecs
         new MapSpec("m10_01_00_00", "parish",       DS1Area.UndeadParish),
         new MapSpec("m10_02_00_00", "firelink",     DS1Area.Firelink),
         new MapSpec("m11_00_00_00", "paintedworld", DS1Area.PaintedWorld),
+        new MapSpec("m12_00_00_00", "darkroot0",    DS1Area.DarkrootGardenOld),
         new MapSpec("m12_00_00_01", "darkroot",     DS1Area.DarkrootGarden),
         new MapSpec("m12_01_00_00", "dlc",          DS1Area.Oolacile),
         new MapSpec("m13_00_00_00", "catacombs",    DS1Area.Catacombs),

@@ -2,6 +2,7 @@ using System.Numerics;
 using DS1MegaRando.Core.Annotations;
 using DS1MegaRando.Core.Graph;
 using DS1MegaRando.Core.IO;
+using DS1MegaRando.Core.Settings;
 using DS1MegaRando.Data.Areas;
 using SoulsFormats;
 
@@ -37,7 +38,8 @@ public class FogGateWriter
         string outDir,
         GameData gameData,
         FogGateResult fogResult,
-        AnnotationData ann)
+        AnnotationData ann,
+        FogGateSettings? fogSettings = null)
     {
         var graph = fogResult.ConnectedGraph;
 
@@ -239,7 +241,16 @@ public class FogGateWriter
             }
         }
 
-        // ── Phase 3: Write EMEVD files ──────────────────────────────────────
+        // ── Phase 3: Starting-area warp ─────────────────────────────────────
+        // When RandomizeStartingArea is on, inject FogMod event 8950 into common.emevd
+        // so the game warps the player out of the Asylum and into the first reachable
+        // connected area immediately on new-game start.
+
+        if (fogSettings?.RandomizeStartingArea == true)
+            TryAddStartAreaWarp(graph, warpPoints, gameData, areaToMapId, playerCounters,
+                warpEvents, ref mk);
+
+        // ── Phase 4: Write EMEVD files ──────────────────────────────────────
 
         WriteEmevdFiles(outDir, warpEvents, slot);
     }
@@ -328,6 +339,77 @@ public class FogGateWriter
             {
                 System.Diagnostics.Debug.WriteLine($"FogGateWriter: failed to write {outPath}: {ex.Message}");
             }
+        }
+    }
+
+    // ── Start-area warp ─────────────────────────────────────────────────────
+
+    // Injects FogMod event 8950 into common.emevd to warp the player from the
+    // Asylum to the first fog-gate-connected area at new-game start.
+    // Event 8950 in FogMod's dist EMEVD takes:
+    //   InitializeEvent(0, 8950, destArea, destBlock, asylumSoftWarp, destSpawn)
+    // where asylumSoftWarp is a fallback player spawn in the Asylum and destSpawn
+    // is the player spawn entity in the destination map (created in Phase 1).
+    private static void TryAddStartAreaWarp(
+        WorldGraph graph,
+        Dictionary<(string, string), WarpPoint> warpPoints,
+        GameData gameData,
+        Dictionary<string, string> areaToMapId,
+        Dictionary<string, int> playerCounters,
+        List<List<object>> warpEvents,
+        ref int mk)
+    {
+        if (!graph.Nodes.TryGetValue("asylum", out var asylumNode)) return;
+
+        foreach (var exit in asylumNode.To)
+        {
+            if (exit.Link == null || exit.Name == null) continue;
+            var entrance = exit.Link;
+            if (entrance.Name == null || entrance.To == null) continue;
+
+            if (!graph.EntranceIds.TryGetValue(entrance.Name, out var entAnn)) continue;
+            if (!warpPoints.TryGetValue((entAnn.FullName, entrance.To), out var destWarp)) continue;
+
+            if (!areaToMapId.TryGetValue(destWarp.Map, out string? destMapId)) continue;
+            (byte da, byte db) = ParseMapId(destMapId);
+
+            // Fallback spawn in asylum (used if event 8950 needs a home-area anchor).
+            // We copy the position from the first vanilla player spawn in the asylum MSB
+            // so we're guaranteed to land on solid ground. If no vanilla spawn exists
+            // we fall back to the known-safe coordinates at the asylum cell entrance.
+            int softWarpId = mk++;
+            if (gameData.Maps.TryGetValue("m18_01_00_00", out var asylumMsb))
+            {
+                int pIdx = playerCounters.GetValueOrDefault("asylum", 50);
+                playerCounters["asylum"] = pIdx + 1;
+
+                // Use vanilla spawn position rather than hardcoding coordinates.
+                Vector3 safePos = asylumMsb.Parts.Players.Count > 0
+                    ? asylumMsb.Parts.Players[0].Position
+                    : new Vector3(-0.44f, 200.6f, 94.7f); // cell entrance fallback
+
+                asylumMsb.Parts.Players.Add(new MSB1.Part.Player
+                {
+                    Name      = $"c0000_{pIdx:d4}",
+                    ModelName = "c0000",
+                    EntityID  = softWarpId,
+                    Position  = safePos,
+                    Rotation  = Vector3.Zero,
+                    Scale     = Vector3.One,
+                });
+            }
+
+            // Slot 0: there is only ever one start-area warp event.
+            warpEvents.Add(new List<object>
+            {
+                0,               // slot 0 — unique among 8950 instances
+                (uint)8950,
+                da,              // destination map area byte
+                db,              // destination map block byte
+                softWarpId,      // fallback player spawn entity in asylum
+                destWarp.Player, // player spawn entity in the destination map
+            });
+            return; // one warp is enough
         }
     }
 
