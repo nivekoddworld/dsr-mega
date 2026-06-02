@@ -125,32 +125,36 @@ public class GameFileWriter
         var loadouts = itemResult.StartingLoadouts;
         if (loadouts.Count == 0) return;
 
-        // Rows 3000-3009 are the 10 player-selectable starting classes shown in the
-        // character creator (3000=Warrior, 3001=Knight, … 3009=Deprived). Writing the
-        // equip slot here both previews the gear in the creator AND grants+equips it on
-        // spawn — vanilla classes receive their weapon purely from equip_Wep_Right, with
-        // no matching inventory item slot, so this is all the player needs to "get" it.
-        //
-        // Each class gets its OWN rolled loadout (loadouts[i]) instead of one shared roll
-        // being copied onto all ten rows.
+        // DS1 keeps TWO linked CharaInitParam rows per starting class:
+        //   3000+i — the character-creator PREVIEW row (drives the gear shown in the menu).
+        //   2000+i — the row the new character ACTUALLY spawns with in the Asylum cell.
+        // (3000=Warrior … 3009=Deprived; 2000=Warrior … 2009=Deprived.)
+        // Vanilla 2000-2009 give only the Straight Sword Hilt, so writing 3000-3009 alone
+        // makes the creator show the random gear while the player still spawns with the
+        // vanilla hilt. Write each class's rolled loadout to BOTH rows so the preview and
+        // the actual spawn match.
         for (int classIdx = 0; classIdx < loadouts.Count; classIdx++)
         {
-            var row = param.Rows.FirstOrDefault(r => r.ID == 3000 + classIdx);
-            if (row == null) continue;
-
-            var loadout = loadouts[classIdx];
-
-            // Right hand always holds a real weapon. Left hand holds the shield, or
-            // StartingLoadout.Empty (-1) for modes that can roll "no shield" — -1 is the
-            // CharaInitParam value for an empty slot.
-            TrySetCell(row, "equip_Wep_Right", loadout.RightHand);
-            TrySetCell(row, "equip_Wep_Left",  loadout.LeftHand);
-
-            // Only the 2H mode fills the right off-hand slot. Leave it untouched
-            // otherwise so caster classes keep their starting catalyst/flame there.
-            if (loadout.SubRightHand != StartingLoadout.Empty)
-                TrySetCell(row, "equip_Subwep_Right", loadout.SubRightHand);
+            ApplyLoadoutToClassRow(param, 3000 + classIdx, loadouts[classIdx]);
+            ApplyLoadoutToClassRow(param, 2000 + classIdx, loadouts[classIdx]);
         }
+    }
+
+    private static void ApplyLoadoutToClassRow(PARAM param, int rowId, StartingLoadout loadout)
+    {
+        var row = param.Rows.FirstOrDefault(r => r.ID == rowId);
+        if (row == null) return;
+
+        // Right hand always holds a real weapon. Left hand holds the shield, or
+        // StartingLoadout.Empty (-1) for modes that can roll "no shield" — -1 is the
+        // CharaInitParam value for an empty slot.
+        TrySetCell(row, "equip_Wep_Right", loadout.RightHand);
+        TrySetCell(row, "equip_Wep_Left",  loadout.LeftHand);
+
+        // Only the 2H mode fills the right off-hand slot. Leave it untouched
+        // otherwise so caster classes keep their starting catalyst/flame there.
+        if (loadout.SubRightHand != StartingLoadout.Empty)
+            TrySetCell(row, "equip_Subwep_Right", loadout.SubRightHand);
     }
 
     // ── Maps ───────────────────────────────────────────────────────────────
