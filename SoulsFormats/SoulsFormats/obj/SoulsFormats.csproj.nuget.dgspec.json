@@ -1,31 +1,28 @@
 {
   "format": 1,
   "restore": {
-    "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj": {}
+    "/home/user/dsr-mega/SoulsFormats/SoulsFormats/SoulsFormats.csproj": {}
   },
   "projects": {
-    "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj": {
+    "/home/user/dsr-mega/SoulsFormats/SoulsFormats/SoulsFormats.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj",
+        "projectUniqueName": "/home/user/dsr-mega/SoulsFormats/SoulsFormats/SoulsFormats.csproj",
         "projectName": "SoulsFormats",
-        "projectPath": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\SoulsFormats\\SoulsFormats\\SoulsFormats.csproj",
-        "packagesPath": "C:\\Users\\samgr\\.nuget\\packages\\",
-        "outputPath": "Z:\\Bonejam\\VideoGameShop\\dsr-mega\\SoulsFormats\\SoulsFormats\\obj\\",
+        "projectPath": "/home/user/dsr-mega/SoulsFormats/SoulsFormats/SoulsFormats.csproj",
+        "packagesPath": "/root/.nuget/packages/",
+        "outputPath": "/home/user/dsr-mega/SoulsFormats/SoulsFormats/obj/",
         "projectStyle": "PackageReference",
         "crossTargeting": true,
         "configFilePaths": [
-          "C:\\Users\\samgr\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/root/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net462",
           "netstandard2.1"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "https://api.nuget.org/v3/index.json": {},
-          "https://git.sam-green.dev/api/packages/WNP78/nuget/index.json": {}
+          "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net462": {
@@ -46,19 +43,24 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "10.0.100"
+        }
       },
       "frameworks": {
         "net462": {
           "targetAlias": "net462",
           "dependencies": {
+            "Microsoft.NETFramework.ReferenceAssemblies": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[1.0.3, )",
+              "autoReferenced": true
+            },
             "ZstdSharp.Port": {
               "target": "Package",
               "version": "[0.8.1, )"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.104\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.421/RuntimeIdentifierGraph.json"
         },
         "netstandard2.1": {
           "targetAlias": "netstandard2.1",
@@ -88,7 +90,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.104\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.421/RuntimeIdentifierGraph.json"
         }
       }
     }

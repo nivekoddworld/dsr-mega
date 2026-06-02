@@ -21,22 +21,30 @@ public class StartingLoadoutRandomizer
 
     private static readonly int[] OneHandedWeapons =
     {
-        ItemIds.Longsword, ItemIds.Shortsword, ItemIds.BroadswordId, ItemIds.MailBreaker,
-        ItemIds.Dagger, ItemIds.HandAxe, ItemIds.BattleAxe, ItemIds.Club, ItemIds.Mace,
-        ItemIds.Reinforced_Club, ItemIds.Spear, ItemIds.Estoc, ItemIds.Falchion,
-        ItemIds.Scimitar, ItemIds.Uchigatana, ItemIds.Whip, ItemIds.ClawWeapon,
+        ItemIds.Dagger, ItemIds.BanditsKnife, ItemIds.Shortsword, ItemIds.Longsword,
+        ItemIds.Broadsword, ItemIds.BalderSideSword, ItemIds.Scimitar, ItemIds.Falchion,
+        ItemIds.Shotel, ItemIds.Uchigatana, ItemIds.Iaito, ItemIds.MailBreaker,
+        ItemIds.Rapier, ItemIds.Estoc, ItemIds.HandAxe, ItemIds.BattleAxe, ItemIds.Club,
+        ItemIds.Mace, ItemIds.MorningStar, ItemIds.ReinforcedClub, ItemIds.Caestus,
+        ItemIds.Claw, ItemIds.Spear, ItemIds.WingedSpear, ItemIds.Whip,
     };
 
     private static readonly int[] TwoHandedWeapons =
     {
-        ItemIds.BattleAxe, ItemIds.ButcherKnife, ItemIds.Club, ItemIds.Mace, ItemIds.Spear,
+        ItemIds.BastardSword, ItemIds.Claymore, ItemIds.ManSerpentGreatsword,
+        ItemIds.Flamberge, ItemIds.Zweihander, ItemIds.Greatsword, ItemIds.Murakumo,
+        ItemIds.Greataxe, ItemIds.GreatClub, ItemIds.LargeClub, ItemIds.Pike,
+        ItemIds.Halberd, ItemIds.Lucerne, ItemIds.Scythe, ItemIds.GreatScythe,
     };
 
     private static readonly int[] Shields =
     {
-        ItemIds.WoodenShield, ItemIds.LargeLeatherShield, ItemIds.SmallLeatherShield,
-        ItemIds.RoundShield, ItemIds.KiteSheild, ItemIds.HeaterShield, ItemIds.BucklerShield,
-        ItemIds.GrassCrestShield, ItemIds.TowerKiteShield,
+        ItemIds.EastWestShield, ItemIds.WoodenShield, ItemIds.LargeLeatherShield,
+        ItemIds.SmallLeatherShield, ItemIds.TargetShield, ItemIds.BucklerShield,
+        ItemIds.CrackedRoundShield, ItemIds.LeatherShield, ItemIds.PlankShield,
+        ItemIds.HeaterShield, ItemIds.KnightShield, ItemIds.TowerKiteShield,
+        ItemIds.GrassCrestShield, ItemIds.HollowSoldierShield, ItemIds.SpiderShield,
+        ItemIds.SpikedShield, ItemIds.EagleShield, ItemIds.TowerShield,
     };
 
     /// <summary>
