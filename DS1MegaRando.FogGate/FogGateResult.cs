@@ -1,6 +1,6 @@
-using DS1MegaRando.Core.Graph;
+using DS1MegaRando.Graph;
 
-namespace DS1MegaRando.Core.FogGate;
+namespace DS1MegaRando.FogGate;
 
 public class FogGateResult
 {

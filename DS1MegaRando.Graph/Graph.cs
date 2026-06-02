@@ -1,7 +1,7 @@
-using DS1MegaRando.Core.Annotations;
-using DS1MegaRando.Core.Settings;
+using DS1MegaRando.Annotations;
+using DS1MegaRando.Settings;
 
-namespace DS1MegaRando.Core.Graph;
+namespace DS1MegaRando.Graph;
 
 /// <summary>
 /// The game world as a directed graph of areas connected by fog gate edges.

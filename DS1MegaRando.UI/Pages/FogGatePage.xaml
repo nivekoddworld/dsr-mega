@@ -1,7 +1,7 @@
 <UserControl x:Class="DS1MegaRando.UI.Pages.FogGatePage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:settings="clr-namespace:DS1MegaRando.Core.Settings;assembly=DS1MegaRando.Core"
+             xmlns:settings="clr-namespace:DS1MegaRando.Settings;assembly=DS1MegaRando.Settings"
              Background="{StaticResource DS1Bg}">
     <StackPanel Margin="0,0,0,24">
 

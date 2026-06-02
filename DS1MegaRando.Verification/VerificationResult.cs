@@ -1,4 +1,4 @@
-namespace DS1MegaRando.Core.Verification;
+namespace DS1MegaRando.Verification;
 
 public class VerificationResult
 {

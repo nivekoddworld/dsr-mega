@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using DS1MegaRando.Core.Settings;
+using DS1MegaRando.Settings;
 
 namespace DS1MegaRando.UI.ViewModels;
 

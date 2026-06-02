@@ -1,10 +1,10 @@
-using DS1MegaRando.Core.Annotations;
-using DS1MegaRando.Core.FogGate;
-using DS1MegaRando.Core.Graph;
-using DS1MegaRando.Core.IO;
-using DS1MegaRando.Core.Settings;
+using DS1MegaRando.Annotations;
+using DS1MegaRando.FogGate;
+using DS1MegaRando.Graph;
+using DS1MegaRando.IO;
+using DS1MegaRando.Settings;
 
-namespace DS1MegaRando.Core.Items;
+namespace DS1MegaRando.Items;
 
 public class ItemRandomizer
 {

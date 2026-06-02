@@ -1,4 +1,4 @@
-namespace DS1MegaRando.Core.Annotations;
+namespace DS1MegaRando.Annotations;
 
 /// <summary>
 /// Logic expression tree for area/item access conditions.

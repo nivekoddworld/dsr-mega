@@ -1,6 +1,6 @@
 using YamlDotNet.Serialization;
 
-namespace DS1MegaRando.Core.Annotations;
+namespace DS1MegaRando.Annotations;
 
 // ── Top-level model ────────────────────────────────────────────────────────
 

@@ -1,6 +1,6 @@
-using DS1MegaRando.Core.Annotations;
+using DS1MegaRando.Annotations;
 
-namespace DS1MegaRando.Core.Graph;
+namespace DS1MegaRando.Graph;
 
 /// <summary>
 /// BFS-based area reachability checker.

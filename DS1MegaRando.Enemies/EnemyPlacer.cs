@@ -1,7 +1,7 @@
-using DS1MegaRando.Core.Settings;
+using DS1MegaRando.Settings;
 using DS1MegaRando.Data.Enemies;
 
-namespace DS1MegaRando.Core.Enemies;
+namespace DS1MegaRando.Enemies;
 
 /// <summary>
 /// Handles placement for regular and miniboss enemies (non-boss slots).

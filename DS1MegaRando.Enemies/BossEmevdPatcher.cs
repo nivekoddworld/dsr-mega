@@ -1,7 +1,7 @@
 using DS1MegaRando.Data.Enemies;
 using SoulsFormats;
 
-namespace DS1MegaRando.Core.Enemies;
+namespace DS1MegaRando.Enemies;
 
 /// <summary>
 /// Patches EMEVD event scripts for boss slots that received a new model.

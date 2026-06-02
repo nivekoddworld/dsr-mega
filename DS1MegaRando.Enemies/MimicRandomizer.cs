@@ -1,7 +1,7 @@
-using DS1MegaRando.Core.IO;
+using DS1MegaRando.IO;
 using SoulsFormats;
 
-namespace DS1MegaRando.Core.Enemies;
+namespace DS1MegaRando.Enemies;
 
 /// <summary>
 /// Swaps mimic positions with normal chest positions within each map.

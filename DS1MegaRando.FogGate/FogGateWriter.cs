@@ -1,12 +1,12 @@
 using System.Numerics;
-using DS1MegaRando.Core.Annotations;
-using DS1MegaRando.Core.Graph;
-using DS1MegaRando.Core.IO;
-using DS1MegaRando.Core.Settings;
+using DS1MegaRando.Annotations;
+using DS1MegaRando.Graph;
+using DS1MegaRando.IO;
+using DS1MegaRando.Settings;
 using DS1MegaRando.Data.Areas;
 using SoulsFormats;
 
-namespace DS1MegaRando.Core.FogGate;
+namespace DS1MegaRando.FogGate;
 
 /// <summary>
 /// Writes fog gate randomization results to DS1R game files.
@@ -182,7 +182,6 @@ public class FogGateWriter
 
         var seen = new HashSet<string>();
         var vanillaSeen = new HashSet<string>();
-        int traverseFlag = 6920; // counter for world-fog-gate pair flags
 
         foreach (var node in graph.Nodes.Values)
         {

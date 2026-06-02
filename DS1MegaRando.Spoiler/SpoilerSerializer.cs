@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace DS1MegaRando.Core.Spoiler;
+namespace DS1MegaRando.Spoiler;
 
 public static class SpoilerSerializer
 {

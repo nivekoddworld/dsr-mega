@@ -1,9 +1,9 @@
-using DS1MegaRando.Core.Enemies;
-using DS1MegaRando.Core.FogGate;
-using DS1MegaRando.Core.Items;
-using DS1MegaRando.Core.Settings;
+using DS1MegaRando.Enemies;
+using DS1MegaRando.FogGate;
+using DS1MegaRando.Items;
+using DS1MegaRando.Settings;
 
-namespace DS1MegaRando.Core.Spoiler;
+namespace DS1MegaRando.Spoiler;
 
 public class SpoilerLog
 {

@@ -1,9 +1,9 @@
-using DS1MegaRando.Core.Annotations;
-using DS1MegaRando.Core.FogGate;
-using DS1MegaRando.Core.Settings;
+using DS1MegaRando.Annotations;
+using DS1MegaRando.FogGate;
+using DS1MegaRando.Settings;
 using DS1MegaRando.Data.Items;
 
-namespace DS1MegaRando.Core.Items;
+namespace DS1MegaRando.Items;
 
 public class ItemLocation
 {

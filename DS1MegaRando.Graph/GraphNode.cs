@@ -1,4 +1,4 @@
-namespace DS1MegaRando.Core.Graph;
+namespace DS1MegaRando.Graph;
 
 public class GraphNode
 {

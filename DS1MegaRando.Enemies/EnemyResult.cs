@@ -1,4 +1,4 @@
-namespace DS1MegaRando.Core.Enemies;
+namespace DS1MegaRando.Enemies;
 
 public class EnemyResult
 {

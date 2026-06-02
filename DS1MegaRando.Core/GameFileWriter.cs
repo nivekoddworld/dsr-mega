@@ -1,13 +1,13 @@
 using System.Numerics;
-using DS1MegaRando.Core.Annotations;
-using DS1MegaRando.Core.Enemies;
-using DS1MegaRando.Core.FogGate;
-using DS1MegaRando.Core.Items;
-using DS1MegaRando.Core.Settings;
+using DS1MegaRando.Annotations;
+using DS1MegaRando.Enemies;
+using DS1MegaRando.FogGate;
+using DS1MegaRando.Items;
+using DS1MegaRando.Settings;
 using DS1MegaRando.Data.Enemies;
 using SoulsFormats;
 
-namespace DS1MegaRando.Core.IO;
+namespace DS1MegaRando.IO;
 
 /// <summary>
 /// Writes randomization results back to DSR game files using SoulsFormats.

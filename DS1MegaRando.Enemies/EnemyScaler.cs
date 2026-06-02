@@ -1,7 +1,7 @@
-using DS1MegaRando.Core.IO;
-using DS1MegaRando.Core.Settings;
+using DS1MegaRando.IO;
+using DS1MegaRando.Settings;
 
-namespace DS1MegaRando.Core.Enemies;
+namespace DS1MegaRando.Enemies;
 
 public class EnemyScaler
 {

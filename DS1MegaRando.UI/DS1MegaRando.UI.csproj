@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DS1MegaRando.Core\DS1MegaRando.Core.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Settings\DS1MegaRando.Settings.csproj" />
     <ProjectReference Include="..\DS1MegaRando.Data\DS1MegaRando.Data.csproj" />
   </ItemGroup>
 

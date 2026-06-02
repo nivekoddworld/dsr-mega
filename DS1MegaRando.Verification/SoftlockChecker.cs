@@ -1,10 +1,10 @@
-using DS1MegaRando.Core.Annotations;
-using DS1MegaRando.Core.FogGate;
-using DS1MegaRando.Core.Graph;
-using DS1MegaRando.Core.Items;
-using DS1MegaRando.Core.Settings;
+using DS1MegaRando.Annotations;
+using DS1MegaRando.FogGate;
+using DS1MegaRando.Graph;
+using DS1MegaRando.Items;
+using DS1MegaRando.Settings;
 
-namespace DS1MegaRando.Core.Verification;
+namespace DS1MegaRando.Verification;
 
 public class SoftlockChecker
 {
@@ -53,15 +53,43 @@ public class SoftlockChecker
 
     private static Dictionary<string, List<string>> BuildItemAreas(AnnotationData ann, ItemResult? itemResult)
     {
-        // Default to vanilla locations; item randomizer overrides when active
+        // Default to vanilla locations when item randomizer is not active
         var itemAreas = ann.KeyItems.ToDictionary(
             ki => ki.Name,
             ki => ki.Area != null ? new List<string> { ki.Area } : new List<string>());
 
         if (itemResult == null) return itemAreas;
 
-        // TODO: override with randomized placements from itemResult.LotAssignments
+        // Build reverse map: itemId → key item name
+        var itemIdToName = new Dictionary<int, string>();
+        foreach (var ki in ann.KeyItems)
+        {
+            if (ki.ID == null) continue;
+            int id = ParseKeyItemId(ki.ID);
+            if (id != 0) itemIdToName[id] = ki.Name;
+        }
+
+        // Replace vanilla areas with where the randomizer actually placed each key item
+        foreach (var ki in ann.KeyItems)
+            itemAreas[ki.Name] = new List<string>();
+
+        foreach (var (lotId, assignment) in itemResult.LotAssignments)
+        {
+            if (!ann.LotLocations.TryGetValue(lotId, out var area)) continue;
+            if (!itemIdToName.TryGetValue(assignment.ItemId, out var keyName)) continue;
+            if (!itemAreas.ContainsKey(keyName)) continue;
+            if (!itemAreas[keyName].Contains(area))
+                itemAreas[keyName].Add(area);
+        }
+
         return itemAreas;
+    }
+
+    private static int ParseKeyItemId(string id)
+    {
+        // Format: "category:itemId" e.g. "3:2510" or "2:138"
+        var parts = id.Split(':');
+        return parts.Length == 2 && int.TryParse(parts[1], out int v) ? v : 0;
     }
 
     private static bool VerifyDukesPrisonEscape(GraphChecker.CheckResult check)

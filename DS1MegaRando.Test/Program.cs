@@ -1,9 +1,9 @@
 using DS1MegaRando.Core;
-using DS1MegaRando.Core.Annotations;
-using DS1MegaRando.Core.Graph;
-using DS1MegaRando.Core.IO;
-using DS1MegaRando.Core.Settings;
-using DS1MegaRando.Core.Verification;
+using DS1MegaRando.Annotations;
+using DS1MegaRando.Graph;
+using DS1MegaRando.IO;
+using DS1MegaRando.Settings;
+using DS1MegaRando.Verification;
 
 const string GAME_DIR   = @"D:\SteamLibrary\steamapps\common\DARK SOULS REMASTERED";
 const int    FOG_SEEDS  = 500;

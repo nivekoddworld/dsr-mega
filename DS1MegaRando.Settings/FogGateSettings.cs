@@ -1,4 +1,4 @@
-namespace DS1MegaRando.Core.Settings;
+namespace DS1MegaRando.Settings;
 
 public enum LogicMode { Normal, Glitched, NoLogic }
 public enum EnemyScalingMode { None, ByDistance, Proportional }

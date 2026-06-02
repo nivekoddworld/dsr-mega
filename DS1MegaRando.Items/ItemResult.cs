@@ -1,4 +1,4 @@
-namespace DS1MegaRando.Core.Items;
+namespace DS1MegaRando.Items;
 
 public class ItemResult
 {

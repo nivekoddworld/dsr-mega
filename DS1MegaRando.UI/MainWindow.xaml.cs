@@ -2,7 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using DS1MegaRando.Core;
-using DS1MegaRando.Core.Settings;
+using DS1MegaRando.Settings;
 using DS1MegaRando.UI.Pages;
 using DS1MegaRando.UI.ViewModels;
 

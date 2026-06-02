@@ -1,8 +1,8 @@
-using DS1MegaRando.Core.Annotations;
-using DS1MegaRando.Core.Graph;
-using DS1MegaRando.Core.Settings;
+using DS1MegaRando.Annotations;
+using DS1MegaRando.Graph;
+using DS1MegaRando.Settings;
 
-namespace DS1MegaRando.Core.FogGate;
+namespace DS1MegaRando.FogGate;
 
 public class FogGateRandomizer
 {

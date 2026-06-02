@@ -2,7 +2,7 @@ using System.Reflection;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace DS1MegaRando.Core.Annotations;
+namespace DS1MegaRando.Annotations;
 
 public static class AnnotationLoader
 {

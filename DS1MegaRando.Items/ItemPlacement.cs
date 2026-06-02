@@ -1,7 +1,7 @@
-using DS1MegaRando.Core.Settings;
+using DS1MegaRando.Settings;
 using DS1MegaRando.Data.Items;
 
-namespace DS1MegaRando.Core.Items;
+namespace DS1MegaRando.Items;
 
 /// <summary>
 /// Priority-matrix item placement algorithm.

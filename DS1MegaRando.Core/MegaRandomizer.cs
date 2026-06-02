@@ -1,11 +1,11 @@
-using DS1MegaRando.Core.Annotations;
-using DS1MegaRando.Core.Enemies;
-using DS1MegaRando.Core.FogGate;
-using DS1MegaRando.Core.IO;
-using DS1MegaRando.Core.Items;
-using DS1MegaRando.Core.Settings;
-using DS1MegaRando.Core.Spoiler;
-using DS1MegaRando.Core.Verification;
+using DS1MegaRando.Annotations;
+using DS1MegaRando.Enemies;
+using DS1MegaRando.FogGate;
+using DS1MegaRando.IO;
+using DS1MegaRando.Items;
+using DS1MegaRando.Settings;
+using DS1MegaRando.Spoiler;
+using DS1MegaRando.Verification;
 
 namespace DS1MegaRando.Core;
 

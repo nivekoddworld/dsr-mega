@@ -1,4 +1,4 @@
-namespace DS1MegaRando.Core.Settings;
+namespace DS1MegaRando.Settings;
 
 public class GlobalSettings
 {

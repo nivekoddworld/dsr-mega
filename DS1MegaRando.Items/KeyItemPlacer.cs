@@ -1,9 +1,9 @@
-using DS1MegaRando.Core.Annotations;
-using DS1MegaRando.Core.FogGate;
-using DS1MegaRando.Core.Graph;
-using DS1MegaRando.Core.Settings;
+using DS1MegaRando.Annotations;
+using DS1MegaRando.FogGate;
+using DS1MegaRando.Graph;
+using DS1MegaRando.Settings;
 
-namespace DS1MegaRando.Core.Items;
+namespace DS1MegaRando.Items;
 
 /// <summary>
 /// Places key items using BFS reachability — ensures the game is always completable.
@@ -93,21 +93,38 @@ public class KeyItemPlacer
         };
     }
 
-    private Dictionary<string, List<string>> BuildItemAreas(
+    private static Dictionary<string, List<string>> BuildItemAreas(
         AnnotationData ann,
         Dictionary<int, (int ItemId, int Category)> currentAssignments)
     {
         var itemAreas = ann.KeyItems.ToDictionary(ki => ki.Name, ki => new List<string>());
 
+        // Build reverse map: itemId → key item name so we can look up placements
+        var itemIdToName = new Dictionary<int, string>();
         foreach (var ki in ann.KeyItems)
         {
-            if (ki.ID == null || ki.Area == null) continue;
-            // Check if any lot with this item's ID has been placed
-            // (simplified — in practice you'd parse ki.ID to get item category + id)
-            itemAreas[ki.Name].Add(ki.Area);
+            if (ki.ID == null) continue;
+            int id = ParseKeyItemId(ki.ID);
+            if (id != 0) itemIdToName[id] = ki.Name;
+        }
+
+        // For each placed lot, find which area it's in and credit the key item there
+        foreach (var (lotId, assignment) in currentAssignments)
+        {
+            if (!ann.LotLocations.TryGetValue(lotId, out var area)) continue;
+            if (!itemIdToName.TryGetValue(assignment.ItemId, out var keyName)) continue;
+            if (!itemAreas[keyName].Contains(area))
+                itemAreas[keyName].Add(area);
         }
 
         return itemAreas;
+    }
+
+    private static int ParseKeyItemId(string id)
+    {
+        // Format: "category:itemId" e.g. "3:2510" or "2:138"
+        var parts = id.Split(':');
+        return parts.Length == 2 && int.TryParse(parts[1], out int v) ? v : 0;
     }
 
     private static void Shuffle<T>(List<T> list, Random rng)

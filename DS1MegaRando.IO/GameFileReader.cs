@@ -1,10 +1,10 @@
-using DS1MegaRando.Core.Settings;
+using DS1MegaRando.Settings;
 using DS1MegaRando.Data.Areas;
 using SoulsFormats;
 using System.Reflection;
 using System.Xml;
 
-namespace DS1MegaRando.Core.IO;
+namespace DS1MegaRando.IO;
 
 /// <summary>
 /// Reads DSR game files into GameData using SoulsFormats.

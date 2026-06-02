@@ -1,9 +1,9 @@
-using DS1MegaRando.Core.IO;
-using DS1MegaRando.Core.Settings;
+using DS1MegaRando.IO;
+using DS1MegaRando.Settings;
 using DS1MegaRando.Data.Items;
 using SoulsFormats;
 
-namespace DS1MegaRando.Core.Items;
+namespace DS1MegaRando.Items;
 
 public class ShopRandomizer
 {

@@ -1,6 +1,6 @@
 using SoulsFormats;
 
-namespace DS1MegaRando.Core.IO;
+namespace DS1MegaRando.IO;
 
 /// <summary>
 /// In-memory representation of all game files relevant to randomization.
