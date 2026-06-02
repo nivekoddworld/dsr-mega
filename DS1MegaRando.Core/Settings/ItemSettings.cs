@@ -24,9 +24,9 @@ public class ItemSettings
     /// <summary>Randomize each starting class's armor (helm/chest/gauntlets/legs) per piece.</summary>
     public bool FashionSouls { get; set; } = false;
     /// <summary>Give each starting class a random bonus consumable gift (placed in their first free item slot).</summary>
-    public bool RandomizeStartingGift { get; set; } = true;
+    public bool RandomizeStartingGift { get; set; } = false;
     /// <summary>Boost a class's base STR/DEX/INT/FTH (and soul level) to meet the minimum requirements of their randomized starting weapons.</summary>
-    public bool AdjustStatsForWeapons { get; set; } = true;
+    public bool AdjustStatsForWeapons { get; set; } = false;
     public bool RandomizeNPCDropArmor { get; set; } = false;
     public bool ProtectNPCQuestItems { get; set; } = true;
     public bool EnsureUpgradeMaterialAccess { get; set; } = true;
