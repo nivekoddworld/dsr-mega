@@ -1,4 +1,3 @@
-using DS1MegaRando.Core.Graph;
 using YamlDotNet.Serialization;
 
 namespace DS1MegaRando.Core.Annotations;

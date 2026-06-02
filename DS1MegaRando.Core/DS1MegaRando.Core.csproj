@@ -16,6 +16,8 @@
     <ProjectReference Include="..\DS1MegaRando.Enemies\DS1MegaRando.Enemies.csproj" />
     <ProjectReference Include="..\DS1MegaRando.Verification\DS1MegaRando.Verification.csproj" />
     <ProjectReference Include="..\DS1MegaRando.Spoiler\DS1MegaRando.Spoiler.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Data\DS1MegaRando.Data.csproj" />
+    <ProjectReference Include="..\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
   </ItemGroup>
 
 </Project>

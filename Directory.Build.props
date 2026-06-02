@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Allow building net8.0-windows and net*-windows TFMs on Linux/macOS CI -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+</Project>

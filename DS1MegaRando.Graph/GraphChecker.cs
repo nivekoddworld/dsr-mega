@@ -1,3 +1,5 @@
+using DS1MegaRando.Core.Annotations;
+
 namespace DS1MegaRando.Core.Graph;
 
 /// <summary>
