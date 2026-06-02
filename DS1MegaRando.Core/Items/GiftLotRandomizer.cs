@@ -6,24 +6,20 @@ namespace DS1MegaRando.Core.Items;
 /// <summary>
 /// Randomizes the items given by the character-creation starting-gift choices.
 ///
-/// In DS1R the gift selection screen is hardcoded in the game engine; each gift
-/// choice sets an event flag in the 50000000–50000090 range, and the matching
-/// <c>ItemLotParam</c> row (identified by its <c>getItemFlagId</c> field) delivers
-/// the item when the character first spawns.  Replacing the lot's item ID changes
-/// what the player actually receives for that gift choice while the menu labels
-/// (e.g. "Pendant", "Binoculars") remain unchanged.
+/// The gift-delivery lots are identified by their fixed row IDs in <c>ItemLotParam</c>:
+///   1000 = Divine Blessing, 1010 = Black Firebomb, 1020 = Twin Humanities,
+///   1030 = Binoculars, 1040 = Pendant, 1050 = Master Key,
+///   1060 = Tiny Being's Ring, 1070 = Old Witch's Ring.
+/// Replacing each lot's item changes what the player receives for that gift
+/// choice; the menu labels in the character-creation screen are engine-side
+/// and remain unchanged.
 /// </summary>
 public class GiftLotRandomizer
 {
-    // Event flags set by the character-creation gift selection.
-    // Every ItemLotParam row whose getItemFlagId matches one of these values is
-    // a gift-delivery lot.  The range 50000000–50000082 covers all nine vanilla
-    // gift options; 50000090 is the Lordvessel (given by Gwynevere, not a gift)
-    // and is deliberately excluded.
-    private static readonly HashSet<int> GiftFlags = new()
+    // The eight non-None starting-gift lot row IDs in DS1's ItemLotParam.
+    private static readonly HashSet<int> GiftLotIds = new()
     {
-        50000000, 50000010, 50000020, 50000030, 50000040,
-        50000050, 50000060, 50000070, 50000080, 50000081, 50000082,
+        1000, 1010, 1020, 1030, 1040, 1050, 1060, 1070,
     };
 
     /// <summary>
@@ -53,19 +49,12 @@ public class GiftLotRandomizer
 
         foreach (var row in itemLotParam.Rows)
         {
-            int flag = GetCell(row, "getItemFlagId");
-            if (!GiftFlags.Contains(flag)) continue;
+            if (!GiftLotIds.Contains((int)row.ID)) continue;
 
             var pick = giftableItems[rng.Next(giftableItems.Count)];
             result[(int)row.ID] = (pick.ItemId, pick.LotCategory, Math.Max(1, pick.Count));
         }
 
         return result;
-    }
-
-    private static int GetCell(PARAM.Row row, string name)
-    {
-        try { return Convert.ToInt32(row[name]?.Value ?? 0); }
-        catch { return 0; }
     }
 }

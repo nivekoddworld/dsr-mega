@@ -265,16 +265,22 @@ public class GameFileWriter
         var row = param.Rows.FirstOrDefault(r => r.ID == rowId);
         if (row == null) return;
 
-        int baseStr = GetStatCell(row, "baseStr");
-        int baseDex = GetStatCell(row, "baseDex");
-        int baseInt = GetStatCell(row, "baseMag");
-        int baseFth = GetStatCell(row, "baseFai");
-        int soulLv  = Convert.ToInt32(row["soulLv"]?.Value ?? 0);
+        // Resolve actual weapon IDs: if a slot is Keep, read the current
+        // value from the row so vanilla weapons are still requirements-checked.
+        int rh  = loadout.RightHand    == StartingLoadout.Keep
+                    ? GetStatCell(row, "equip_Wep_Right")    : loadout.RightHand;
+        int lh  = loadout.LeftHand     == StartingLoadout.Keep
+                    ? GetStatCell(row, "equip_Wep_Left")     : loadout.LeftHand;
+        int srh = loadout.SubRightHand == StartingLoadout.Keep
+                    ? GetStatCell(row, "equip_Subwep_Right") : loadout.SubRightHand;
 
-        int newStr = baseStr, newDex = baseDex, newInt = baseInt, newFth = baseFth;
+        int newStr = GetStatCell(row, "baseStr");
+        int newDex = GetStatCell(row, "baseDex");
+        int newInt = GetStatCell(row, "baseMag");
+        int newFth = GetStatCell(row, "baseFai");
 
-        // RightHand and LeftHand: one-hand requirements.
-        foreach (int wepId in new[] { loadout.RightHand, loadout.LeftHand })
+        // RightHand and LeftHand: full 1H requirements (shields use 1H req in the offhand).
+        foreach (int wepId in new[] { rh, lh })
         {
             if (wepId <= 0) continue;
             if (!WeaponRequirements.TryGetValue(wepId, out var req)) continue;
@@ -284,10 +290,9 @@ public class GameFileWriter
             newFth = Math.Max(newFth, req.Fth);
         }
 
-        // SubRightHand is typically a two-handed weapon — apply the 2H rule:
-        //   effective STR = floor(base × 1.5), so minimum base = ceil(req × 2/3).
-        if (loadout.SubRightHand > 0 &&
-            WeaponRequirements.TryGetValue(loadout.SubRightHand, out var twoHReq))
+        // SubRightHand is the 2H weapon slot — apply the two-hand STR rule:
+        //   effective STR = floor(base × 1.5), so min base = ceil(req × 2/3).
+        if (srh > 0 && WeaponRequirements.TryGetValue(srh, out var twoHReq))
         {
             int minStr2H = (int)Math.Ceiling(twoHReq.Str * 2.0 / 3.0);
             newStr = Math.Max(newStr, minStr2H);
@@ -296,15 +301,23 @@ public class GameFileWriter
             newFth = Math.Max(newFth, twoHReq.Fth);
         }
 
-        int totalBoost = (newStr - baseStr) + (newDex - baseDex)
-                       + (newInt - baseInt) + (newFth - baseFth);
-        if (totalBoost <= 0) return;
+        // Compute delta against what's currently written (not the load-time base),
+        // so the soul-level bump stays consistent with the actual stat change.
+        int oldStr = GetStatCell(row, "baseStr");
+        int oldDex = GetStatCell(row, "baseDex");
+        int oldInt = GetStatCell(row, "baseMag");
+        int oldFth = GetStatCell(row, "baseFai");
 
+        int delta = (newStr - oldStr) + (newDex - oldDex)
+                  + (newInt - oldInt) + (newFth - oldFth);
+        if (delta <= 0) return;
+
+        short currentSl = Convert.ToInt16(row["soulLv"]?.Value ?? (short)1);
         TrySetCell(row, "baseStr", (sbyte)Math.Clamp(newStr, 1, 99));
         TrySetCell(row, "baseDex", (sbyte)Math.Clamp(newDex, 1, 99));
         TrySetCell(row, "baseMag", (sbyte)Math.Clamp(newInt, 1, 99));
         TrySetCell(row, "baseFai", (sbyte)Math.Clamp(newFth, 1, 99));
-        TrySetCell(row, "soulLv",  (short)Math.Clamp(soulLv + totalBoost, 1, 713));
+        TrySetCell(row, "soulLv",  (short)Math.Clamp(currentSl + delta, 1, 713));
     }
 
     private static int GetStatCell(PARAM.Row row, string name)
