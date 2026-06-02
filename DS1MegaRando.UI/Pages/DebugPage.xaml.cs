@@ -234,7 +234,8 @@ public partial class DebugPage : UserControl
             {
                 var lo = items.StartingLoadouts[i];
                 sb.AppendLine($"  Class {3000 + i}: right={lo.RightHand}  left={lo.LeftHand}"
-                    + (lo.SubRightHand != StartingLoadout.Empty ? $"  rightOffhand={lo.SubRightHand}" : ""));
+                    + (lo.SubRightHand != StartingLoadout.Empty ? $"  rightOffhand={lo.SubRightHand}" : "")
+                    + $"  armor=[{lo.Helm}, {lo.Chest}, {lo.Gauntlets}, {lo.Legs}]");
             }
         else
             sb.AppendLine("  (none / starting loadout not randomized)");
@@ -376,7 +377,7 @@ public partial class DebugPage : UserControl
 
         if (itm != null)
         {
-            sb.AppendLine($"STARTING_LOADOUTS: {string.Join("; ", itm.StartingLoadouts.Select(l => $"{l.RightHand}/{l.LeftHand}/{l.SubRightHand}"))}");
+            sb.AppendLine($"STARTING_LOADOUTS: {string.Join("; ", itm.StartingLoadouts.Select(l => $"{l.RightHand}/{l.LeftHand}/{l.SubRightHand}/{l.Helm}/{l.Chest}/{l.Gauntlets}/{l.Legs}"))}");
             sb.AppendLine("KEY_ITEMS:");
             foreach (var (name, area, loc) in itm.KeyItemPlacements)
                 sb.AppendLine($"  {name} = {area} ({loc})");

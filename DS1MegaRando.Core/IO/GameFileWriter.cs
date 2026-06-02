@@ -155,6 +155,12 @@ public class GameFileWriter
         // otherwise so caster classes keep their starting catalyst/flame there.
         if (loadout.SubRightHand != StartingLoadout.Empty)
             TrySetCell(row, "equip_Subwep_Right", loadout.SubRightHand);
+
+        // Armor (equip_Armer is the chest slot). Each piece is rolled independently.
+        if (loadout.Helm      != StartingLoadout.Empty) TrySetCell(row, "equip_Helm",  loadout.Helm);
+        if (loadout.Chest     != StartingLoadout.Empty) TrySetCell(row, "equip_Armer", loadout.Chest);
+        if (loadout.Gauntlets != StartingLoadout.Empty) TrySetCell(row, "equip_Gaunt", loadout.Gauntlets);
+        if (loadout.Legs      != StartingLoadout.Empty) TrySetCell(row, "equip_Leg",   loadout.Legs);
     }
 
     // ── Maps ───────────────────────────────────────────────────────────────
