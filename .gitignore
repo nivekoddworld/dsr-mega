@@ -14,6 +14,10 @@ obj/
 # Rider
 .idea/
 
+# Python bytecode
+__pycache__/
+*.pyc
+
 # OS
 Thumbs.db
 desktop.ini
