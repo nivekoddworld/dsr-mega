@@ -17,9 +17,11 @@ public class WorldGraph
     /// <summary>Area depth ratios computed after connecting the graph. (healthRatio, damageRatio)</summary>
     public Dictionary<string, (float Health, float Damage)> AreaRatios { get; set; } = new();
 
-    public string StartArea { get; private set; } = "asylum";
+    public string      StartArea   { get; private set; } = "asylum";
+    /// <summary>The selected CustomStart entry (null if using the default asylum start).</summary>
+    public CustomStart? CustomStart { get; private set; }
 
-    public void Construct(FogGateSettings settings, AnnotationData ann)
+    public void Construct(FogGateSettings settings, AnnotationData ann, Random? rng = null)
     {
         Areas     = ann.Areas.ToDictionary(a => a.Name);
         // Seed with vanilla locations; item randomizer overwrites these later if active
@@ -85,12 +87,17 @@ public class WorldGraph
         // Determine starting area
         if (settings.RandomizeStartingArea && ann.CustomStarts?.Count > 0)
         {
-            var rng = new Random();
-            StartArea = ann.CustomStarts[rng.Next(ann.CustomStarts.Count)].Area;
+            // Use the caller's RNG so start-area selection is part of the same seed chain.
+            var effectiveRng = rng ?? new Random();
+            int idx = effectiveRng.Next(ann.CustomStarts.Count);
+            CustomStart = ann.CustomStarts[idx];
+            StartArea   = CustomStart.Area;
         }
         else if (ann.CustomStarts?.Count > 0 && ann.CustomStarts[0].Area != null)
         {
-            StartArea = ann.CustomStarts[0].Area;
+            // No randomization — first entry is the default (usually Firelink or Asylum)
+            CustomStart = ann.CustomStarts[0];
+            StartArea   = CustomStart.Area;
         }
     }
 

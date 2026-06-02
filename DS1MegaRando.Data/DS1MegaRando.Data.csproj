@@ -14,6 +14,8 @@
     <!-- Embed YAML annotation files as resources -->
     <EmbeddedResource Include="Annotations\ds1-fog.yaml" />
     <EmbeddedResource Include="Annotations\ds1-enemies.yaml" />
+    <!-- Embed patched bonfire ESD (adds Level Up to all bonfires unconditionally) -->
+    <EmbeddedResource Include="ESDs\bonfire_patched.esd" />
     <!-- Embed param layout XML files as resources -->
     <EmbeddedResource Include="Params\ITEMLOT_PARAM_ST.xml" />
     <EmbeddedResource Include="Params\NPC_PARAM_ST.xml" />

@@ -1927,56 +1927,30 @@ DefaultCost:
   kiln: 1  # SL 70
   kiln_gwyn: 1  # SL 70
 CustomStarts:
-- Name: Firelink Shrine
-  Area: firelink
-  Respawn: firelink 1022960
-- Name: Undead Parish
-  Area: parish_andre
-  Respawn: parish 1012964
-- Name: Darkroot Garden
-  Area: darkroot
-  Respawn: darkroot 1202961
-- Name: Blighttown
-  Area: blighttown
-  Respawn: blighttown 1402961
-# In this case, also remove objact param for the door. Needs traversable/boss fogs randomized
-- Name: Depths
-  Area: depths
-  Respawn: depths 1002960
-- Name: Demon Ruins
-  Area: demonruins
-  Respawn: demonruins 1412961
-# Sens and Anor Londo and Dukes and Painted World and DLC need traversable/boss fogs randomized to get back to main map
-- Name: Sen's Fortress
-  Area: sens_mid
-  Respawn: sens 1502961
-- Name: Anor Londo
-  Area: anorlondo_start
-  Respawn: anorlondo 1512960
-- Name: Anor Londo  # in building
-  Area: anorlondo_building
-  Respawn: anorlondo 1512961
-- Name: Painted World
-  Area: paintedworld
-  Respawn: paintedworld 1102960
-- Name: Tomb of the Giants
-  Area: totg
-  Respawn: totg 1312961
-- Name: Catacombs  # hidden one
-  Area: catacombs
-  Respawn: catacombs 1302961
-- Name: Duke's Archives
-  Area: dukes_library2
-  Respawn: dukes 1702960
-- Name: Lost Izalith
-  Area: demonruins_izalithprelava
-  Respawn: demonruins 1412964
+- Name: Sen's Upper Bonfire
+  Area: sens_upper
+  MapId: sens
+  Pos: "190.806 179.400 254.867"
+- Name: Darkroot Garden (Sif)
+  Area: darkroot_sif
+  MapId: darkroot
+  Pos: "255.893 -3.314 -11.943"
+- Name: Anor Londo (Pre O&S)
+  Area: anorlondo_os
+  MapId: anorlondo
+  Pos: "506.113 135.000 176.713"
 - Name: Oolacile Sanctuary
   Area: dlc_sanctuary
-  Respawn: dlc 1212961
-- Name: Oolacile Township
-  Area: dlc_township
-  Respawn: dlc 1212962
+  MapId: dlc
+  Pos: "177.843 207.200 131.973"
+- Name: Anor Londo (First Bonfire)
+  Area: anorlondo_start
+  MapId: anorlondo
+  Pos: "971.700 -313.690 580.143"
+- Name: Painted World Entry
+  Area: paintedworld
+  MapId: paintedworld
+  Pos: "-19.716 -48.918 954.450"
 
 Enemies:
 - Col: depths

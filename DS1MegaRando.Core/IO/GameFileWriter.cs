@@ -38,6 +38,15 @@ public class GameFileWriter
         if (itemResult != null)
             WriteItemParams(outDir, gameData, itemResult);
 
+        // Patch all bonfire TalkESDs to enable Level Up unconditionally.
+        // In vanilla DS1R the Level Up bonfire option is gated behind a flag set
+        // only when you first arrive at Firelink via the crow.  With fog gate
+        // randomisation (or any run where the normal path to Firelink is disrupted)
+        // the flag may never fire, leaving Level Up permanently unavailable.
+        // The patched ESD (derived from FogMod) simply removes that condition so
+        // Level Up is always present in every bonfire menu in the game.
+        PatchBonfireEsds(outDir);
+
         // Maps are always written: in-memory MSB mutations can come from
         // sources outside of fog/enemy results (e.g. mimic position shuffles).
         WriteMapFiles(outDir, gameData, fogResult, enemyResult, ann, fogSettings);
@@ -326,5 +335,72 @@ public class GameFileWriter
     {
         var cell = row[name];
         if (cell != null) cell.Value = value;
+    }
+
+    // ── TalkESD patching ───────────────────────────────────────────────────
+
+    /// <summary>
+    /// Replaces every vanilla bonfire ESD in every map's talkesdbnd with the
+    /// patched version that enables Level Up unconditionally at all bonfires.
+    ///
+    /// Detection: vanilla bonfire ESDs are all exactly <see cref="VanillaBonfireEsdSize"/>
+    /// bytes.  Any ESD entry of that size is a bonfire ESD and gets replaced.
+    /// NPC/Firekeeper ESDs have different sizes and are left untouched.
+    /// </summary>
+    private void PatchBonfireEsds(string outDir)
+    {
+        byte[] patchedEsd = LoadPatchedBonfireEsd();
+        if (patchedEsd.Length == 0) return;
+
+        string gameDir = _settings.GameDirectory;
+        string talkSrc  = Path.Combine(gameDir, @"script\talk");
+        string talkDest = Path.Combine(outDir,  @"script\talk");
+
+        if (!Directory.Exists(talkSrc)) return;
+        Directory.CreateDirectory(talkDest);
+
+        foreach (var srcPath in Directory.GetFiles(talkSrc, "*.talkesdbnd.dcx"))
+        {
+            string destPath = Path.Combine(talkDest, Path.GetFileName(srcPath));
+
+            var bnd = BND3.Read(srcPath);
+            bool changed = false;
+
+            foreach (var entry in bnd.Files)
+            {
+                if (entry.Bytes.Length == VanillaBonfireEsdSize)
+                {
+                    entry.Bytes = patchedEsd;
+                    changed = true;
+                }
+            }
+
+            if (changed)
+                bnd.Write(destPath, bnd.Compression);
+        }
+    }
+
+    // Vanilla bonfire ESD is always exactly this size in DSR.
+    // Any ESD entry of this size is a bonfire ESD; all others are NPC ESDs.
+    private const int VanillaBonfireEsdSize = 23012;
+
+    private static byte[]? _patchedBonfireEsd;
+
+    private static byte[] LoadPatchedBonfireEsd()
+    {
+        if (_patchedBonfireEsd != null) return _patchedBonfireEsd;
+
+        var asm  = System.Reflection.Assembly.Load("DS1MegaRando.Data");
+        string resourceName = asm.GetManifestResourceNames()
+            .FirstOrDefault(n => n.EndsWith("bonfire_patched.esd", StringComparison.OrdinalIgnoreCase))
+            ?? "";
+
+        if (string.IsNullOrEmpty(resourceName)) return Array.Empty<byte>();
+
+        using var stream = asm.GetManifestResourceStream(resourceName)!;
+        var bytes = new byte[stream.Length];
+        stream.ReadExactly(bytes);
+        _patchedBonfireEsd = bytes;
+        return bytes;
     }
 }

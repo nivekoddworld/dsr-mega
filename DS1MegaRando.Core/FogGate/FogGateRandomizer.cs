@@ -12,7 +12,7 @@ public class FogGateRandomizer
     {
         Emit("Building world graph...");
         var graph = new WorldGraph();
-        graph.Construct(settings, ann);
+        graph.Construct(settings, ann, rng);
 
         Emit("Connecting fog gates...");
         var connector = new GraphConnector();

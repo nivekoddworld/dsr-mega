@@ -124,9 +124,23 @@ public class AnnotationKeyItem : Taggable
 
 // ── Custom start ──────────────────────────────────────────────────────────
 
+/// <summary>
+/// A candidate starting location for the "random first warp" feature.
+/// When RandomizeStartingArea is enabled, one of these is chosen at random and
+/// the player is warped here immediately after escaping the Undead Asylum.
+///
+/// MapId  = MapSpec.InternalName (e.g. "sens", "anorlondo")
+/// Pos    = world-space spawn position (X Y Z, space-separated)
+/// Area   = fog-gate graph area name used for reachability checks
+/// Respawn is kept for legacy serialisation but Pos/MapId take precedence when set.
+/// </summary>
 public class CustomStart
 {
     public string  Name    { get; set; } = "";
     public string  Area    { get; set; } = "";
     public string? Respawn { get; set; }
+    /// <summary>MapSpec.InternalName (e.g. "sens", "anorlondo", "dlc").</summary>
+    public string? MapId   { get; set; }
+    /// <summary>World-space spawn position as "X Y Z".</summary>
+    public string? Pos     { get; set; }
 }
