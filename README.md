@@ -123,6 +123,113 @@ The game directory must contain an unpacked (UXM-extracted) copy of Dark Souls R
 
 ---
 
+## Boss Randomizer
+
+### How it works
+
+Every DSR boss is defined in `DS1MegaRando.Data/Enemies/BossIds.cs` as a `BossDef` record with:
+
+| Field | Purpose |
+|---|---|
+| `MapId` | Which MSB file the boss lives in |
+| `EntityId` | The unique integer the game uses to identify the enemy part in EMEVD scripts |
+| `ModelId` | The character model (`c####`) |
+| `Name` | Display name for the spoiler log |
+| `CanReplace` | `false` → slot is frozen (never randomized); model also excluded from replacement pool |
+| `EmevdPatches` | EMEVD instructions to strip from the boss intro event so the replacement model isn't locked in a model-specific state |
+
+**EntityIDs are ground truth** — they must exactly match the value at `@ENTITYID` in `FogMod-master/dist/fog.txt`. Wrong EntityIDs are the root cause of bosses not being randomized at all.
+
+### Replacement pool rules
+
+A boss model enters the replacement pool only if:
+1. Its `BossDef.CanReplace` is `true`
+2. Its model is found in `GameData.KnownModels` (the game has the file)
+3. `EnemyIds.ByModelId(modelId).IsIgnored` is `false`
+
+`IsIgnored = true` is used for bosses that are too environment-specific or too large to work in any foreign arena (Ceaseless Discharge is the main example).
+
+### NpcParam and animation
+
+- Replacement bosses always use **the replacement model's own NpcParam** (not the slot's vanilla NpcParam). This prevents T-pose attacks caused by animation ID mismatches.
+- `InitAnimId` is always set to `-1` for boss replacements, which tells the game to use the model's default idle animation.
+
+### EMEVD patching
+
+The `BossEmevdPatcher` scans each boss slot's intro event and strips instructions that would break a replacement model:
+
+| Instruction | Bank/ID | Why stripped |
+|---|---|---|
+| `ForceAnimationPlayback` | `(2003, 18)` | Plays a hardcoded animation ID that only exists on the vanilla boss |
+| `WarpCharacter` | `(2004, 41)` | Teleports to a position only valid for the vanilla model |
+| `SetImmortality` | `(2004, 12)` | Seath's crystal-prison phase makes any replacement immortal and unkillable |
+| `CreateMultipartNpc` | `(2004, 22)` | Seath's invisible tail — kill condition checks tail HP, so replacement can never die |
+
+---
+
+## Boss Override Config (`boss_overrides.json`)
+
+`boss_overrides.json` in the repo root (also deployed alongside the app executable) controls three optional overrides:
+
+### `pinned` — force a specific replacement
+
+```json
+"pinned": {
+  "Gaping Dragon": "Chaos Witch Quelaag"
+}
+```
+
+### `blocked` — prevent certain replacements in a slot
+
+```json
+"blocked": {
+  "Bell Gargoyles": ["Iron Golem", "Seath the Scaleless"]
+}
+```
+
+The defaults in the file cover all known arena-size mismatches and crash combos.
+
+### `positions` — override spawn coordinates
+
+```json
+"positions": {
+  "Taurus Demon": { "x": 3.372, "y": 15.814, "z": -115.055, "rotY": -73.54 }
+}
+```
+
+Any component omitted keeps the vanilla MSB value. The slot name (key) is what normally occupies that arena — the override applies to whatever boss is placed there, not to the Taurus Demon model specifically.
+
+> **Important**: `boss_overrides.json` must be in the same directory as the application executable. The `.csproj` wires this up automatically via `Content/PreserveNewest`; if you run from a custom output path you may need to copy the file manually.
+
+---
+
+## VFX System
+
+Enemy particle effects (hit sparks, magic auras, smoke trails) are stored in per-map SFX bundles: `sfx\FRPG_SfxBnd_m*.ffxbnd.dcx`. When a boss is moved to a foreign map the effects aren't present in that map's bundle and the boss appears without any VFX.
+
+`DS1MegaRando.Core/BossSfxMerger` fixes this by:
+
+1. Scanning all 26 map SFX bundles
+2. Collecting every entry whose internal path name matches the enemy-effect ID range (10001–20000) for `.ffx`, `.flver`, and `.tpf` files
+3. Adding any missing entries to `sfx\FRPG_SfxBnd_CommonEffects.ffxbnd.dcx`, which is loaded in every area
+
+The CommonEffects bundle uses BND3 ID ranges: `< 100000` = FFX effects, `100000–199999` = TPF textures, `≥ 200000` = FLVER models. New entries are appended after the current maximum ID in each range.
+
+---
+
+## Boss-Specific Notes
+
+| Boss | Notes |
+|---|---|
+| **Bell Gargoyles** | Three entity instances (1010800/01/02). Only the first is randomized; the other two are frozen (`CanReplace: false`) to avoid mid-fight phase spawns breaking. |
+| **Ceaseless Discharge** | Randomizable slot, but `IsIgnored: true` prevents the c5250 model from appearing as a replacement elsewhere — the arena is too small. |
+| **Seath the Scaleless** | EMEVD-patched to remove immortality lock and multipart tail creation. Without these patches, any replacement is unkillable. |
+| **Dark Sun Gwyndolin** | `CanReplace: true`; `IsIgnored: true` so Gwyndolin never appears in other arenas. |
+| **Moonlight Butterfly** | Same pattern as Gwyndolin. Replacement always spawned at `(180.717, 8.066, 29.612)` via position override. |
+| **Stray Demon** | Treated as a regular non-replaceable enemy (CanReplace: false) because its EntityID belongs to the same sub-boss category. |
+
+---
+
 ## Legacy Python Components
 
 Three standalone Python randomizers live in the repo as historical reference. They are **not** called by the C# application and do not need to be run:
