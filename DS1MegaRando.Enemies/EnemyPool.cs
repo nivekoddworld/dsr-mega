@@ -80,6 +80,21 @@ public class EnemyPool
                 bool isBossSlot = hasEntityId && bossLookup.TryGetValue(part.EntityID, out var bossDef);
                 bossDef = isBossSlot ? bossLookup[part.EntityID] : null;
 
+                // Fallback: some boss MSB parts have EntityId=0 (EMEVD manages the spawn).
+                // Identify them by model ID + map instead so they can still be randomized.
+                if (!isBossSlot && !hasEntityId)
+                {
+                    var modelMatch = BossIds.All.FirstOrDefault(b =>
+                        b.CanReplace &&
+                        b.ModelId.Equals(part.ModelName, StringComparison.OrdinalIgnoreCase) &&
+                        b.MapId.Equals(mapId, StringComparison.OrdinalIgnoreCase));
+                    if (modelMatch != null)
+                    {
+                        isBossSlot = true;
+                        bossDef    = modelMatch;
+                    }
+                }
+
                 // Skip boss slots that are marked non-replaceable (BoC, Gwyndolin, etc.)
                 if (isBossSlot && bossDef != null && !bossDef.CanReplace) continue;
 
