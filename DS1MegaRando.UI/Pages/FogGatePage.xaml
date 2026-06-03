@@ -142,6 +142,10 @@
             <StackPanel>
                 <TextBlock Text="GUARANTEES" Style="{StaticResource DS1SectionTitle}" Margin="0,0,0,12"/>
                 <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,4"
+                          Content="Guarantee Starting Estus (place Estus Flask corpse in Undead Asylum)"
+                          IsChecked="{Binding FogGate.GuaranteeStartingEstus}"
+                          ToolTip="Ensures an Estus Flask is always obtainable at the start, even if fog gate randomization blocks the normal path to Oscar."/>
+                <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,4"
                           Content="Guarantee Blacksmith Access (Andre is reachable without excessive travel)"
                           IsChecked="{Binding FogGate.GuaranteeBlacksmithAccess}"/>
                 <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,4"

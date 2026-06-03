@@ -13,7 +13,8 @@ public class ItemPool
     // ItemLotParam rows that should never be moved (quest progression, scripted events)
     private static readonly HashSet<int> NeverRandomize = new()
     {
-        10010, // Estus Flask lot — always given at start
+        10010, // Estus Flask lot — always given at start via Oscar
+        1082,  // Estus Flask lot used by the asylum corpse (ApplyStartingEstus / GuaranteeStartingEstus)
         11000, // Lordvessel — given by Gwynevere (handled separately if setting enabled)
     };
 
