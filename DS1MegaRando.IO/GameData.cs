@@ -20,6 +20,9 @@ public class GameData
     /// <summary>CharaInitParam rows, keyed by row ID.</summary>
     public PARAM? CharaInitParam    { get; set; }
 
+    /// <summary>SpEffectParam rows. Used to create damage-scaling SpEffects for enemy scaling.</summary>
+    public PARAM? SpEffectParam     { get; set; }
+
     /// <summary>MapId → MSB for each map file.</summary>
     public Dictionary<string, MSB1> Maps { get; set; } = new();
 

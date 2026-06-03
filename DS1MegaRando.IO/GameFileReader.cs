@@ -71,6 +71,7 @@ public class GameFileReader
                 case "ShopLineupParam": data.ShopLineupParam = param; break;
                 case "NpcParam":        data.NpcParam        = param; break;
                 case "CharaInitParam":  data.CharaInitParam  = param; break;
+                case "SpEffectParam":   data.SpEffectParam   = param; break;
             }
         }
     }

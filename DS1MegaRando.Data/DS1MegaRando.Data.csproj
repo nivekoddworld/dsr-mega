@@ -21,6 +21,7 @@
     <EmbeddedResource Include="Params\NPC_PARAM_ST.xml" />
     <EmbeddedResource Include="Params\SHOP_LINEUP_PARAM.xml" />
     <EmbeddedResource Include="Params\CHARACTER_INIT_PARAM.xml" />
+    <EmbeddedResource Include="Params\SP_EFFECT_PARAM_ST.xml" />
   </ItemGroup>
 
 </Project>

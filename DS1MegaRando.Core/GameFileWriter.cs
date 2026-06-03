@@ -395,9 +395,27 @@ public class GameFileWriter
 
     // ── Enemy stat params ──────────────────────────────────────────────────
 
+    // SpEffectParam row IDs reserved for damage scaling (7950–7990).
+    private const int DmgSpEffectBase = 7950;
+    private static readonly string[] DmgRateFields =
+    {
+        "physicsAttackPowerRate", "magicAttackPowerRate",
+        "fireAttackPowerRate",    "thunderAttackPowerRate",
+    };
+    private static readonly string[] NpcSpEffectSlots =
+    {
+        "spEffectID0", "spEffectID1", "spEffectID2", "spEffectID3",
+        "spEffectID4", "spEffectID5", "spEffectID6", "spEffectID7",
+    };
+
     private void WriteEnemyStatParams(string outDir, GameData gameData, EnemyResult enemyResult)
     {
         if (gameData.NpcParam?.AppliedParamdef == null || gameData.ParamBnd == null) return;
+
+        // Build damage SpEffects if SpEffectParam is available
+        // Maps damage-multiplier → SpEffect row ID so we reuse rows for identical multipliers
+        var dmgSpEffectMap = new Dictionary<float, int>();
+        int nextSpId = DmgSpEffectBase;
 
         foreach (var (npcParamId, mods) in enemyResult.StatModifications)
         {
@@ -408,10 +426,47 @@ public class GameFileWriter
             if (mods.HP != 1.0f && row["hp"]?.Value is uint baseHp)
                 TrySetCell(row, "hp", (uint)(baseHp * mods.HP));
 
-            // Scale poise (superArmorDurability, s16 field) when ScalePoiseArmor is on
+            // Scale poise (superArmorDurability, s16 field)
             if (mods.Poise != 1.0f && row["superArmorDurability"]?.Value is short basePoise)
                 TrySetCell(row, "superArmorDurability", (short)Math.Clamp(basePoise * mods.Poise, short.MinValue, short.MaxValue));
+
+            // Scale damage via SpEffectParam — write physicsAttackPowerRate etc.
+            if (mods.Damage != 1.0f && gameData.SpEffectParam?.AppliedParamdef != null)
+            {
+                float dmgMult = mods.Damage;
+                if (!dmgSpEffectMap.TryGetValue(dmgMult, out int spId))
+                {
+                    spId = nextSpId++;
+                    dmgSpEffectMap[dmgMult] = spId;
+
+                    // Clone base row 7000 if it exists, otherwise create blank
+                    var baseRow = gameData.SpEffectParam.Rows.FirstOrDefault(r => r.ID == 7000);
+                    var newRow = new SoulsFormats.PARAM.Row(spId, null, gameData.SpEffectParam.AppliedParamdef);
+                    if (baseRow != null)
+                        foreach (var cell in baseRow.Cells)
+                            newRow[cell.Def.InternalName].Value = cell.Value;
+
+                    foreach (var field in DmgRateFields)
+                        if (newRow[field] != null)
+                            TrySetCell(newRow, field, dmgMult);
+
+                    gameData.SpEffectParam.Rows.Add(newRow);
+                }
+
+                // Assign to the first empty spEffectID slot on the NpcParam row
+                foreach (var slot in NpcSpEffectSlots)
+                {
+                    if (row[slot]?.Value is int slotVal && slotVal <= 0)
+                    {
+                        TrySetCell(row, slot, spId);
+                        break;
+                    }
+                }
+            }
         }
+
+        if (dmgSpEffectMap.Count > 0)
+            RepackParamIntoBnd(gameData.ParamBnd, "SpEffectParam", gameData.SpEffectParam!);
 
         RepackParamIntoBnd(gameData.ParamBnd, "NpcParam", gameData.NpcParam);
 
