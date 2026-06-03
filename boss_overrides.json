@@ -36,6 +36,7 @@
     // Very confined space; large or environment-dependent bosses will clip or
     // crash on load.
     "Bell Gargoyles": [
+      "Asylum Demon",
       "Gaping Dragon",
       "Iron Golem",
       "Centipede Demon",
@@ -71,6 +72,7 @@
 
     // ── Lower Undead Burg courtyard — extremely tight enclosed courtyard ─────
     "Capra Demon": [
+      "Asylum Demon",
       "Iron Golem",
       "Gaping Dragon",
       "Centipede Demon",
@@ -95,6 +97,7 @@
 
     // ── Painted World clearing — small snowy courtyard ───────────────────────
     "Crossbreed Priscilla": [
+      "Asylum Demon",
       "Iron Golem",
       "Gaping Dragon",
       "Centipede Demon",
@@ -133,6 +136,7 @@
     // ── Tomb of the Giants crypt — medium dark tomb room ─────────────────────
     // Oversized bosses will clip through the low ceiling or irregular walls.
     "Pinwheel": [
+      "Asylum Demon",
       "Gaping Dragon",
       "Iron Golem",
       "Centipede Demon",
@@ -146,6 +150,7 @@
 
     // ── Tomb of the Giants coffin cavern — irregular bone-and-coffin cave ────
     "Gravelord Nito": [
+      "Asylum Demon",
       "Gaping Dragon",
       "Iron Golem",
       "Centipede Demon",
@@ -260,6 +265,7 @@
     //   "Slot Name": { "x": 0.0, "y": 0.0, "z": 0.0, "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0 }
     //
     // Examples (remove leading // to activate):
+    //   "Asylum Demon":         { "x": 0.0, "y": 0.0, "z": 0.0, "rotY": 0.0 },
     //   "Capra Demon":          { "rotY": 180.0 },
     //   "Gwyn, Lord of Cinder": { "x": 28.5, "y": 0.3, "z": -18.0, "rotY": 0.0 }
   }

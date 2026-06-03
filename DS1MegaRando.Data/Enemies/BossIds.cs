@@ -36,12 +36,11 @@ public static class BossIds
     public static readonly IReadOnlyList<BossDef> All = new BossDef[]
     {
         // ── Undead Asylum ─────────────────────────────────────────────────────
-        // c2232 has broken AI (IsIgnored) and requires a specific map/intro sequence.
-        // CanReplace:false keeps it vanilla; the slot is still tracked so that if
-        // another boss ends up here (e.g. via FreeForAll on a different run), we
-        // know to strip its intro EMEVD.
+        // c2232 has IsIgnored AI, so it behaves oddly if placed as a replacement
+        // elsewhere — but its own slot is replaceable.  Use boss_overrides.json
+        // "positions" to fine-tune the spawn point if a replacement clips geometry.
         new("m18_01_00_00", 1801800, "c2232", "Asylum Demon",
-            CanReplace: false,
+            CanReplace: true,
             EmevdPatches: new[] { new EmevdPatch(11810310, ForceAnim, WarpChar) }),
 
         // ── Undead Parish ─────────────────────────────────────────────────────
