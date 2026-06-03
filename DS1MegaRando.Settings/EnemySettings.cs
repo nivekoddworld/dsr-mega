@@ -1,7 +1,7 @@
 namespace DS1MegaRando.Settings;
 
 public enum EnemyPlacementMode { FullRandom, CategoryRestricted, AreaCohesive, BossOnly }
-public enum BossRandomizationMode { BossForBoss, FreeForAll }
+public enum BossRandomizationMode { BossForBoss }
 public enum EnemyScalingSource { FogGateDepth, VanillaDepth, Fixed }
 public enum EnemyDensityMode { Vanilla, Reduced, Increased }
 

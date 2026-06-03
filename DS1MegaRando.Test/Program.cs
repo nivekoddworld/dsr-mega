@@ -192,7 +192,7 @@ static List<(string, MegaSettings)> BuildPresets()
     AE("Enemy_NoProtectNPCs",   E(protectNPCs:false));
     AE("Enemy_Flying",          E(flying:true));
     AE("Enemy_BossOnly_DupOK",  E(mode:EnemyPlacementMode.BossOnly, dupBosses:true));
-    AE("Enemy_AllOn",           E(mode:EnemyPlacementMode.FullRandom, bossMode:BossRandomizationMode.FreeForAll,
+    AE("Enemy_AllOn",           E(mode:EnemyPlacementMode.FullRandom,
                                   dupBosses:true, scale:true, scaleSrc:EnemyScalingSource.FogGateDepth,
                                   dlc:true, flying:true, protectNPCs:false));
 
@@ -210,7 +210,7 @@ static List<(string, MegaSettings)> BuildPresets()
     AC("FogEnemy_BossOnly",      Fd(), null, E(mode:EnemyPlacementMode.BossOnly));
     AC("FogEnemy_FullRandom",    Fd(), null, E(mode:EnemyPlacementMode.FullRandom));
     AC("FogEnemy_DLC+Scale",     F(boss:true,world:true,major:true,minor:false,warps:false,dlc:true,lv:false,kiln:true), null, E(dlc:true,scaleSrc:EnemyScalingSource.FogGateDepth));
-    AC("FogEnemy_NoLogic+Free",  F(boss:true,world:true,major:true,minor:false,warps:false,dlc:false,lv:false,kiln:true,logic:LogicMode.NoLogic), null, E(mode:EnemyPlacementMode.FullRandom,bossMode:BossRandomizationMode.FreeForAll));
+    AC("FogEnemy_NoLogic+Full",  F(boss:true,world:true,major:true,minor:false,warps:false,dlc:false,lv:false,kiln:true,logic:LogicMode.NoLogic), null, E(mode:EnemyPlacementMode.FullRandom));
 
     // ── Mega (all three) ──────────────────────────────────────────────────
     AC("Mega_Default",       Fd(), I(), E());
@@ -227,7 +227,7 @@ static List<(string, MegaSettings)> BuildPresets()
                                shopPrice:ShopPriceMode.Random,startLoadout:true,
                                loadout:StartingLoadoutMode.CombinedPool,fashion:true,
                                npcArmor:true,randoLV:true,randoLS:true,dlcLocs:true),
-                             E(mode:EnemyPlacementMode.FullRandom,bossMode:BossRandomizationMode.FreeForAll,
+                             E(mode:EnemyPlacementMode.FullRandom,
                                dupBosses:true,scale:true,scaleSrc:EnemyScalingSource.FogGateDepth,
                                dlc:true,flying:true,protectNPCs:false));
     AC("Mega_DLC_Everything", F(boss:true,world:true,major:true,minor:true,warps:true,dlc:true,lv:true,kiln:false,startArea:true),
@@ -284,17 +284,16 @@ static ItemSettings I(
     };
 
 static EnemySettings E(
-    EnemyPlacementMode mode        = EnemyPlacementMode.CategoryRestricted,
-    BossRandomizationMode bossMode = BossRandomizationMode.BossForBoss,
+    EnemyPlacementMode mode     = EnemyPlacementMode.CategoryRestricted,
     bool randoBosses = true, bool randoMini = true, bool dupBosses = false,
     bool scale       = true,
-    EnemyScalingSource scaleSrc    = EnemyScalingSource.FogGateDepth,
+    EnemyScalingSource scaleSrc = EnemyScalingSource.FogGateDepth,
     bool dlc         = true, bool flying = false, bool protectNPCs = true) =>
     new EnemySettings
     {
-        EnableEnemyRandomizer     = true,  EnemyPlacementMode        = mode,
-        RandomizeBosses           = randoBosses, BossRandomizationMode = bossMode,
-        AllowDuplicateBosses      = dupBosses,   RandomizeMinibosses   = randoMini,
+        EnableEnemyRandomizer = true,  EnemyPlacementMode   = mode,
+        RandomizeBosses       = randoBosses,
+        AllowDuplicateBosses  = dupBosses, RandomizeMinibosses = randoMini,
         ScaleEnemyStats           = scale,        EnemyScalingSource   = scaleSrc,
         IncludeDLCEnemies         = dlc,           AllowFlyingEnemiesInDoors = flying,
         ProtectImportantNPCs      = protectNPCs,

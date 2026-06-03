@@ -157,7 +157,7 @@ public partial class DebugPage : UserControl
         }
         if (s.Enemies.EnableEnemyRandomizer)
         {
-            sb.AppendLine($"  ENEMIES: Mode={s.Enemies.EnemyPlacementMode}  Bosses={s.Enemies.RandomizeBosses}  BossMode={s.Enemies.BossRandomizationMode}");
+            sb.AppendLine($"  ENEMIES: Mode={s.Enemies.EnemyPlacementMode}  Bosses={s.Enemies.RandomizeBosses}");
             sb.AppendLine($"           Scale={s.Enemies.ScaleEnemyStats}  DupBosses={s.Enemies.AllowDuplicateBosses}  DLC={s.Enemies.IncludeDLCEnemies}");
         }
 

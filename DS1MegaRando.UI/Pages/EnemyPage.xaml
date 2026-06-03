@@ -41,12 +41,8 @@
                 <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,4"
                           Content="Randomize Boss Encounters"
                           IsChecked="{Binding Enemies.RandomizeBosses}"/>
-                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="16,4,0,0" GroupName="BossMode"
-                             Content="Boss-for-Boss  —  Boss slots only get replaced by other bosses"
-                             IsChecked="{Binding Enemies.BossRandomizationMode, Converter={StaticResource EnumEquals}, ConverterParameter=BossForBoss}"/>
-                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="16,4,0,0" GroupName="BossMode"
-                             Content="Free For All  —  Boss slots can get any enemy"
-                             IsChecked="{Binding Enemies.BossRandomizationMode, Converter={StaticResource EnumEquals}, ConverterParameter=FreeForAll}"/>
+                <TextBlock Style="{StaticResource DS1Label}" Margin="16,4,0,0"
+                           Text="Boss-for-Boss  —  Each boss slot receives a different randomised boss"/>
                 <CheckBox Style="{StaticResource DS1CheckBox}" Margin="16,4,0,0"
                           Content="Allow Duplicate Bosses (same boss can appear multiple times)"
                           IsChecked="{Binding Enemies.AllowDuplicateBosses}"/>

@@ -39,7 +39,7 @@ public class EnemyRandomizer
         // regardless of the standalone RandomizeBosses flag.
         if (settings.RandomizeBosses || settings.EnemyPlacementMode == EnemyPlacementMode.BossOnly)
         {
-            Emit($"Randomizing {bosses.Count} boss encounters ({settings.BossRandomizationMode})...");
+            Emit($"Randomizing {bosses.Count} boss encounters...");
             var bossRando = new BossRandomizer();
             allPlacements.AddRange(bossRando.Randomize(settings, bosses, gameData.KnownEnemyModels, rng));
         }

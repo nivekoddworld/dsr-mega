@@ -4,16 +4,12 @@ using DS1MegaRando.Data.Enemies;
 namespace DS1MegaRando.Enemies;
 
 /// <summary>
-/// Randomizes which model fills each boss slot.
-///
-/// BossForBoss  — shuffles the vanilla boss models among the boss slots.
-///                Every slot gets a different boss.  NpcParam is kept from
-///                the original slot so scripted HP/death triggers still work.
-///
-/// FreeForAll   — any non-ignored enemy (boss or regular) can fill any boss
-///                slot.  NpcParam comes from the replacement model so the
-///                enemy's stats feel authentic.  If a regular enemy fills a
-///                boss slot it uses its own AI and animations.
+/// Shuffles the canonical vanilla boss models among the replaceable boss slots.
+/// Every slot gets a different boss (derangement when AllowDuplicateBosses is off).
+/// NpcParam is always kept from the original slot so scripted HP/death triggers work.
+/// The replacement pool is sourced from BossIds.All definitions, not from whatever
+/// model happens to be in the MSB, so re-running on already-randomised files cannot
+/// contaminate the pool with non-boss models.
 /// </summary>
 public class BossRandomizer
 {
@@ -26,184 +22,125 @@ public class BossRandomizer
         if (bossSlots.Count == 0)
             return new List<EnemyPlacement>();
 
-        return settings.BossRandomizationMode == BossRandomizationMode.FreeForAll
-            ? RandomizeFreeForAll(settings, bossSlots, knownModels, rng)
-            : RandomizeBossForBoss(settings, bossSlots, rng);
-    }
+        // Build the replacement pool from canonical BossIds definitions so that
+        // re-running on already-randomised game files cannot introduce non-boss models.
+        // Only include bosses whose model is present in the game's vanilla MSBs and
+        // whose slot is marked replaceable.
+        var canonicalPool = BossIds.Replaceable
+            .Where(b => knownModels.Contains(b.ModelId))
+            .Select(b => b.ModelId)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
-    // ── BossForBoss ──────────────────────────────────────────────────────────
+        if (canonicalPool.Count == 0)
+            canonicalPool = bossSlots.Select(b => b.ModelId).Distinct().ToList();
 
-    private static List<EnemyPlacement> RandomizeBossForBoss(
-        EnemySettings settings,
-        List<EnemyEntity> bossSlots,
-        Random rng)
-    {
-        var originalModels = bossSlots.Select(b => b.ModelId).ToList();
-        var replacementPool = originalModels.ToList();
-
-        if (!settings.AllowDuplicateBosses)
-        {
-            // Sattolo's algorithm: generates a derangement (no element stays in its
-            // original position), so every boss always gets a different replacement.
-            SattoloShuffle(replacementPool, rng);
-        }
-        else
-        {
-            Shuffle(replacementPool, rng);
-        }
+        // Build a per-slot assignment list the same length as bossSlots.
+        // Each slot is matched to one model from the canonical pool.
+        var assignment = BuildAssignment(bossSlots, canonicalPool, settings, rng);
 
         var placements = new List<EnemyPlacement>();
         for (int i = 0; i < bossSlots.Count; i++)
         {
-            var target      = bossSlots[i];
-            string newModel = replacementPool[i];
+            var target    = bossSlots[i];
+            string newModel = assignment[i];
             var    newDef   = EnemyIds.ByModelId(newModel);
 
-            placements.Add(MakePlacement(target, newModel, newDef,
-                keepOriginalNpc: true, settings));
+            placements.Add(MakePlacement(target, newModel, newDef, settings));
         }
         return placements;
     }
 
-    // ── FreeForAll ────────────────────────────────────────────────────────────
+    // ── Assignment ───────────────────────────────────────────────────────────
 
-    private static List<EnemyPlacement> RandomizeFreeForAll(
-        EnemySettings settings,
+    private static List<string> BuildAssignment(
         List<EnemyEntity> bossSlots,
-        HashSet<string> knownModels,
+        List<string> pool,
+        EnemySettings settings,
         Random rng)
     {
-        // Build free pool: boss-capable or large enemies, restricted to models
-        // that exist in the game's vanilla MSBs (chrbnd files guaranteed).
-        var freePool = EnemyIds.All
-            .Where(e => !e.IsIgnored
-                     && e.Category != EnemyCategory.NPC
-                     && e.Category != EnemyCategory.Misc
-                     && (e.BossCapable || e.Size >= 2)
-                     && knownModels.Contains(e.ModelId))
+        // For each slot, look up the canonical vanilla model via BossIds so we
+        // know which model to avoid placing back in the same slot (derangement).
+        var vanillaModels = bossSlots
+            .Select(b => BossIds.ByEntityId(b.EntityId)?.ModelId ?? b.ModelId)
             .ToList();
 
-        // Also add vanilla boss models for this run from the actual slots
-        var bossDefs = bossSlots
-            .Select(b => EnemyIds.ByModelId(b.ModelId))
-            .Where(d => d != null)
-            .Cast<EnemyDef>()
-            .ToList();
-
-        var combined = freePool
-            .Concat(bossDefs.Where(d => !freePool.Any(p => p.ModelId == d.ModelId)))
-            .ToList();
-
-        // Pre-filter invalid giant enemies for tiny arenas
-        var placements = new List<EnemyPlacement>();
-        foreach (var target in bossSlots)
+        if (settings.AllowDuplicateBosses)
         {
-            var candidates = FilterCandidatesForSlot(combined, target, settings);
-            if (candidates.Count == 0)
-                candidates = combined; // fallback: ignore restrictions
-
-            var chosen = candidates[rng.Next(candidates.Count)];
-            // In FreeForAll: use the replacement's NpcParam so stats feel authentic
-            placements.Add(MakePlacement(target, chosen.ModelId, chosen,
-                keepOriginalNpc: false, settings));
+            // Simple shuffle of the pool; wrap-around if pool is smaller than slots.
+            var shuffled = pool.ToList();
+            Shuffle(shuffled, rng);
+            return Enumerable.Range(0, bossSlots.Count)
+                             .Select(i => shuffled[i % shuffled.Count])
+                             .ToList();
         }
-        return placements;
+
+        // No duplicates: assign each slot a unique model from the pool,
+        // ensuring no slot keeps its own vanilla model (derangement).
+        // If the pool is smaller than the slot count we allow wrap-around
+        // for the overflow slots but still avoid self-assignment.
+        var poolShuffled = pool.ToList();
+        Shuffle(poolShuffled, rng);
+
+        var assignment = new List<string>(bossSlots.Count);
+        var used       = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        for (int i = 0; i < bossSlots.Count; i++)
+        {
+            string vanilla = vanillaModels[i];
+
+            // Pick the first unused model that isn't the vanilla one for this slot.
+            string? chosen = poolShuffled.FirstOrDefault(
+                m => !used.Contains(m) &&
+                     !string.Equals(m, vanilla, StringComparison.OrdinalIgnoreCase));
+
+            // Fallback 1: allow reuse if pool is exhausted.
+            if (chosen == null)
+                chosen = poolShuffled.FirstOrDefault(
+                    m => !string.Equals(m, vanilla, StringComparison.OrdinalIgnoreCase));
+
+            // Fallback 2: all pool models equal vanilla (single-boss edge case).
+            if (chosen == null)
+                chosen = poolShuffled[i % poolShuffled.Count];
+
+            assignment.Add(chosen);
+            used.Add(chosen);
+        }
+
+        return assignment;
     }
 
-    // ── Shared helpers ────────────────────────────────────────────────────────
+    // ── Placement factory ─────────────────────────────────────────────────────
 
     private static EnemyPlacement MakePlacement(
         EnemyEntity target,
         string newModelId,
         EnemyDef? newDef,
-        bool keepOriginalNpc,
         EnemySettings settings)
     {
-        int newNpc = keepOriginalNpc
-            ? target.NpcParam
-            : (newDef?.NpcParamId > 0 ? newDef.NpcParamId : target.NpcParam);
-
+        // Always keep the original slot's NpcParam so scripted boss triggers
+        // (health thresholds, death events) fire correctly for this arena.
         int newThink = settings.RandomizeEnemyAI
             ? (newDef?.NpcParamId > 0 ? newDef.NpcParamId : target.ThinkParam)
             : target.ThinkParam;
 
         return new EnemyPlacement
         {
-            EntityId       = target.EntityId,
-            PartIndex      = target.PartIndex,
-            MapId          = target.MapId,
-            Area           = target.Area,
-            OldModelId     = target.ModelId,
-            NewModelId     = newModelId,
-            OldNpcParam    = target.NpcParam,
-            NewNpcParam    = newNpc,
-            OldThinkParam  = target.ThinkParam,
-            NewThinkParam  = newThink,
-            NewInitAnimId  = newDef?.DefaultInitAnim ?? -1,
+            EntityId      = target.EntityId,
+            PartIndex     = target.PartIndex,
+            MapId         = target.MapId,
+            Area          = target.Area,
+            OldModelId    = target.ModelId,
+            NewModelId    = newModelId,
+            OldNpcParam   = target.NpcParam,
+            NewNpcParam   = target.NpcParam,
+            OldThinkParam = target.ThinkParam,
+            NewThinkParam = newThink,
+            NewInitAnimId = newDef?.DefaultInitAnim ?? -1,
         };
     }
 
-    /// <summary>
-    /// Returns the subset of <paramref name="pool"/> that is safe for
-    /// <paramref name="slot"/>.  Excludes enemies that are too large for
-    /// indoor/tight arenas, and flying enemies if the arena has no sky.
-    /// </summary>
-    private static List<EnemyDef> FilterCandidatesForSlot(
-        List<EnemyDef> pool,
-        EnemyEntity slot,
-        EnemySettings settings)
-    {
-        int maxSize = GetMaxSizeForArena(slot.BossDef?.MapId ?? slot.MapId,
-                                         slot.BossDef?.Name ?? "");
-        bool noFly = !settings.AllowFlyingEnemiesInDoors
-                     && IsIndoorArena(slot.BossDef?.MapId ?? slot.MapId);
-
-        return pool.Where(e =>
-            e.Size <= maxSize &&
-            !(noFly && e.CanFly)).ToList();
-    }
-
-    /// <summary>
-    /// Maximum enemy size that is safe to place in a given boss arena.
-    /// Default is 4 (large but not colossal).  Tight arenas like Capra Demon
-    /// or the Four Kings chamber get tighter limits.
-    /// </summary>
-    private static int GetMaxSizeForArena(string mapId, string bossName)
-    {
-        // Capra Demon / small courtyards — only medium-sized enemies fit
-        if (bossName.Contains("Capra")) return 2;
-        // Painted World, New Londo (small corridors)
-        if (mapId == "m11_00_00_00" || mapId == "m16_00_00_00") return 3;
-        // Default: allow up to size 4
-        return 4;
-    }
-
-    private static bool IsIndoorArena(string mapId) =>
-        mapId is "m10_00_00_00" or "m10_01_00_00" or "m10_02_00_00"
-               or "m13_00_00_00" or "m13_01_00_00" or "m14_01_00_00"
-               or "m15_01_00_00" or "m16_00_00_00" or "m17_00_00_00";
-
-    /// <summary>
-    /// Sattolo's algorithm: shuffles in-place guaranteeing no element stays at its
-    /// original index (a derangement). Every boss in BossForBoss mode will change.
-    /// </summary>
-    private static void SattoloShuffle<T>(List<T> list, Random rng)
-    {
-        for (int i = list.Count - 1; i > 0; i--)
-        {
-            int j = rng.Next(i); // [0, i) — never i itself, so no fixed points
-            (list[i], list[j]) = (list[j], list[i]);
-        }
-    }
-
-    private static List<T> Deduplicate<T>(List<T> list)
-    {
-        var seen   = new HashSet<T>();
-        var result = new List<T>();
-        foreach (var item in list)
-            if (seen.Add(item!)) result.Add(item);
-        return result;
-    }
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private static void Shuffle<T>(List<T> list, Random rng)
     {
