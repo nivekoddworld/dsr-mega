@@ -178,7 +178,7 @@ public class BossRandomizer
             NewNpcParam   = target.NpcParam,
             OldThinkParam = target.ThinkParam,
             NewThinkParam = newThink,
-            NewInitAnimId = newDef?.DefaultInitAnim ?? -1,
+            NewInitAnimId = -1,
             PosX          = pos?.X,
             PosY          = pos?.Y,
             PosZ          = pos?.Z,

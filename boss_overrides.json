@@ -32,6 +32,14 @@
 
   "blocked": {
 
+    // ── Undead Asylum courtyard — medium open courtyard, low ceiling indoors ──
+    // Seath is too large to fit; Four Kings requires open void geometry.
+    "Asylum Demon": [
+      "Seath the Scaleless",
+      "Four Kings",
+      "Black Dragon Kalameet"
+    ],
+
     // ── Undead Parish rooftop — tiny bell-tower ledge ────────────────────────
     // Very confined space; large or environment-dependent bosses will clip or
     // crash on load.
@@ -253,17 +261,11 @@
   },
 
   "positions": {
-    // Uncomment and fill in world-space XYZ + Euler rotation (degrees) to
-    // override where a boss spawns in its arena.  Any component you leave out
-    // keeps the vanilla MSB value.  You only need entries for slots where the
-    // vanilla spawn point causes problems with a randomized replacement.
-    //
-    // Format:
-    //   "Slot Name": { "x": 0.0, "y": 0.0, "z": 0.0, "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0 }
-    //
-    // Examples (remove leading // to activate):
-    //   "Asylum Demon":         { "x": 0.0, "y": 0.0, "z": 0.0, "rotY": 0.0 },
-    //   "Capra Demon":          { "rotY": 180.0 },
-    //   "Gwyn, Lord of Cinder": { "x": 28.5, "y": 0.3, "z": -18.0, "rotY": 0.0 }
+    // Override where a boss spawns in its arena.  Any component you leave out
+    // keeps the vanilla MSB value.
+
+    // Ceaseless Discharge arena centre — vanilla spawn is inside a pillar; this
+    // places the replacement on the open lava floor where it can pathfind.
+    "Ceaseless Discharge": { "x": 246.494, "y": -283.147, "z": 68.164 }
   }
 }

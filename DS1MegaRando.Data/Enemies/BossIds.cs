@@ -52,7 +52,7 @@ public static class BossIds
                 new EmevdPatch(11015396, ForceAnim, WarpChar),
             }),
         // Second gargoyle spawns mid-fight; no separate intro EMEVD needed
-        new("m10_01_00_00", 1010801, "c5350", "Bell Gargoyle 2"),
+        new("m10_01_00_00", 1010801, "c5350", "Bell Gargoyle 2", CanReplace: false),
 
         // ── The Depths ────────────────────────────────────────────────────────
         new("m10_00_00_00", 1000800, "c5260", "Gaping Dragon",
@@ -75,7 +75,7 @@ public static class BossIds
         new("m12_00_00_01", 1200801, "c3230", "Moonlight Butterfly", CanReplace: false),
 
         // ── Demon Ruins / Lost Izalith ────────────────────────────────────────
-        new("m14_01_00_00", 1410600, "c5250", "Ceaseless Discharge", CanReplace: false),
+        new("m14_01_00_00", 1410600, "c5250", "Ceaseless Discharge"),
         new("m14_01_00_00", 1410400, "c2231", "Demon Firesage"),
         new("m14_01_00_00", 1410700, "c5200", "Centipede Demon"),
         // Bed of Chaos is multi-part/scripted; never replace
