@@ -23,7 +23,7 @@ public class BossRandomizer
         HashSet<string> knownModels,
         Random rng)
     {
-        if (!settings.RandomizeBosses || bossSlots.Count == 0)
+        if (bossSlots.Count == 0)
             return new List<EnemyPlacement>();
 
         return settings.BossRandomizationMode == BossRandomizationMode.FreeForAll
@@ -38,19 +38,26 @@ public class BossRandomizer
         List<EnemyEntity> bossSlots,
         Random rng)
     {
-        // Build a pool of boss models from the occupied slots
-        var replacementPool = bossSlots.Select(b => b.ModelId).ToList();
-        Shuffle(replacementPool, rng);
+        var originalModels = bossSlots.Select(b => b.ModelId).ToList();
+        var replacementPool = originalModels.ToList();
 
         if (!settings.AllowDuplicateBosses)
-            replacementPool = Deduplicate(replacementPool);
+        {
+            // Sattolo's algorithm: generates a derangement (no element stays in its
+            // original position), so every boss always gets a different replacement.
+            SattoloShuffle(replacementPool, rng);
+        }
+        else
+        {
+            Shuffle(replacementPool, rng);
+        }
 
         var placements = new List<EnemyPlacement>();
         for (int i = 0; i < bossSlots.Count; i++)
         {
-            var target       = bossSlots[i];
-            string newModel  = replacementPool[i % replacementPool.Count];
-            var    newDef    = EnemyIds.ByModelId(newModel);
+            var target      = bossSlots[i];
+            string newModel = replacementPool[i];
+            var    newDef   = EnemyIds.ByModelId(newModel);
 
             placements.Add(MakePlacement(target, newModel, newDef,
                 keepOriginalNpc: true, settings));
@@ -175,6 +182,19 @@ public class BossRandomizer
         mapId is "m10_00_00_00" or "m10_01_00_00" or "m10_02_00_00"
                or "m13_00_00_00" or "m13_01_00_00" or "m14_01_00_00"
                or "m15_01_00_00" or "m16_00_00_00" or "m17_00_00_00";
+
+    /// <summary>
+    /// Sattolo's algorithm: shuffles in-place guaranteeing no element stays at its
+    /// original index (a derangement). Every boss in BossForBoss mode will change.
+    /// </summary>
+    private static void SattoloShuffle<T>(List<T> list, Random rng)
+    {
+        for (int i = list.Count - 1; i > 0; i--)
+        {
+            int j = rng.Next(i); // [0, i) — never i itself, so no fixed points
+            (list[i], list[j]) = (list[j], list[i]);
+        }
+    }
 
     private static List<T> Deduplicate<T>(List<T> list)
     {

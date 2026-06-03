@@ -18,7 +18,8 @@ public class EnemyPlacer
         EnemySettings settings,
         List<EnemyEntity> slots,
         HashSet<string> knownModels,
-        Random rng)
+        Random rng,
+        IReadOnlyDictionary<string, HashSet<string>>? areaModels = null)
     {
         if (slots.Count == 0) return new List<EnemyPlacement>();
 
@@ -48,7 +49,7 @@ public class EnemyPlacer
                 continue;
             }
 
-            var candidates = GetCandidates(shuffled, target, i, settings);
+            var candidates = GetCandidates(shuffled, target, i, settings, areaModels);
             if (candidates.Count == 0) candidates = shuffled; // fallback
 
             var chosen = candidates[i % candidates.Count];
@@ -65,7 +66,8 @@ public class EnemyPlacer
         List<EnemyDef> pool,
         EnemyEntity target,
         int index,
-        EnemySettings settings)
+        EnemySettings settings,
+        IReadOnlyDictionary<string, HashSet<string>>? areaModels = null)
     {
         // Never place flying enemies in doorways / tight spaces unless allowed
         bool blockFlying = !settings.AllowFlyingEnemiesInDoors
@@ -91,12 +93,14 @@ public class EnemyPlacer
             }
             case EnemyPlacementMode.AreaCohesive:
             {
-                var sameArea = candidates.Where(e =>
-                    EnemyIds.ByModelId(e.ModelId) != null // ensure it's a catalogued model
-                ).ToList();
-                // Prefer enemies that appear in the same map per reference data locations
-                // (we don't have that table here, so fall through to full-random with size filter)
-                if (sameArea.Count > 0) return sameArea;
+                if (areaModels != null &&
+                    !string.IsNullOrEmpty(target.Area) &&
+                    areaModels.TryGetValue(target.Area, out var nativeModels))
+                {
+                    var sameArea = candidates.Where(e => nativeModels.Contains(e.ModelId)).ToList();
+                    if (sameArea.Count > 0) return sameArea;
+                }
+                // Fall through to full pool if area has no native enemy data
                 break;
             }
         }

@@ -28,9 +28,16 @@ public class EnemyRandomizer
         if (settings.EnemyDensityMode != EnemyDensityMode.Vanilla)
             Emit($"  After density filter ({settings.EnemyDensityMode}): {regular.Count} regular enemies");
 
+        // Build area → native-model set for AreaCohesive mode.
+        // Enemies in each area will be replaced by models that natively appear there.
+        var areaModels = BuildAreaModelMap(regular.Concat(minibosses));
+
         var allPlacements = new List<EnemyPlacement>();
 
-        if (settings.RandomizeBosses)
+        // BossOnly mode exists specifically to randomize bosses while leaving
+        // everything else vanilla, so always run boss randomization in that mode
+        // regardless of the standalone RandomizeBosses flag.
+        if (settings.RandomizeBosses || settings.EnemyPlacementMode == EnemyPlacementMode.BossOnly)
         {
             Emit($"Randomizing {bosses.Count} boss encounters ({settings.BossRandomizationMode})...");
             var bossRando = new BossRandomizer();
@@ -41,14 +48,14 @@ public class EnemyRandomizer
         {
             Emit($"Randomizing {minibosses.Count} miniboss encounters...");
             var placer = new EnemyPlacer();
-            allPlacements.AddRange(placer.Place(settings, minibosses, gameData.KnownEnemyModels, rng));
+            allPlacements.AddRange(placer.Place(settings, minibosses, gameData.KnownEnemyModels, rng, areaModels));
         }
 
         if (settings.EnemyPlacementMode != EnemyPlacementMode.BossOnly)
         {
             Emit($"Randomizing {regular.Count} regular enemies...");
             var placer = new EnemyPlacer();
-            var regularPlacements = placer.Place(settings, regular, gameData.KnownEnemyModels, rng);
+            var regularPlacements = placer.Place(settings, regular, gameData.KnownEnemyModels, rng, areaModels);
 
             // Shuffle patrol paths among regular enemies if enabled
             if (settings.RandomizePatrolPaths)
@@ -119,6 +126,19 @@ public class EnemyRandomizer
                 .ToList(),
             _ => enemies,
         };
+    }
+
+    private static Dictionary<string, HashSet<string>> BuildAreaModelMap(IEnumerable<EnemyEntity> entities)
+    {
+        var map = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var e in entities)
+        {
+            if (string.IsNullOrEmpty(e.Area) || string.IsNullOrEmpty(e.ModelId)) continue;
+            if (!map.TryGetValue(e.Area, out var set))
+                map[e.Area] = set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            set.Add(e.ModelId);
+        }
+        return map;
     }
 
     private static void Shuffle<T>(List<T> list, Random rng)
