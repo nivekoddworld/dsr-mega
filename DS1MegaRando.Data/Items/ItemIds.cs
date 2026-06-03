@@ -14,58 +14,155 @@ namespace DS1MegaRando.Data.Items;
 public static class ItemIds
 {
     // ── One-handable weapons (valid right-hand equip row IDs) ──────────────
-    public const int Dagger           = 100000;
-    public const int BanditsKnife     = 103000;
-    public const int ParryingDagger   = 104000;
-    public const int Shortsword       = 200000;
-    public const int Longsword        = 201000;
-    public const int Broadsword       = 202000;
-    public const int BalderSideSword  = 204000;
-    public const int Scimitar         = 400000;
-    public const int Falchion         = 401000;
-    public const int Shotel           = 402000;
+    // Daggers
+    public const int Dagger              = 100000;
+    public const int ParryingDagger      = 101000;
+    public const int GhostBlade          = 102000;
+    public const int BanditsKnife        = 103000;
+    public const int PriscillasDagger    = 104000;
+    // Straight Swords
+    public const int Shortsword          = 200000;
+    public const int Longsword           = 201000;
+    public const int Broadsword          = 202000;
+    public const int BalderSideSword     = 204000;
+    public const int Darksword           = 205000;
+    public const int DrakeSwrd           = 206000;
+    public const int SilverKnightSword   = 207000;
+    public const int BarbedStraightSword = 208000;
+    public const int AstoraStraightSword = 209000;
+    public const int SunlightStraightSword = 210000;
+    public const int Weapon211000        = 211000;
+    // Curved Swords
+    public const int Scimitar            = 400000;
+    public const int Falchion            = 401000;
+    public const int Shotel              = 402000;
+    public const int JaggedGhostBlade    = 403000;
+    public const int CurvedSword405      = 405000;
+    public const int CurvedSword406      = 406000;
     public const int PaintingGuardianSword = 450000;
-    public const int Uchigatana       = 500000;
-    public const int Iaito            = 502000;
-    public const int WashingPole      = 504000;
-    public const int MailBreaker      = 600000;
-    public const int Rapier           = 601000;
-    public const int Estoc            = 602000;
-    public const int HandAxe          = 700000;
-    public const int BattleAxe        = 701000;
-    public const int Club             = 800000;
-    public const int Mace             = 801000;
-    public const int MorningStar      = 802000;
-    public const int Pickaxe          = 803000;
-    public const int ReinforcedClub   = 809000;
-    public const int Caestus          = 901000;
-    public const int Claw             = 902000;
-    public const int Spear            = 1000000;
-    public const int WingedSpear      = 1001000;
-    public const int Partizan         = 1003000;
-    public const int Whip             = 1600000;
+    public const int Murakumo            = 451000;
+    public const int CurvedGreatsword453 = 453000;
+    public const int GoldTracer          = 460000;
+    public const int DarkSilverTracer    = 461000;
+    // Katanas
+    public const int Uchigatana          = 500000;
+    public const int Katana501           = 501000;
+    public const int Iaito               = 502000;
+    public const int WashingPole         = 504000;
+    public const int ChaosBlade          = 505000;
+    // Thrusting Swords
+    public const int MailBreaker         = 600000;
+    public const int Rapier              = 601000;
+    public const int Estoc               = 602000;
+    public const int VelkasRapier        = 603000;
+    public const int RicardsRapier       = 604000;
+    // Axes
+    public const int HandAxe             = 700000;
+    public const int BattleAxe           = 701000;
+    public const int CrescentAxe         = 702000;
+    public const int GargoyleTailAxe     = 703000;
+    public const int GolemAxe            = 704000;
+    public const int ButchersKnife       = 705000;
+    // Hammers
+    public const int Club                = 800000;
+    public const int Mace                = 801000;
+    public const int MorningStar         = 802000;
+    public const int Pickaxe             = 803000;
+    public const int Hammer804           = 804000;
+    public const int ReinforcedClub      = 809000;
+    public const int BlacksmithHammer    = 810000;
+    public const int BlacksmithGiantHammer = 811000;
+    public const int DragonToothHammer   = 812000;
+    // Fists
+    public const int Caestus             = 901000;
+    public const int Claw                = 902000;
+    public const int Fist903             = 903000;
+    public const int DarkHand            = 904000;
+    // Spears
+    public const int Spear               = 1000000;
+    public const int WingedSpear         = 1001000;
+    public const int ChannelersTrident   = 1002000;
+    public const int Partizan            = 1003000;
+    public const int Spear1004           = 1004000;
+    public const int SilverKnightSpear   = 1006000;
+    public const int DemonsSpear         = 1007000;
+    // Whips
+    public const int Whip                = 1600000;
+    public const int NotchedWhip         = 1601000;
 
     // ── Heavier / typically two-handed weapons ────────────────────────────
+    // Greatswords
     public const int BastardSword         = 300000;
     public const int Claymore             = 301000;
     public const int ManSerpentGreatsword = 302000;
     public const int Flamberge            = 303000;
+    public const int Greatsword304        = 304000;
+    public const int BlackKnightSword     = 306000;
+    public const int BlackKnightGreatsword = 307000;
+    public const int Greatsword309        = 309000;
+    public const int ArtorisasGreatsword  = 310000;
+    public const int AbyssGreatsword      = 311000;
+    public const int Greatsword314        = 314000;
+    // Ultra Greatswords
     public const int Zweihander           = 350000;
     public const int Greatsword           = 351000;
     public const int StoneGreatsword      = 352000;
-    public const int Murakumo             = 451000;
+    public const int UltraGreatsword354   = 354000;
+    public const int MoonlightGreatsword  = 355000;
+    // Great Axes
     public const int Greataxe             = 750000;
+    public const int BlackKnightGreataxe  = 751000;
     public const int DemonsGreataxe       = 752000;
+    public const int GreatAxe753          = 753000;
+    // Great Hammers
     public const int GreatClub            = 850000;
+    public const int GreatHammer851       = 851000;
+    public const int GreatHammer852       = 852000;
+    public const int GreatHammer854       = 854000;
     public const int LargeClub            = 855000;
+    public const int GreatHammer856       = 856000;
+    public const int Grant                = 857000;
     public const int SmoughsHammer        = 858000;
+    // Great Spears
     public const int Pike                 = 1050000;
+    public const int GreatSpear1051       = 1051000;
+    public const int GreatSpear1052       = 1052000;
+    public const int GreatSpear1054       = 1054000;
+    // Halberds
     public const int Halberd              = 1100000;
+    public const int BlackKnightHalberd   = 1101000;
+    public const int TitaniteCatchPole    = 1102000;
+    public const int GargoyleHalberd      = 1103000;
+    public const int Halberd1105          = 1105000;
     public const int Lucerne              = 1106000;
     public const int Scythe               = 1107000;
     public const int GreatScythe          = 1150000;
-    public const int Twinblade            = 1200000;
-    public const int StoneTwinblade       = 1201000;
+    public const int Scythe1151           = 1151000;
+    public const int LifehuntScythe       = 1153000;
+    // ── Bows ──────────────────────────────────────────────────────────────
+    public const int Shortbow             = 1200000;
+    public const int Longbow              = 1201000;
+    public const int CompositeBow         = 1202000;
+    public const int BlackBowOfPharis     = 1203000;
+    public const int Bow1204              = 1204000;
+    public const int Bow1205              = 1205000;
+    public const int Greatbow             = 1250000;
+    public const int Greatbow1251         = 1251000;
+    public const int Greatbow1252         = 1252000;
+    public const int GoughsGreatbow       = 1253000;
+    // ── Crossbows ─────────────────────────────────────────────────────────
+    public const int LightCrossbow        = 1300000;
+    public const int HeavyCrossbow        = 1301000;
+    public const int SniperCrossbow       = 1302000;
+    public const int Avelyn               = 1303000;
+    public const int Crossbow1304         = 1304000;
+    public const int Crossbow1305         = 1305000;
+    public const int Crossbow1306         = 1306000;
+    public const int Crossbow1307         = 1307000;
+    public const int Crossbow1308         = 1308000;
+    // ── Arrows / Bolts ────────────────────────────────────────────────────
+    public const int StandardArrow        = 2000000;
+    public const int StandardBolt         = 2100000;
 
     // ── Catalysts / flames ────────────────────────────────────────────────
     public const int Pyromancy_Flame  = 1330000;

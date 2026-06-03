@@ -11,7 +11,8 @@ namespace DS1MegaRando.Items;
 /// </summary>
 public readonly record struct StartingLoadout(
     int RightHand, int LeftHand, int SubRightHand,
-    int Helm, int Chest, int Gauntlets, int Legs)
+    int Helm, int Chest, int Gauntlets, int Legs,
+    int Arrow = -2, int Bolt = -2)
 {
     /// <summary>Sentinel for an empty equip slot (matches the CharaInitParam default).</summary>
     public const int Empty = -1;
@@ -27,27 +28,96 @@ public class StartingLoadoutRandomizer
 
     private static readonly int[] OneHandedWeapons =
     {
-        ItemIds.Dagger, ItemIds.BanditsKnife, ItemIds.ParryingDagger,
-        ItemIds.Shortsword, ItemIds.Longsword, ItemIds.Broadsword, ItemIds.BalderSideSword,
-        ItemIds.Scimitar, ItemIds.Falchion, ItemIds.Shotel, ItemIds.PaintingGuardianSword,
-        ItemIds.Uchigatana, ItemIds.Iaito,
+        // Daggers
+        ItemIds.Dagger, ItemIds.ParryingDagger, ItemIds.GhostBlade,
+        ItemIds.BanditsKnife, ItemIds.PriscillasDagger,
+        // Straight Swords
+        ItemIds.Shortsword, ItemIds.Longsword, ItemIds.Broadsword,
+        ItemIds.BalderSideSword, ItemIds.Darksword, ItemIds.DrakeSwrd,
+        ItemIds.SilverKnightSword, ItemIds.BarbedStraightSword,
+        ItemIds.AstoraStraightSword, ItemIds.SunlightStraightSword, ItemIds.Weapon211000,
+        // Curved Swords
+        ItemIds.Scimitar, ItemIds.Falchion, ItemIds.Shotel,
+        ItemIds.JaggedGhostBlade, ItemIds.CurvedSword405, ItemIds.CurvedSword406,
+        ItemIds.PaintingGuardianSword, ItemIds.GoldTracer, ItemIds.DarkSilverTracer,
+        // Katanas
+        ItemIds.Uchigatana, ItemIds.Katana501, ItemIds.Iaito,
+        // Thrusting Swords
         ItemIds.MailBreaker, ItemIds.Rapier, ItemIds.Estoc,
+        ItemIds.VelkasRapier, ItemIds.RicardsRapier,
+        // Axes
         ItemIds.HandAxe, ItemIds.BattleAxe,
-        ItemIds.Club, ItemIds.Mace, ItemIds.MorningStar, ItemIds.Pickaxe, ItemIds.ReinforcedClub,
-        ItemIds.Caestus, ItemIds.Claw,
-        ItemIds.Spear, ItemIds.WingedSpear, ItemIds.Partizan,
-        ItemIds.Whip,
+        ItemIds.CrescentAxe, ItemIds.GargoyleTailAxe, ItemIds.GolemAxe, ItemIds.ButchersKnife,
+        // Hammers
+        ItemIds.Club, ItemIds.Mace, ItemIds.MorningStar, ItemIds.Pickaxe,
+        ItemIds.Hammer804, ItemIds.ReinforcedClub,
+        ItemIds.BlacksmithHammer, ItemIds.BlacksmithGiantHammer, ItemIds.DragonToothHammer,
+        // Fists
+        ItemIds.Caestus, ItemIds.Claw, ItemIds.Fist903, ItemIds.DarkHand,
+        // Spears
+        ItemIds.Spear, ItemIds.WingedSpear, ItemIds.ChannelersTrident,
+        ItemIds.Partizan, ItemIds.Spear1004, ItemIds.SilverKnightSpear, ItemIds.DemonsSpear,
+        // Whips
+        ItemIds.Whip, ItemIds.NotchedWhip,
     };
 
     private static readonly int[] TwoHandedWeapons =
     {
+        // Greatswords
         ItemIds.BastardSword, ItemIds.Claymore, ItemIds.ManSerpentGreatsword,
-        ItemIds.Flamberge, ItemIds.Zweihander, ItemIds.Greatsword, ItemIds.StoneGreatsword,
-        ItemIds.Murakumo, ItemIds.WashingPole,
-        ItemIds.Greataxe, ItemIds.DemonsGreataxe,
-        ItemIds.GreatClub, ItemIds.LargeClub, ItemIds.SmoughsHammer,
-        ItemIds.Pike, ItemIds.Halberd, ItemIds.Lucerne, ItemIds.Scythe, ItemIds.GreatScythe,
-        ItemIds.Twinblade, ItemIds.StoneTwinblade,
+        ItemIds.Flamberge, ItemIds.Greatsword304, ItemIds.BlackKnightSword,
+        ItemIds.BlackKnightGreatsword, ItemIds.Greatsword309,
+        ItemIds.ArtorisasGreatsword, ItemIds.AbyssGreatsword, ItemIds.Greatsword314,
+        // Ultra Greatswords
+        ItemIds.Zweihander, ItemIds.Greatsword, ItemIds.StoneGreatsword,
+        ItemIds.UltraGreatsword354, ItemIds.MoonlightGreatsword,
+        // Curved Greatswords / Katanas
+        ItemIds.Murakumo, ItemIds.CurvedGreatsword453,
+        ItemIds.WashingPole, ItemIds.ChaosBlade,
+        // Great Axes
+        ItemIds.Greataxe, ItemIds.BlackKnightGreataxe, ItemIds.DemonsGreataxe, ItemIds.GreatAxe753,
+        // Great Hammers
+        ItemIds.GreatClub, ItemIds.GreatHammer851, ItemIds.GreatHammer852,
+        ItemIds.GreatHammer854, ItemIds.LargeClub, ItemIds.GreatHammer856,
+        ItemIds.Grant, ItemIds.SmoughsHammer,
+        // Great Spears
+        ItemIds.Pike, ItemIds.GreatSpear1051, ItemIds.GreatSpear1052, ItemIds.GreatSpear1054,
+        // Halberds
+        ItemIds.Halberd, ItemIds.BlackKnightHalberd, ItemIds.TitaniteCatchPole,
+        ItemIds.GargoyleHalberd, ItemIds.Halberd1105,
+        ItemIds.Lucerne, ItemIds.Scythe, ItemIds.GreatScythe, ItemIds.Scythe1151, ItemIds.LifehuntScythe,
+    };
+
+    private static readonly int[] Bows =
+    {
+        ItemIds.Shortbow, ItemIds.Longbow, ItemIds.CompositeBow,
+        ItemIds.BlackBowOfPharis, ItemIds.Bow1204, ItemIds.Bow1205,
+    };
+
+    private static readonly int[] Greatbows =
+    {
+        ItemIds.Greatbow, ItemIds.Greatbow1251, ItemIds.Greatbow1252, ItemIds.GoughsGreatbow,
+    };
+
+    private static readonly int[] Crossbows =
+    {
+        ItemIds.LightCrossbow, ItemIds.HeavyCrossbow, ItemIds.SniperCrossbow,
+        ItemIds.Avelyn, ItemIds.Crossbow1304, ItemIds.Crossbow1305,
+        ItemIds.Crossbow1306, ItemIds.Crossbow1307, ItemIds.Crossbow1308,
+    };
+
+    private static readonly HashSet<int> BowIds = new()
+    {
+        ItemIds.Shortbow, ItemIds.Longbow, ItemIds.CompositeBow,
+        ItemIds.BlackBowOfPharis, ItemIds.Bow1204, ItemIds.Bow1205,
+        ItemIds.Greatbow, ItemIds.Greatbow1251, ItemIds.Greatbow1252, ItemIds.GoughsGreatbow,
+    };
+
+    private static readonly HashSet<int> CrossbowIds = new()
+    {
+        ItemIds.LightCrossbow, ItemIds.HeavyCrossbow, ItemIds.SniperCrossbow,
+        ItemIds.Avelyn, ItemIds.Crossbow1304, ItemIds.Crossbow1305,
+        ItemIds.Crossbow1306, ItemIds.Crossbow1307, ItemIds.Crossbow1308,
     };
 
     private static readonly int[] Shields =
@@ -103,42 +173,45 @@ public class StartingLoadoutRandomizer
     private static StartingLoadout RollOne(
         StartingLoadoutMode mode, bool randomizeWeapons, bool randomizeArmor, Random rng)
     {
-        var (rightHand, leftHand, subRightHand) = randomizeWeapons
+        var (rightHand, leftHand, subRightHand, arrow, bolt) = randomizeWeapons
             ? RollWeapons(mode, rng)
-            : (StartingLoadout.Keep, StartingLoadout.Keep, StartingLoadout.Keep);
+            : (StartingLoadout.Keep, StartingLoadout.Keep, StartingLoadout.Keep, StartingLoadout.Keep, StartingLoadout.Keep);
 
         return new StartingLoadout(
             rightHand, leftHand, subRightHand,
             Helm:      randomizeArmor ? RollArmorPiece(ArmorHelmOffset,  rng) : StartingLoadout.Keep,
             Chest:     randomizeArmor ? RollArmorPiece(ArmorChestOffset, rng) : StartingLoadout.Keep,
             Gauntlets: randomizeArmor ? RollArmorPiece(ArmorGauntOffset, rng) : StartingLoadout.Keep,
-            Legs:      randomizeArmor ? RollArmorPiece(ArmorLegOffset,   rng) : StartingLoadout.Keep);
+            Legs:      randomizeArmor ? RollArmorPiece(ArmorLegOffset,   rng) : StartingLoadout.Keep,
+            Arrow:     arrow,
+            Bolt:      bolt);
     }
 
-    private static (int right, int left, int subRight) RollWeapons(StartingLoadoutMode mode, Random rng)
+    private static (int right, int left, int subRight, int arrow, int bolt) RollWeapons(StartingLoadoutMode mode, Random rng)
     {
         switch (mode)
         {
             case StartingLoadoutMode.ShieldAnd1H:
                 // Keep the off-hand slot so caster classes retain their catalyst/flame.
-                return (Pick(OneHandedWeapons, rng), Pick(Shields, rng), StartingLoadout.Keep);
+                return (Pick(OneHandedWeapons, rng), Pick(Shields, rng), StartingLoadout.Keep, StartingLoadout.Keep, StartingLoadout.Keep);
 
             case StartingLoadoutMode.ShieldAnd1HAnd2H:
                 // The 2H weapon goes in the right off-hand slot so the player actually
                 // receives it (the old flat-list code dropped it entirely).
-                return (Pick(OneHandedWeapons, rng), Pick(Shields, rng), Pick(TwoHandedWeapons, rng));
+                return (Pick(OneHandedWeapons, rng), Pick(Shields, rng), Pick(TwoHandedWeapons, rng), StartingLoadout.Keep, StartingLoadout.Keep);
 
             case StartingLoadoutMode.CombinedPool:
             {
-                // Weighted toward 1H simply because that pool is larger.
-                var combined = OneHandedWeapons.Concat(TwoHandedWeapons).ToArray();
+                var combined = OneHandedWeapons.Concat(TwoHandedWeapons).Concat(Bows).Concat(Greatbows).Concat(Crossbows).ToArray();
                 int weapon = combined[rng.Next(combined.Length)];
                 int shield = rng.Next(2) == 0 ? Pick(Shields, rng) : StartingLoadout.Empty;
-                return (weapon, shield, StartingLoadout.Keep);
+                int arrow = BowIds.Contains(weapon) ? ItemIds.StandardArrow : StartingLoadout.Keep;
+                int bolt  = CrossbowIds.Contains(weapon) ? ItemIds.StandardBolt : StartingLoadout.Keep;
+                return (weapon, shield, StartingLoadout.Keep, arrow, bolt);
             }
 
             default:
-                return (ItemIds.Longsword, ItemIds.WoodenShield, StartingLoadout.Keep);
+                return (ItemIds.Longsword, ItemIds.WoodenShield, StartingLoadout.Keep, StartingLoadout.Keep, StartingLoadout.Keep);
         }
     }
 

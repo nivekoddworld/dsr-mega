@@ -163,58 +163,151 @@ public class GameFileWriter
     // two-hand rule: effective STR = floor(baseSTR × 1.5), so minimum base = ceil(req × 2/3).
     private static readonly Dictionary<int, (int Str, int Dex, int Int, int Fth)> WeaponRequirements = new()
     {
-        // One-handed weapons
-        [ItemIds.Dagger]                = ( 5,  9, 0, 0),
-        [ItemIds.BanditsKnife]          = ( 6, 12, 0, 0),
+        // Daggers
+        [ItemIds.Dagger]                = ( 5,  8, 0, 0),
         [ItemIds.ParryingDagger]        = ( 5, 14, 0, 0),
-        [ItemIds.Shortsword]            = ( 7, 10, 0, 0),
+        [ItemIds.GhostBlade]            = ( 5,  0, 0, 0),
+        [ItemIds.BanditsKnife]          = ( 6, 12, 0, 0),
+        [ItemIds.PriscillasDagger]      = ( 5, 14, 0, 0),
+        // Straight Swords
+        [ItemIds.Shortsword]            = ( 8, 10, 0, 0),
         [ItemIds.Longsword]             = (10, 10, 0, 0),
         [ItemIds.Broadsword]            = (10, 10, 0, 0),
         [ItemIds.BalderSideSword]       = (10, 14, 0, 0),
+        [ItemIds.Darksword]             = (16, 10, 0, 0),
+        [ItemIds.DrakeSwrd]             = (12, 12, 0, 0),
+        [ItemIds.SilverKnightSword]     = (10, 10, 0, 0),
+        [ItemIds.BarbedStraightSword]   = (10, 10, 0, 0),
+        [ItemIds.AstoraStraightSword]   = (10, 10, 0, 0),
+        [ItemIds.SunlightStraightSword] = (16, 10, 0, 0),
+        [ItemIds.Weapon211000]          = (16, 10, 0, 0),
+        // Curved Swords
         [ItemIds.Scimitar]              = ( 7, 13, 0, 0),
         [ItemIds.Falchion]              = ( 9, 13, 0, 0),
         [ItemIds.Shotel]                = ( 9, 14, 0, 0),
+        [ItemIds.JaggedGhostBlade]      = ( 7,  0, 0, 0),
+        [ItemIds.CurvedSword405]        = (11, 13, 0, 0),
+        [ItemIds.CurvedSword406]        = (11, 13, 0, 0),
         [ItemIds.PaintingGuardianSword] = (10, 14, 0, 0),
+        [ItemIds.GoldTracer]            = ( 9, 20, 0, 0),
+        [ItemIds.DarkSilverTracer]      = ( 9, 20, 0, 0),
+        // Katanas
         [ItemIds.Uchigatana]            = (14, 14, 0, 0),
+        [ItemIds.Katana501]             = (14, 14, 0, 0),
         [ItemIds.Iaito]                 = (14, 14, 0, 0),
+        // Thrusting Swords
         [ItemIds.MailBreaker]           = ( 5, 12, 0, 0),
         [ItemIds.Rapier]                = ( 7, 12, 0, 0),
         [ItemIds.Estoc]                 = (10, 12, 0, 0),
-        [ItemIds.HandAxe]               = ( 7,  9, 0, 0),
-        [ItemIds.BattleAxe]             = (10,  8, 0, 0),
+        [ItemIds.VelkasRapier]          = ( 8, 16, 0, 15),
+        [ItemIds.RicardsRapier]         = ( 8, 16, 0, 0),
+        // Axes
+        [ItemIds.HandAxe]               = ( 8,  8, 0, 0),
+        [ItemIds.BattleAxe]             = (12,  8, 0, 0),
+        [ItemIds.CrescentAxe]           = (14, 10, 0, 14),
+        [ItemIds.GargoyleTailAxe]       = (14, 14, 0, 0),
+        [ItemIds.GolemAxe]              = (26, 10, 0, 0),
+        [ItemIds.ButchersKnife]         = (14, 14, 0, 0),
+        // Hammers
         [ItemIds.Club]                  = (10,  0, 0, 0),
         [ItemIds.Mace]                  = (12,  0, 0, 0),
-        [ItemIds.MorningStar]           = (11,  9, 0, 0),
-        [ItemIds.Pickaxe]               = (14,  0, 0, 0),
+        [ItemIds.MorningStar]           = (11,  0, 0, 0),
+        [ItemIds.Pickaxe]               = (11, 10, 0, 0),
+        [ItemIds.Hammer804]             = (14,  0, 0, 0),
         [ItemIds.ReinforcedClub]        = (12,  0, 0, 0),
-        [ItemIds.Caestus]               = ( 5,  6, 0, 0),
+        [ItemIds.BlacksmithHammer]      = (14,  0, 0, 0),
+        [ItemIds.BlacksmithGiantHammer] = (16,  0, 0, 0),
+        [ItemIds.DragonToothHammer]     = (14,  0, 0, 0),
+        // Fists
+        [ItemIds.Caestus]               = ( 5,  8, 0, 0),
         [ItemIds.Claw]                  = ( 6, 14, 0, 0),
+        [ItemIds.Fist903]               = ( 5,  0, 0, 0),
+        [ItemIds.DarkHand]              = ( 0,  0, 0, 0),
+        // Spears
         [ItemIds.Spear]                 = (11, 10, 0, 0),
-        [ItemIds.WingedSpear]           = (13, 11, 0, 0),
-        [ItemIds.Partizan]              = (14, 12, 0, 0),
+        [ItemIds.WingedSpear]           = (13, 15, 0, 0),
+        [ItemIds.ChannelersTrident]     = (13, 12, 0, 0),
+        [ItemIds.Partizan]              = (12, 10, 0, 0),
+        [ItemIds.Spear1004]             = (13, 12, 0, 0),
+        [ItemIds.SilverKnightSpear]     = (16, 14, 0, 0),
+        [ItemIds.DemonsSpear]           = (16, 16, 0, 0),
+        // Whips
         [ItemIds.Whip]                  = ( 7, 14, 0, 0),
-        // Two-handed / heavy weapons
+        [ItemIds.NotchedWhip]           = ( 7, 14, 0, 0),
+        // Greatswords
         [ItemIds.BastardSword]          = (16, 10, 0, 0),
         [ItemIds.Claymore]              = (16, 10, 0, 0),
         [ItemIds.ManSerpentGreatsword]  = (22, 10, 0, 0),
-        [ItemIds.Flamberge]             = (14, 14, 0, 0),
+        [ItemIds.Flamberge]             = (16, 14, 0, 0),
+        [ItemIds.Greatsword304]         = (20, 10, 0, 0),
+        [ItemIds.BlackKnightSword]      = (20, 18, 0, 0),
+        [ItemIds.BlackKnightGreatsword] = (20, 18, 0, 0),
+        [ItemIds.Greatsword309]         = (24, 10, 0, 0),
+        [ItemIds.ArtorisasGreatsword]   = (24, 18, 0, 20),
+        [ItemIds.AbyssGreatsword]       = (20, 10, 0, 0),
+        [ItemIds.Greatsword314]         = (24, 14, 0, 0),
+        // Ultra Greatswords
         [ItemIds.Zweihander]            = (24, 14, 0, 0),
         [ItemIds.Greatsword]            = (28, 10, 0, 0),
         [ItemIds.StoneGreatsword]       = (40,  0, 0, 0),
+        [ItemIds.UltraGreatsword354]    = (30, 14, 0, 0),
+        [ItemIds.MoonlightGreatsword]   = (16,  0, 16, 0),
+        // Curved Greatswords / Katanas
         [ItemIds.Murakumo]              = (28, 13, 0, 0),
+        [ItemIds.CurvedGreatsword453]   = (20, 20, 0, 0),
         [ItemIds.WashingPole]           = (20, 16, 0, 0),
+        [ItemIds.ChaosBlade]            = (16, 14, 0, 0),
+        // Great Axes
         [ItemIds.Greataxe]              = (30,  8, 0, 0),
+        [ItemIds.BlackKnightGreataxe]   = (36, 18, 0, 0),
         [ItemIds.DemonsGreataxe]        = (46,  0, 0, 0),
+        [ItemIds.GreatAxe753]           = (36,  0, 0, 0),
+        // Great Hammers
         [ItemIds.GreatClub]             = (28,  0, 0, 0),
+        [ItemIds.GreatHammer851]        = (30,  0, 0, 0),
+        [ItemIds.GreatHammer852]        = (36,  0, 0, 0),
+        [ItemIds.GreatHammer854]        = (36,  0, 0, 0),
         [ItemIds.LargeClub]             = (26,  0, 0, 0),
+        [ItemIds.GreatHammer856]        = (48,  0, 0, 0),
+        [ItemIds.Grant]                 = (50,  0, 0, 30),
         [ItemIds.SmoughsHammer]         = (58,  0, 0, 0),
+        // Great Spears
         [ItemIds.Pike]                  = (24, 14, 0, 0),
+        [ItemIds.GreatSpear1051]        = (20, 14, 0, 0),
+        [ItemIds.GreatSpear1052]        = (12,  0, 0, 14),
+        [ItemIds.GreatSpear1054]        = (24, 14, 0, 0),
+        // Halberds
         [ItemIds.Halberd]               = (16, 12, 0, 0),
+        [ItemIds.BlackKnightHalberd]    = (32, 18, 0, 0),
+        [ItemIds.TitaniteCatchPole]     = (16, 14, 0, 0),
+        [ItemIds.GargoyleHalberd]       = (16, 12, 0, 0),
+        [ItemIds.Halberd1105]           = (16, 12, 0, 0),
         [ItemIds.Lucerne]               = (15, 12, 0, 0),
         [ItemIds.Scythe]                = (14, 12, 0, 0),
         [ItemIds.GreatScythe]           = (14, 14, 0, 0),
-        [ItemIds.Twinblade]             = (20, 18, 0, 0),
-        [ItemIds.StoneTwinblade]        = (40, 18, 0, 0),
+        [ItemIds.Scythe1151]            = (16, 14, 0, 0),
+        [ItemIds.LifehuntScythe]        = (16, 14, 0, 0),
+        // Bows
+        [ItemIds.Shortbow]              = ( 7, 12, 0, 0),
+        [ItemIds.Longbow]               = ( 9, 14, 0, 0),
+        [ItemIds.CompositeBow]          = (11, 12, 0, 0),
+        [ItemIds.BlackBowOfPharis]      = ( 9, 18, 0, 0),
+        [ItemIds.Bow1204]               = (11, 12, 0, 0),
+        [ItemIds.Bow1205]               = (11, 12, 0, 0),
+        [ItemIds.Greatbow]              = (20, 14, 0, 0),
+        [ItemIds.Greatbow1251]          = (20, 14, 0, 0),
+        [ItemIds.Greatbow1252]          = (20, 14, 0, 0),
+        [ItemIds.GoughsGreatbow]        = (20, 14, 0, 0),
+        // Crossbows
+        [ItemIds.LightCrossbow]         = ( 8, 10, 0, 0),
+        [ItemIds.HeavyCrossbow]         = (12, 10, 0, 0),
+        [ItemIds.SniperCrossbow]        = (10, 14, 0, 0),
+        [ItemIds.Avelyn]                = (11, 14, 0, 0),
+        [ItemIds.Crossbow1304]          = ( 8, 10, 0, 0),
+        [ItemIds.Crossbow1305]          = ( 8, 10, 0, 0),
+        [ItemIds.Crossbow1306]          = ( 8, 10, 0, 0),
+        [ItemIds.Crossbow1307]          = ( 8, 10, 0, 0),
+        [ItemIds.Crossbow1308]          = ( 8, 10, 0, 0),
         // Shields
         [ItemIds.EastWestShield]      = ( 6,  0, 0, 0),
         [ItemIds.WoodenShield]        = ( 7,  0, 0, 0),
@@ -281,6 +374,12 @@ public class GameFileWriter
         SetSlotUnlessKeep(row, "equip_Armer",        loadout.Chest);
         SetSlotUnlessKeep(row, "equip_Gaunt",        loadout.Gauntlets);
         SetSlotUnlessKeep(row, "equip_Leg",          loadout.Legs);
+        SetSlotUnlessKeep(row, "equip_Arrow",        loadout.Arrow);
+        SetSlotUnlessKeep(row, "equip_Bolt",         loadout.Bolt);
+        if (loadout.Arrow != StartingLoadout.Keep && loadout.Arrow != StartingLoadout.Empty)
+            TrySetCell(row, "arrowNum", (ushort)50);
+        if (loadout.Bolt != StartingLoadout.Keep && loadout.Bolt != StartingLoadout.Empty)
+            TrySetCell(row, "boltNum", (ushort)50);
     }
 
     private static void BoostStatsForWeapons(PARAM param, int rowId, StartingLoadout loadout)
