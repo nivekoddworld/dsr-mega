@@ -68,7 +68,7 @@ public class EnemyRandomizer
         {
             Emit("Scaling enemy stats...");
             var scaler = new EnemyScaler();
-            statMods = scaler.Scale(allPlacements, fogResult?.AreaRatios, settings, gameData);
+            statMods = scaler.Scale(allPlacements, fogResult?.AreaRatios, settings);
         }
 
         // Build entity → area lookup for the spoiler log (EntityID=0 enemies show "?").

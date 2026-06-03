@@ -125,6 +125,7 @@ public class BossRandomizer
             EntityId       = target.EntityId,
             PartIndex      = target.PartIndex,
             MapId          = target.MapId,
+            Area           = target.Area,
             OldModelId     = target.ModelId,
             NewModelId     = newModelId,
             OldNpcParam    = target.NpcParam,

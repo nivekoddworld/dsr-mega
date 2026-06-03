@@ -24,6 +24,9 @@ public class EnemyPlacement
     /// <summary>Map this placement belongs to (e.g. "m10_02_00_00").</summary>
     public string MapId         { get; set; } = "";
 
+    /// <summary>Fog-gate graph area name (e.g. "parish_church"). Used for enemy scaling.</summary>
+    public string Area          { get; set; } = "";
+
     public string OldModelId    { get; set; } = "";
     public string NewModelId    { get; set; } = "";
     public int    OldNpcParam   { get; set; }
