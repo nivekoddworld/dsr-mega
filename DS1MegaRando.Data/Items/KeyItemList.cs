@@ -1,60 +1,51 @@
 namespace DS1MegaRando.Data.Items;
 
 /// <summary>
-/// Progression-critical key items. IDs match DS1R ItemLotParam item_id values.
+/// Progression-critical key items. IDs are DS1R ItemLotParam item_id values and are
+/// kept in sync with the key items defined in the annotation data (ds1-fog.yaml),
+/// which drives key-item placement. Matching the two ensures these items are excluded
+/// from the general item pool so they are never double-placed.
 /// </summary>
 public static class KeyItemList
 {
     public static readonly IReadOnlyList<KeyItemDef> All = new[]
     {
-        // Bells / progression gates
-        new KeyItemDef(2000, "Bell of Awakening (Undead Parish)"),
-        new KeyItemDef(2001, "Bell of Awakening (Quelaag's Domain)"),
-
         // Lord Souls
-        new KeyItemDef(2005, "Bequeathed Lord Soul Shard (Seath)"),
-        new KeyItemDef(2006, "Bequeathed Lord Soul Shard (Four Kings)"),
-        new KeyItemDef(2007, "Lord Soul (Bed of Chaos)"),
-        new KeyItemDef(2008, "Lord Soul (Gravelord Nito)"),
+        new KeyItemDef(2500, "Lord Soul (Nito)"),
+        new KeyItemDef(2501, "Lord Soul (Bed of Chaos)"),
+        new KeyItemDef(2502, "Bequeathed Lord Soul Shard (Four Kings)"),
+        new KeyItemDef(2503, "Bequeathed Lord Soul Shard (Seath)"),
+
+        // Endgame progression
+        new KeyItemDef(2510, "Lordvessel"),
+        new KeyItemDef(2520, "Broken Pendant"),
 
         // Keys
-        new KeyItemDef(2010, "Basement Key"),
-        new KeyItemDef(2011, "Blighttown Key"),
-        new KeyItemDef(2012, "Key to New Londo Ruins"),
-        new KeyItemDef(2013, "Annex Key"),
-        new KeyItemDef(2014, "Dungeon Cell Key"),
-        new KeyItemDef(2015, "Big Pilgrim's Key"),
-        new KeyItemDef(2016, "Undead Asylum F2 East Key"),
-        new KeyItemDef(2017, "Key to the Seal"),
-        new KeyItemDef(2018, "Key to Depths"),
-        new KeyItemDef(2019, "Residence Key"),
-        new KeyItemDef(2020, "Crest of Artorias"),
-        new KeyItemDef(2021, "Cage Key"),
-        new KeyItemDef(2022, "Archive Tower Cell Key"),
-        new KeyItemDef(2023, "Archive Tower Giant Door Key"),
-        new KeyItemDef(2024, "Archive Tower Giant Cell Key"),
-        new KeyItemDef(2025, "Watchtower Basement Key"),
-        new KeyItemDef(2026, "Mystery Key"),
-        new KeyItemDef(2027, "Sewer Chamber Key"),
-        new KeyItemDef(2028, "Undead Asylum F2 West Key"),
-        new KeyItemDef(2029, "Peculiar Doll"),
+        new KeyItemDef(2001, "Basement Key"),
+        new KeyItemDef(2002, "Crest of Artorias"),
+        new KeyItemDef(2003, "Cage Key"),
+        new KeyItemDef(2005, "Archive Tower Giant Door Key"),
+        new KeyItemDef(2006, "Archive Tower Giant Cell Key"),
+        new KeyItemDef(2007, "Blighttown Key"),
+        new KeyItemDef(2008, "Key to New Londo Ruins"),
+        new KeyItemDef(2009, "Annex Key"),
+        new KeyItemDef(2013, "Key to the Seal"),
+        new KeyItemDef(2014, "Key to Depths"),
+        new KeyItemDef(2016, "Undead Asylum F2 West Key"),
+        new KeyItemDef(2019, "Watchtower Basement Key"),
+        new KeyItemDef(2020, "Archive Prison Extra Key"),
+        new KeyItemDef(2021, "Residence Key"),
+        new KeyItemDef(2022, "Crest Key"),
 
-        // Rite / special progression
-        new KeyItemDef(2030, "Lordvessel"),
-        new KeyItemDef(2031, "Covenant of Artorias"),
-        new KeyItemDef(2032, "Broken Pendant"),
+        // Special progression goods
+        new KeyItemDef(118,  "Purple Coward's Crystal"),
+        new KeyItemDef(384,  "Peculiar Doll"),
+        new KeyItemDef(3500, "Sorcery: Cast Light"),
 
-        // Embers (required for some NPC interactions)
-        new KeyItemDef(2040, "Divine Ember"),
-        new KeyItemDef(2041, "Large Divine Ember"),
-        new KeyItemDef(2042, "Dark Ember"),
-        new KeyItemDef(2043, "Large Ember"),
-        new KeyItemDef(2044, "Very Large Ember"),
-        new KeyItemDef(2045, "Large Magic Ember"),
-        new KeyItemDef(2046, "Enchanted Ember"),
-        new KeyItemDef(2047, "Crystal Ember"),
-        new KeyItemDef(2048, "Large Flame Ember"),
-        new KeyItemDef(2049, "Chaos Flame Ember"),
+        // Covenant / progression rings
+        new KeyItemDef(138,  "Covenant of Artorias"),
+        new KeyItemDef(139,  "Orange Charred Ring"),
+        new KeyItemDef(149,  "Darkmoon Seance Ring"),
     };
 
     private static readonly IReadOnlyDictionary<int, KeyItemDef> _byId =

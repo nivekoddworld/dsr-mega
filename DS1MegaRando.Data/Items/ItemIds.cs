@@ -42,14 +42,13 @@ public static class ItemIds
     public const int PaintingGuardianSword = 450000;
     public const int Murakumo            = 451000;
     public const int CurvedGreatsword453 = 453000;
-    public const int GoldTracer          = 460000;
-    public const int DarkSilverTracer    = 461000;
+    public const int GoldTracer          = 9010000;
+    public const int DarkSilverTracer    = 9011000;
     // Katanas
     public const int Uchigatana          = 500000;
-    public const int Katana501           = 501000;
+    public const int Katana501           = 501000;  // Washing Pole
     public const int Iaito               = 502000;
-    public const int WashingPole         = 504000;
-    public const int ChaosBlade          = 505000;
+    public const int ChaosBlade          = 503000;
     // Thrusting Swords
     public const int MailBreaker         = 600000;
     public const int Rapier              = 601000;
@@ -85,7 +84,6 @@ public static class ItemIds
     public const int Partizan            = 1003000;
     public const int Spear1004           = 1004000;
     public const int SilverKnightSpear   = 1006000;
-    public const int DemonsSpear         = 1007000;
     // Whips
     public const int Whip                = 1600000;
     public const int NotchedWhip         = 1601000;
@@ -120,9 +118,8 @@ public static class ItemIds
     public const int GreatHammer852       = 852000;
     public const int GreatHammer854       = 854000;
     public const int LargeClub            = 855000;
-    public const int GreatHammer856       = 856000;
+    public const int GreatHammer856       = 856000;  // Smough's Hammer
     public const int Grant                = 857000;
-    public const int SmoughsHammer        = 858000;
     // Great Spears
     public const int Pike                 = 1050000;
     public const int GreatSpear1051       = 1051000;
@@ -137,8 +134,7 @@ public static class ItemIds
     public const int Lucerne              = 1106000;
     public const int Scythe               = 1107000;
     public const int GreatScythe          = 1150000;
-    public const int Scythe1151           = 1151000;
-    public const int LifehuntScythe       = 1153000;
+    public const int Scythe1151           = 1151000;  // Lifehunt Scythe
     // ── Bows ──────────────────────────────────────────────────────────────
     public const int Shortbow             = 1200000;
     public const int Longbow              = 1201000;

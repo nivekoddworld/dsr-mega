@@ -56,7 +56,7 @@ public class StartingLoadoutRandomizer
         ItemIds.Caestus, ItemIds.Claw, ItemIds.Fist903, ItemIds.DarkHand,
         // Spears
         ItemIds.Spear, ItemIds.WingedSpear, ItemIds.ChannelersTrident,
-        ItemIds.Partizan, ItemIds.Spear1004, ItemIds.SilverKnightSpear, ItemIds.DemonsSpear,
+        ItemIds.Partizan, ItemIds.Spear1004, ItemIds.SilverKnightSpear,
         // Whips
         ItemIds.Whip, ItemIds.NotchedWhip,
     };
@@ -72,20 +72,19 @@ public class StartingLoadoutRandomizer
         ItemIds.Zweihander, ItemIds.Greatsword, ItemIds.StoneGreatsword,
         ItemIds.UltraGreatsword354, ItemIds.MoonlightGreatsword,
         // Curved Greatswords / Katanas
-        ItemIds.Murakumo, ItemIds.CurvedGreatsword453,
-        ItemIds.WashingPole, ItemIds.ChaosBlade,
+        ItemIds.Murakumo, ItemIds.CurvedGreatsword453, ItemIds.ChaosBlade,
         // Great Axes
         ItemIds.Greataxe, ItemIds.BlackKnightGreataxe, ItemIds.DemonsGreataxe, ItemIds.GreatAxe753,
         // Great Hammers
         ItemIds.GreatClub, ItemIds.GreatHammer851, ItemIds.GreatHammer852,
         ItemIds.GreatHammer854, ItemIds.LargeClub, ItemIds.GreatHammer856,
-        ItemIds.Grant, ItemIds.SmoughsHammer,
+        ItemIds.Grant,
         // Great Spears
         ItemIds.Pike, ItemIds.GreatSpear1051, ItemIds.GreatSpear1052, ItemIds.GreatSpear1054,
         // Halberds
         ItemIds.Halberd, ItemIds.BlackKnightHalberd, ItemIds.TitaniteCatchPole,
         ItemIds.GargoyleHalberd, ItemIds.Halberd1105,
-        ItemIds.Lucerne, ItemIds.Scythe, ItemIds.GreatScythe, ItemIds.Scythe1151, ItemIds.LifehuntScythe,
+        ItemIds.Lucerne, ItemIds.Scythe, ItemIds.GreatScythe, ItemIds.Scythe1151,
     };
 
     private static readonly int[] Bows =

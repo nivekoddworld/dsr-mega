@@ -206,7 +206,6 @@ public class GameFileWriter
         [ItemIds.Partizan]              = (12, 10, 0, 0),
         [ItemIds.Spear1004]             = (13, 12, 0, 0),
         [ItemIds.SilverKnightSpear]     = (16, 14, 0, 0),
-        [ItemIds.DemonsSpear]           = (16, 16, 0, 0),
         // Whips
         [ItemIds.Whip]                  = ( 7, 14, 0, 0),
         [ItemIds.NotchedWhip]           = ( 7, 14, 0, 0),
@@ -231,7 +230,6 @@ public class GameFileWriter
         // Curved Greatswords / Katanas
         [ItemIds.Murakumo]              = (28, 13, 0, 0),
         [ItemIds.CurvedGreatsword453]   = (20, 20, 0, 0),
-        [ItemIds.WashingPole]           = (20, 16, 0, 0),
         [ItemIds.ChaosBlade]            = (16, 14, 0, 0),
         // Great Axes
         [ItemIds.Greataxe]              = (30,  8, 0, 0),
@@ -246,7 +244,6 @@ public class GameFileWriter
         [ItemIds.LargeClub]             = (26,  0, 0, 0),
         [ItemIds.GreatHammer856]        = (48,  0, 0, 0),
         [ItemIds.Grant]                 = (50,  0, 0, 30),
-        [ItemIds.SmoughsHammer]         = (58,  0, 0, 0),
         // Great Spears
         [ItemIds.Pike]                  = (24, 14, 0, 0),
         [ItemIds.GreatSpear1051]        = (20, 14, 0, 0),
@@ -262,7 +259,6 @@ public class GameFileWriter
         [ItemIds.Scythe]                = (14, 12, 0, 0),
         [ItemIds.GreatScythe]           = (14, 14, 0, 0),
         [ItemIds.Scythe1151]            = (16, 14, 0, 0),
-        [ItemIds.LifehuntScythe]        = (16, 14, 0, 0),
         // Bows
         [ItemIds.Shortbow]              = ( 7, 12, 0, 0),
         [ItemIds.Longbow]               = ( 9, 14, 0, 0),
