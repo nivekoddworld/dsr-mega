@@ -164,31 +164,17 @@ public class WorldGraph
         string text  = e?.Text ?? side.Text ?? (side.HasTag("hard") ? "hard skip" : "in map");
         bool isFixed = e == null || e.IsFixed;
 
-        // Gate hard/glitched-tagged edges behind a pseudo-item so GraphChecker only
-        // traverses them when the caller opts in via the preAvailable set.
-        bool isGlitched = side.HasTag("hard") || side.HasTag("glitched");
-        Expr? logicExpr  = isGlitched ? Expr.Named("allow_glitched") : null;
-        bool isInstawarp = side.HasTag("instawarp");
-        if (isInstawarp) logicExpr = logicExpr == null
-            ? Expr.Named("allow_instawarps")
-            : new Expr(new List<Expr> { logicExpr, Expr.Named("allow_instawarps") }, every: true).Simplify();
-
-        Expr? fullExpr = (side.Expr, logicExpr) switch
-        {
-            (null, var lg) => lg,
-            (var se, null) => se,
-            (var se, var lg) => new Expr(new List<Expr> { se, lg }, every: true).Simplify(),
-        };
+        bool isGlitchedOnly = side.HasTag("hard") || side.HasTag("glitched") || side.HasTag("instawarp");
 
         var exit = new GraphEdge
         {
             Type = EdgeType.Exit, From = side.Area, Name = name,
-            Text = text, IsFixed = isFixed, Expr = fullExpr, IsGlitchedOnly = isGlitched || isInstawarp,
+            Text = text, IsFixed = isFixed, Expr = side.Expr, IsGlitchedOnly = isGlitchedOnly,
         };
         var ent = new GraphEdge
         {
             Type = EdgeType.Entrance, To = side.Area, Name = name,
-            Text = text, IsFixed = isFixed, Expr = fullExpr, IsGlitchedOnly = isGlitched || isInstawarp,
+            Text = text, IsFixed = isFixed, Expr = side.Expr, IsGlitchedOnly = isGlitchedOnly,
         };
         exit.Pair = ent;
         ent.Pair  = exit;

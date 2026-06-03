@@ -33,8 +33,7 @@ public class SoftlockChecker
         // Build item areas from key item placements
         var itemAreas = BuildItemAreas(ann, itemResult);
 
-        var logicTokens = BuildLogicTokens(settings.FogGate);
-        var check  = checker.Check(graph, fogResult.StartArea, itemAreas, logicTokens);
+        var check  = checker.Check(graph, fogResult.StartArea, itemAreas);
         var issues = new List<string>();
 
         foreach (var required in RequiredAreas)
@@ -117,14 +116,6 @@ public class SoftlockChecker
         // Format: "category:itemId" e.g. "3:2510" or "2:138"
         var parts = id.Split(':');
         return parts.Length == 2 && int.TryParse(parts[1], out int v) ? v : 0;
-    }
-
-    private static IReadOnlyList<string> BuildLogicTokens(FogGateSettings fog)
-    {
-        var tokens = new List<string>();
-        if (fog.AllowHardSkips || fog.LogicMode != LogicMode.Normal) tokens.Add("allow_glitched");
-        if (fog.AllowInstawarps || fog.LogicMode == LogicMode.NoLogic)  tokens.Add("allow_instawarps");
-        return tokens;
     }
 
     private static bool IsUpgradeMaterial(int itemId) => itemId is

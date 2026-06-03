@@ -61,18 +61,6 @@ public class GraphConnector
         }
     }
 
-    private static IReadOnlyList<string> BuildLogicTokens(FogGateSettings settings)
-    {
-        var tokens = new List<string>();
-        // In Glitched/NoLogic modes, or when AllowHardSkips is explicitly on, hard-skip edges are traversable.
-        if (settings.AllowHardSkips || settings.LogicMode != LogicMode.Normal)
-            tokens.Add("allow_glitched");
-        // Instawarps require explicit opt-in OR NoLogic mode.
-        if (settings.AllowInstawarps || settings.LogicMode == LogicMode.NoLogic)
-            tokens.Add("allow_instawarps");
-        return tokens;
-    }
-
     private void ConnectSilo(
         WorldGraph graph,
         List<GraphEdge> exits,
@@ -130,7 +118,7 @@ public class GraphConnector
         // BFS-based swap loop: ensure all areas are reachable (mirrors FogMod's retry loop)
         while (swapAttempts++ < maxSwapAttempts)
         {
-            var check    = _checker.Check(graph, graph.StartArea, graph.ItemAreas, BuildLogicTokens(settings));
+            var check    = _checker.Check(graph, graph.StartArea, graph.ItemAreas);
             if (check.Unreachable.Count == 0) break;
 
             // Find an entrance into an unreachable area
