@@ -17,7 +17,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include "heapfix.h"
-#include "dinput8_proxy.h"
 
 static DWORD WINAPI WorkerThread(LPVOID)
 {
@@ -33,7 +32,8 @@ BOOL WINAPI DllMain(HMODULE hMod, DWORD reason, LPVOID)
     if (reason == DLL_PROCESS_ATTACH)
     {
         DisableThreadLibraryCalls(hMod);
-        InitDInput8Proxy();                          // load real dinput8 now
+        // No LoadLibrary here — loader lock is held during DllMain.
+        // The real dinput8.dll is loaded lazily in DirectInput8Create.
         CreateThread(nullptr, 0, WorkerThread, nullptr, 0, nullptr);
     }
     return TRUE;
