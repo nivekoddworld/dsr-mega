@@ -279,13 +279,32 @@
                         VerticalAlignment="Center"
                         Margin="0,0,0,0"/>
 
-                <!-- Launch game button -->
-                <Button Grid.Column="6"
-                        Style="{StaticResource DS1Button}"
-                        Content="▶ PLAY"
-                        Margin="8,0,0,0"
-                        Click="LaunchGame_Click"
-                        ToolTip="Launch Dark Souls Remastered"/>
+                <!-- Launch game split button -->
+                <StackPanel Grid.Column="6" Orientation="Horizontal" Margin="8,0,0,0">
+                    <Button Style="{StaticResource DS1Button}"
+                            Content="▶ PLAY"
+                            Click="LaunchGame_Click"
+                            ToolTip="Launch Dark Souls Remastered"/>
+                    <Button x:Name="LaunchDropdownBtn"
+                            Style="{StaticResource DS1Button}"
+                            Content="▾"
+                            Padding="8,8"
+                            Margin="2,0,0,0"
+                            Click="LaunchDropdown_Click"
+                            ToolTip="More launch options">
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="▶  Standard Launch"
+                                          Click="LaunchGame_Click"/>
+                                <MenuItem Header="⚙  Launch with Mod Framework"
+                                          Click="LaunchWithModFramework_Click"/>
+                                <Separator/>
+                                <MenuItem Header="✕  Remove Mod Framework"
+                                          Click="RemoveModFramework_Click"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
 

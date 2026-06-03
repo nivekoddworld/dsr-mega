@@ -68,7 +68,96 @@ public partial class MainWindow : Window
         return page;
     }
 
-    private void LaunchGame_Click(object sender, RoutedEventArgs e)
+    private void LaunchGame_Click(object sender, RoutedEventArgs e) =>
+        LaunchViaSteam();
+
+    private void LaunchDropdown_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.ContextMenu is ContextMenu menu)
+        {
+            menu.PlacementTarget = btn;
+            menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+            menu.IsOpen = true;
+        }
+    }
+
+    private void LaunchWithModFramework_Click(object sender, RoutedEventArgs e)
+    {
+        var gameDir = Settings.MegaSettings.Global.GameDirectory;
+        if (string.IsNullOrWhiteSpace(gameDir))
+        {
+            MessageBox.Show("Please set the game directory first.",
+                "No Game Directory", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var dllDst = Path.Combine(gameDir, "dinput8.dll");
+
+        if (!File.Exists(dllDst))
+        {
+            // Try to copy from the app folder (placed there by build.bat)
+            var dllSrc = Path.Combine(AppContext.BaseDirectory, "dinput8.dll");
+            if (File.Exists(dllSrc))
+            {
+                try { File.Copy(dllSrc, dllDst); }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        $"Could not copy Mod Framework to game folder:\n{ex.Message}",
+                        "Deploy Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+            else
+            {
+                MessageBox.Show(
+                    "Mod Framework (dinput8.dll) not found.\n\n" +
+                    "Run build.bat first to build and install it, then try again.",
+                    "Mod Framework Not Installed", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+        }
+
+        LaunchViaSteam();
+    }
+
+    private void RemoveModFramework_Click(object sender, RoutedEventArgs e)
+    {
+        var gameDir = Settings.MegaSettings.Global.GameDirectory;
+        if (string.IsNullOrWhiteSpace(gameDir))
+        {
+            MessageBox.Show("Please set the game directory first.",
+                "No Game Directory", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var dllPath = Path.Combine(gameDir, "dinput8.dll");
+        if (!File.Exists(dllPath))
+        {
+            MessageBox.Show("Mod Framework is not currently installed in the game folder.",
+                "Not Installed", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var result = MessageBox.Show(
+            $"Remove Mod Framework from:\n{gameDir}?",
+            "Remove Mod Framework", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (result != MessageBoxResult.Yes) return;
+
+        try
+        {
+            File.Delete(dllPath);
+            MessageBox.Show("Mod Framework removed successfully.",
+                "Removed", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Could not remove dinput8.dll:\n{ex.Message}",
+                "Remove Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void LaunchViaSteam()
     {
         try
         {
