@@ -68,6 +68,36 @@ public partial class MainWindow : Window
         return page;
     }
 
+    private void LaunchGame_Click(object sender, RoutedEventArgs e)
+    {
+        var gameDir = Settings.MegaSettings.Global.GameDirectory;
+        var exe = string.IsNullOrWhiteSpace(gameDir)
+            ? null
+            : Path.Combine(gameDir, "DarkSoulsRemastered.exe");
+
+        if (exe == null || !File.Exists(exe))
+        {
+            MessageBox.Show("Game executable not found. Please set the game directory first.",
+                "Launch Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = exe,
+                WorkingDirectory = gameDir,
+                UseShellExecute = true,
+            });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Could not launch game: {ex.Message}",
+                "Launch Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private void RollSeed_Click(object sender, RoutedEventArgs e)
     {
         Settings.MegaSettings.Global.Seed = GlobalSettings.GenerateRandomSeed();

@@ -233,6 +233,7 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- Status label -->
@@ -277,6 +278,14 @@
                         Click="Randomize_Click"
                         VerticalAlignment="Center"
                         Margin="0,0,0,0"/>
+
+                <!-- Launch game button -->
+                <Button Grid.Column="6"
+                        Style="{StaticResource DS1Button}"
+                        Content="▶ PLAY"
+                        Margin="8,0,0,0"
+                        Click="LaunchGame_Click"
+                        ToolTip="Launch Dark Souls Remastered"/>
             </Grid>
         </Border>
 
