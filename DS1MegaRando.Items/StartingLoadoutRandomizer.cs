@@ -27,20 +27,27 @@ public class StartingLoadoutRandomizer
 
     private static readonly int[] OneHandedWeapons =
     {
-        ItemIds.Dagger, ItemIds.BanditsKnife, ItemIds.Shortsword, ItemIds.Longsword,
-        ItemIds.Broadsword, ItemIds.BalderSideSword, ItemIds.Scimitar, ItemIds.Falchion,
-        ItemIds.Shotel, ItemIds.Uchigatana, ItemIds.Iaito, ItemIds.MailBreaker,
-        ItemIds.Rapier, ItemIds.Estoc, ItemIds.HandAxe, ItemIds.BattleAxe, ItemIds.Club,
-        ItemIds.Mace, ItemIds.MorningStar, ItemIds.ReinforcedClub, ItemIds.Caestus,
-        ItemIds.Claw, ItemIds.Spear, ItemIds.WingedSpear, ItemIds.Whip,
+        ItemIds.Dagger, ItemIds.BanditsKnife, ItemIds.ParryingDagger,
+        ItemIds.Shortsword, ItemIds.Longsword, ItemIds.Broadsword, ItemIds.BalderSideSword,
+        ItemIds.Scimitar, ItemIds.Falchion, ItemIds.Shotel, ItemIds.PaintingGuardianSword,
+        ItemIds.Uchigatana, ItemIds.Iaito,
+        ItemIds.MailBreaker, ItemIds.Rapier, ItemIds.Estoc,
+        ItemIds.HandAxe, ItemIds.BattleAxe,
+        ItemIds.Club, ItemIds.Mace, ItemIds.MorningStar, ItemIds.Pickaxe, ItemIds.ReinforcedClub,
+        ItemIds.Caestus, ItemIds.Claw,
+        ItemIds.Spear, ItemIds.WingedSpear, ItemIds.Partizan,
+        ItemIds.Whip,
     };
 
     private static readonly int[] TwoHandedWeapons =
     {
         ItemIds.BastardSword, ItemIds.Claymore, ItemIds.ManSerpentGreatsword,
-        ItemIds.Flamberge, ItemIds.Zweihander, ItemIds.Greatsword, ItemIds.Murakumo,
-        ItemIds.Greataxe, ItemIds.GreatClub, ItemIds.LargeClub, ItemIds.Pike,
-        ItemIds.Halberd, ItemIds.Lucerne, ItemIds.Scythe, ItemIds.GreatScythe,
+        ItemIds.Flamberge, ItemIds.Zweihander, ItemIds.Greatsword, ItemIds.StoneGreatsword,
+        ItemIds.Murakumo, ItemIds.WashingPole,
+        ItemIds.Greataxe, ItemIds.DemonsGreataxe,
+        ItemIds.GreatClub, ItemIds.LargeClub, ItemIds.SmoughsHammer,
+        ItemIds.Pike, ItemIds.Halberd, ItemIds.Lucerne, ItemIds.Scythe, ItemIds.GreatScythe,
+        ItemIds.Twinblade, ItemIds.StoneTwinblade,
     };
 
     private static readonly int[] Shields =

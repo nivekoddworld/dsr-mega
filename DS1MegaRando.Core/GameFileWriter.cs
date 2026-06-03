@@ -164,47 +164,57 @@ public class GameFileWriter
     private static readonly Dictionary<int, (int Str, int Dex, int Int, int Fth)> WeaponRequirements = new()
     {
         // One-handed weapons
-        [ItemIds.Dagger]           = ( 5,  9, 0, 0),
-        [ItemIds.BanditsKnife]     = ( 6, 12, 0, 0),
-        [ItemIds.Shortsword]       = ( 7, 10, 0, 0),
-        [ItemIds.Longsword]        = (10, 10, 0, 0),
-        [ItemIds.Broadsword]       = (10, 10, 0, 0),
-        [ItemIds.BalderSideSword]  = (10, 14, 0, 0),
-        [ItemIds.Scimitar]         = ( 7, 13, 0, 0),
-        [ItemIds.Falchion]         = ( 9, 13, 0, 0),
-        [ItemIds.Shotel]           = ( 9, 14, 0, 0),
-        [ItemIds.Uchigatana]       = (14, 14, 0, 0),
-        [ItemIds.Iaito]            = (14, 14, 0, 0),
-        [ItemIds.MailBreaker]      = ( 5, 12, 0, 0),
-        [ItemIds.Rapier]           = ( 7, 12, 0, 0),
-        [ItemIds.Estoc]            = (10, 12, 0, 0),
-        [ItemIds.HandAxe]          = ( 7,  9, 0, 0),
-        [ItemIds.BattleAxe]        = (10,  8, 0, 0),
-        [ItemIds.Club]             = (10,  0, 0, 0),
-        [ItemIds.Mace]             = (12,  0, 0, 0),
-        [ItemIds.MorningStar]      = (11,  9, 0, 0),
-        [ItemIds.ReinforcedClub]   = (12,  0, 0, 0),
-        [ItemIds.Caestus]          = ( 5,  6, 0, 0),
-        [ItemIds.Claw]             = ( 6, 14, 0, 0),
-        [ItemIds.Spear]            = (11, 10, 0, 0),
-        [ItemIds.WingedSpear]      = (13, 11, 0, 0),
-        [ItemIds.Whip]             = ( 7, 14, 0, 0),
+        [ItemIds.Dagger]                = ( 5,  9, 0, 0),
+        [ItemIds.BanditsKnife]          = ( 6, 12, 0, 0),
+        [ItemIds.ParryingDagger]        = ( 5, 14, 0, 0),
+        [ItemIds.Shortsword]            = ( 7, 10, 0, 0),
+        [ItemIds.Longsword]             = (10, 10, 0, 0),
+        [ItemIds.Broadsword]            = (10, 10, 0, 0),
+        [ItemIds.BalderSideSword]       = (10, 14, 0, 0),
+        [ItemIds.Scimitar]              = ( 7, 13, 0, 0),
+        [ItemIds.Falchion]              = ( 9, 13, 0, 0),
+        [ItemIds.Shotel]                = ( 9, 14, 0, 0),
+        [ItemIds.PaintingGuardianSword] = (10, 14, 0, 0),
+        [ItemIds.Uchigatana]            = (14, 14, 0, 0),
+        [ItemIds.Iaito]                 = (14, 14, 0, 0),
+        [ItemIds.MailBreaker]           = ( 5, 12, 0, 0),
+        [ItemIds.Rapier]                = ( 7, 12, 0, 0),
+        [ItemIds.Estoc]                 = (10, 12, 0, 0),
+        [ItemIds.HandAxe]               = ( 7,  9, 0, 0),
+        [ItemIds.BattleAxe]             = (10,  8, 0, 0),
+        [ItemIds.Club]                  = (10,  0, 0, 0),
+        [ItemIds.Mace]                  = (12,  0, 0, 0),
+        [ItemIds.MorningStar]           = (11,  9, 0, 0),
+        [ItemIds.Pickaxe]               = (14,  0, 0, 0),
+        [ItemIds.ReinforcedClub]        = (12,  0, 0, 0),
+        [ItemIds.Caestus]               = ( 5,  6, 0, 0),
+        [ItemIds.Claw]                  = ( 6, 14, 0, 0),
+        [ItemIds.Spear]                 = (11, 10, 0, 0),
+        [ItemIds.WingedSpear]           = (13, 11, 0, 0),
+        [ItemIds.Partizan]              = (14, 12, 0, 0),
+        [ItemIds.Whip]                  = ( 7, 14, 0, 0),
         // Two-handed / heavy weapons
-        [ItemIds.BastardSword]         = (16, 10, 0, 0),
-        [ItemIds.Claymore]             = (16, 10, 0, 0),
-        [ItemIds.ManSerpentGreatsword] = (22, 10, 0, 0),
-        [ItemIds.Flamberge]            = (14, 14, 0, 0),
-        [ItemIds.Zweihander]           = (24, 14, 0, 0),
-        [ItemIds.Greatsword]           = (28, 10, 0, 0),
-        [ItemIds.Murakumo]             = (28, 13, 0, 0),
-        [ItemIds.Greataxe]             = (30,  8, 0, 0),
-        [ItemIds.GreatClub]            = (28,  0, 0, 0),
-        [ItemIds.LargeClub]            = (26,  0, 0, 0),
-        [ItemIds.Pike]                 = (24, 14, 0, 0),
-        [ItemIds.Halberd]              = (16, 12, 0, 0),
-        [ItemIds.Lucerne]              = (15, 12, 0, 0),
-        [ItemIds.Scythe]               = (14, 12, 0, 0),
-        [ItemIds.GreatScythe]          = (14, 14, 0, 0),
+        [ItemIds.BastardSword]          = (16, 10, 0, 0),
+        [ItemIds.Claymore]              = (16, 10, 0, 0),
+        [ItemIds.ManSerpentGreatsword]  = (22, 10, 0, 0),
+        [ItemIds.Flamberge]             = (14, 14, 0, 0),
+        [ItemIds.Zweihander]            = (24, 14, 0, 0),
+        [ItemIds.Greatsword]            = (28, 10, 0, 0),
+        [ItemIds.StoneGreatsword]       = (40,  0, 0, 0),
+        [ItemIds.Murakumo]              = (28, 13, 0, 0),
+        [ItemIds.WashingPole]           = (20, 16, 0, 0),
+        [ItemIds.Greataxe]              = (30,  8, 0, 0),
+        [ItemIds.DemonsGreataxe]        = (46,  0, 0, 0),
+        [ItemIds.GreatClub]             = (28,  0, 0, 0),
+        [ItemIds.LargeClub]             = (26,  0, 0, 0),
+        [ItemIds.SmoughsHammer]         = (58,  0, 0, 0),
+        [ItemIds.Pike]                  = (24, 14, 0, 0),
+        [ItemIds.Halberd]               = (16, 12, 0, 0),
+        [ItemIds.Lucerne]               = (15, 12, 0, 0),
+        [ItemIds.Scythe]                = (14, 12, 0, 0),
+        [ItemIds.GreatScythe]           = (14, 14, 0, 0),
+        [ItemIds.Twinblade]             = (20, 18, 0, 0),
+        [ItemIds.StoneTwinblade]        = (40, 18, 0, 0),
         // Shields
         [ItemIds.EastWestShield]      = ( 6,  0, 0, 0),
         [ItemIds.WoodenShield]        = ( 7,  0, 0, 0),
@@ -492,13 +502,6 @@ public class GameFileWriter
             new FogGateWriter(distEventDir).Write(outDir, gameData, fogResult, ann, fogSettings);
         }
 
-        // Vanilla DS1 gives the player their starting Estus Flask via Oscar's
-        // death scene. A randomized fog gate between the cell and Oscar's cell
-        // would lock the flask away. Drop a corpse with the flask in the
-        // starter area so the player always gets it before any fog gate.
-        if (fogResult != null && fogSettings?.GuaranteeStartingEstus == true)
-            ApplyStartingEstus(gameData);
-
         // Patch EMEVD intro sequences for all bosses that received new models.
         // This replaces the old single-boss ApplyAsylumDemonIntroFix; the
         // BossEmevdPatcher covers Asylum + every other boss with an intro event.
@@ -527,55 +530,6 @@ public class GameFileWriter
             // If output dir differs from game dir, keep the same filename.
             string destPath = Path.Combine(msbOutDir, fileName);
             msb.Write(destPath);
-        }
-    }
-
-    // Ported from FogMod GameDataWriter.cs:798-816. Drops an Estus Flask
-    // corpse-treasure in the asylum starter area so the player gets the flask
-    // even if a randomized fog gate blocks the path to Oscar.
-    private static void ApplyStartingEstus(GameData gameData)
-    {
-        const string asylumMapId = "m18_01_00_00";
-        if (!gameData.Maps.TryGetValue(asylumMapId, out var msb)) return;
-
-        // Idempotent on re-rolls.
-        if (msb.Parts.Objects.Any(p => p.Name == "o0500_0050")) return;
-
-        // Any of the asylum starter-treasure objects works as a template — cloning
-        // it preserves the existing draw/disp groups and collision linkage so the
-        // new corpse spawns and renders correctly on map load.
-        var templateIds = new HashSet<int> { 1811613, 1811616, 1811619, 1811622 };
-        var template = msb.Parts.Objects.FirstOrDefault(o => templateIds.Contains(o.EntityID));
-        if (template == null) return;
-
-        var estus = (MSB1.Part.Object)template.DeepCopy();
-        estus.Name       = "o0500_0050";
-        estus.ModelName  = "o0500";
-        estus.InitAnimID = 50;
-        estus.Position   = new Vector3(13.279f, 202.015f, 20.8f);
-        estus.Rotation   = new Vector3(0, 0, 0);
-        estus.EntityID   = -1;
-        msb.Parts.Objects.Add(estus);
-
-        var treasure = new MSB1.Event.Treasure
-        {
-            Name             = "New Estus",
-            EventID          = -1,   // let SoulsFormats assign; avoids vanilla ID collisions
-            EntityID         = -1,
-            TreasurePartName = "o0500_0050",
-        };
-        treasure.ItemLots[0] = 1082; // Estus Flask row in ItemLotParam
-        msb.Events.Treasures.Add(treasure);
-
-        // o0500 (corpse) should already be in the asylum's model list in vanilla,
-        // but add it if missing so the objbnd streams in at load time.
-        if (!msb.Models.Objects.Any(m => string.Equals(m.Name, "o0500", StringComparison.OrdinalIgnoreCase)))
-        {
-            msb.Models.Objects.Add(new MSB1.Model.Object
-            {
-                Name = "o0500",
-                SibPath = @"N:\FRPG\data\Model\obj\o0500\sib\o0500.SIB",
-            });
         }
     }
 

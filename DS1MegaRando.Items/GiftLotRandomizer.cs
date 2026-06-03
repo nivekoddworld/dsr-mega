@@ -26,7 +26,7 @@ public class GiftLotRandomizer
     private static readonly HashSet<int> GiftLotIds = new()
     {
         1010, // Tiny Being's Ring
-        // 1082 excluded — reserved for Estus Flask guarantee (ApplyStartingEstus)
+        1082, // Black Firebombs ×5
         2060, // Firekeeper Soul
         2070, // Pendant
         4073, // Master Key

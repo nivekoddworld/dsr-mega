@@ -16,6 +16,7 @@ public static class ItemIds
     // ── One-handable weapons (valid right-hand equip row IDs) ──────────────
     public const int Dagger           = 100000;
     public const int BanditsKnife     = 103000;
+    public const int ParryingDagger   = 104000;
     public const int Shortsword       = 200000;
     public const int Longsword        = 201000;
     public const int Broadsword       = 202000;
@@ -23,8 +24,10 @@ public static class ItemIds
     public const int Scimitar         = 400000;
     public const int Falchion         = 401000;
     public const int Shotel           = 402000;
+    public const int PaintingGuardianSword = 450000;
     public const int Uchigatana       = 500000;
     public const int Iaito            = 502000;
+    public const int WashingPole      = 504000;
     public const int MailBreaker      = 600000;
     public const int Rapier           = 601000;
     public const int Estoc            = 602000;
@@ -33,11 +36,13 @@ public static class ItemIds
     public const int Club             = 800000;
     public const int Mace             = 801000;
     public const int MorningStar      = 802000;
+    public const int Pickaxe          = 803000;
     public const int ReinforcedClub   = 809000;
     public const int Caestus          = 901000;
     public const int Claw             = 902000;
     public const int Spear            = 1000000;
     public const int WingedSpear      = 1001000;
+    public const int Partizan         = 1003000;
     public const int Whip             = 1600000;
 
     // ── Heavier / typically two-handed weapons ────────────────────────────
@@ -47,15 +52,20 @@ public static class ItemIds
     public const int Flamberge            = 303000;
     public const int Zweihander           = 350000;
     public const int Greatsword           = 351000;
+    public const int StoneGreatsword      = 352000;
     public const int Murakumo             = 451000;
     public const int Greataxe             = 750000;
+    public const int DemonsGreataxe       = 752000;
     public const int GreatClub            = 850000;
     public const int LargeClub            = 855000;
+    public const int SmoughsHammer        = 858000;
     public const int Pike                 = 1050000;
     public const int Halberd              = 1100000;
     public const int Lucerne              = 1106000;
     public const int Scythe               = 1107000;
     public const int GreatScythe          = 1150000;
+    public const int Twinblade            = 1200000;
+    public const int StoneTwinblade       = 1201000;
 
     // ── Catalysts / flames ────────────────────────────────────────────────
     public const int Pyromancy_Flame  = 1330000;
