@@ -67,7 +67,9 @@ public class ItemRandomizer
             ShopPrices            = shopPrices,
             StartingLoadouts      = startingLoadouts,
             KeyItemPlacements     = keyPlacements,
-            AdjustStatsForWeapons = settings.AdjustStatsForWeapons,
+            // Auto-enable stat adjustment whenever the loadout itself is randomized
+            // so players can always wield their starting weapon.
+            AdjustStatsForWeapons = settings.AdjustStatsForWeapons || settings.RandomizeStartingLoadout,
             GiftLotAssignments    = giftLots,
         };
     }
