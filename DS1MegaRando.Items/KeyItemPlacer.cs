@@ -97,7 +97,10 @@ public class KeyItemPlacer
         AnnotationData ann,
         Dictionary<int, (int ItemId, int Category)> currentAssignments)
     {
-        var itemAreas = ann.KeyItems.ToDictionary(ki => ki.Name, ki => new List<string>());
+        // Start from vanilla areas — items not touched by the randomizer keep their original location
+        var itemAreas = ann.KeyItems.ToDictionary(
+            ki => ki.Name,
+            ki => ki.Area != null ? new List<string> { ki.Area } : new List<string>());
 
         // Build reverse map: itemId → key item name so we can look up placements
         var itemIdToName = new Dictionary<int, string>();
@@ -108,11 +111,15 @@ public class KeyItemPlacer
             if (id != 0) itemIdToName[id] = ki.Name;
         }
 
-        // For each placed lot, find which area it's in and credit the key item there
+        // For each placed lot, override vanilla areas with where the randomizer put the item
+        var overridden = new HashSet<string>();
         foreach (var (lotId, assignment) in currentAssignments)
         {
             if (!ann.LotLocations.TryGetValue(lotId, out var area)) continue;
             if (!itemIdToName.TryGetValue(assignment.ItemId, out var keyName)) continue;
+            if (!itemAreas.ContainsKey(keyName)) continue;
+            if (overridden.Add(keyName))
+                itemAreas[keyName] = new List<string>(); // clear vanilla on first randomized placement
             if (!itemAreas[keyName].Contains(area))
                 itemAreas[keyName].Add(area);
         }

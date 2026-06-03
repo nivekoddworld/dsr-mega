@@ -43,7 +43,7 @@ Console.WriteLine("════════════════════�
                 var graph = new WorldGraph();
                 graph.Construct(fogCfg, ann);
                 connector.Connect(fogCfg, graph, ann, new Random((int)seed));
-                var fr = new DS1MegaRando.Core.FogGate.FogGateResult
+                var fr = new DS1MegaRando.FogGate.FogGateResult
                     { ConnectedGraph = graph, StartArea = graph.StartArea };
                 var vr = softlock.Verify(fr, null, ann, ms);
                 if (vr.Passed) ok = true; else lastIssues = vr.Issues;

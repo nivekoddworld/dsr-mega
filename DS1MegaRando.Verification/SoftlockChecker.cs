@@ -95,15 +95,16 @@ public class SoftlockChecker
             if (id != 0) itemIdToName[id] = ki.Name;
         }
 
-        // Replace vanilla areas with where the randomizer actually placed each key item
-        foreach (var ki in ann.KeyItems)
-            itemAreas[ki.Name] = new List<string>();
-
+        // Override vanilla areas only for items the randomizer actually placed;
+        // un-randomized items (Lordvessel, lord souls with RandomizeLordSouls=false) keep their vanilla area.
+        var overridden = new HashSet<string>();
         foreach (var (lotId, assignment) in itemResult.LotAssignments)
         {
             if (!ann.LotLocations.TryGetValue(lotId, out var area)) continue;
             if (!itemIdToName.TryGetValue(assignment.ItemId, out var keyName)) continue;
             if (!itemAreas.ContainsKey(keyName)) continue;
+            if (overridden.Add(keyName))
+                itemAreas[keyName] = new List<string>(); // clear vanilla on first randomized placement
             if (!itemAreas[keyName].Contains(area))
                 itemAreas[keyName].Add(area);
         }
