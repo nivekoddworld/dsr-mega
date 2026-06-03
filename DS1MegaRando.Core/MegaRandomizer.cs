@@ -152,10 +152,11 @@ public class MegaRandomizer
         {
             Emit("Randomizing enemies...");
             Progress(60);
-            var rng = new Random((int)settings.GetEnemySeed());
-            var er  = new EnemyRandomizer();
+            var rng           = new Random((int)settings.GetEnemySeed());
+            var bossOverrides = BossOverrideConfig.LoadFrom(BossOverrideConfig.DefaultPath);
+            var er            = new EnemyRandomizer();
             er.Log += (_, m) => Emit(m);
-            enemyResult = er.Randomize(settings.Enemies, ann, gameData, fogResult, rng);
+            enemyResult = er.Randomize(settings.Enemies, ann, gameData, fogResult, rng, bossOverrides);
         }
 
         MimicRandomizer.Randomize(gameData, new Random((int)(settings.Global.Seed + 3)));

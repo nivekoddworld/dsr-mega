@@ -1,0 +1,59 @@
+{
+  // Boss placement overrides for DS1 Mega Randomizer.
+  //
+  // "pinned"  — slot name : replacement name
+  //   Force a specific boss slot to always receive a specific replacement,
+  //   regardless of the seed.  Leave empty to let the randomizer decide.
+  //
+  // "blocked" — slot name : [ list of boss names ]
+  //   Prevent listed bosses from ever appearing in that slot.
+  //   Useful for arena-size mismatches or known crash combos.
+  //
+  // All names must match the boss names exactly (case-insensitive).
+  // Valid names: Asylum Demon, Bell Gargoyles, Gaping Dragon, Taurus Demon,
+  //   Capra Demon, Chaos Witch Quelaag, Crossbreed Priscilla, Sif the Great Wolf,
+  //   Demon Firesage, Centipede Demon, Pinwheel, Gravelord Nito, Four Kings,
+  //   Iron Golem, Ornstein, Smough, Seath the Scaleless, Gwyn Lord of Cinder,
+  //   Knight Artorias, Black Dragon Kalameet, Manus Father of the Abyss,
+  //   Sanctuary Guardian
+  //
+  // Examples (remove the leading // to activate):
+  //   "pinned": { "Gwyn, Lord of Cinder": "Sif the Great Wolf" }
+  //   "blocked": { "Four Kings": ["Gaping Dragon"] }
+
+  "pinned": {
+  },
+
+  "blocked": {
+    "Capra Demon": [
+      "Iron Golem",
+      "Gaping Dragon",
+      "Centipede Demon",
+      "Seath the Scaleless",
+      "Four Kings",
+      "Gravelord Nito",
+      "Black Dragon Kalameet"
+    ],
+    "Four Kings": [
+      "Gaping Dragon",
+      "Centipede Demon",
+      "Seath the Scaleless",
+      "Iron Golem",
+      "Black Dragon Kalameet"
+    ],
+    "Crossbreed Priscilla": [
+      "Iron Golem",
+      "Gaping Dragon",
+      "Centipede Demon",
+      "Seath the Scaleless",
+      "Black Dragon Kalameet"
+    ],
+    "Bell Gargoyles": [
+      "Gaping Dragon",
+      "Centipede Demon",
+      "Seath the Scaleless",
+      "Iron Golem",
+      "Black Dragon Kalameet"
+    ]
+  }
+}

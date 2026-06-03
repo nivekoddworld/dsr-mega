@@ -17,10 +17,13 @@ public class BossRandomizer
         EnemySettings settings,
         List<EnemyEntity> bossSlots,
         HashSet<string> knownModels,
-        Random rng)
+        Random rng,
+        BossOverrideConfig? overrides = null)
     {
         if (bossSlots.Count == 0)
             return new List<EnemyPlacement>();
+
+        overrides?.Resolve();
 
         // Build the replacement pool from canonical BossIds definitions so that
         // re-running on already-randomised game files cannot introduce non-boss models.
@@ -37,7 +40,7 @@ public class BossRandomizer
 
         // Build a per-slot assignment list the same length as bossSlots.
         // Each slot is matched to one model from the canonical pool.
-        var assignment = BuildAssignment(bossSlots, canonicalPool, settings, rng);
+        var assignment = BuildAssignment(bossSlots, canonicalPool, settings, rng, overrides);
 
         var placements = new List<EnemyPlacement>();
         for (int i = 0; i < bossSlots.Count; i++)
@@ -57,57 +60,93 @@ public class BossRandomizer
         List<EnemyEntity> bossSlots,
         List<string> pool,
         EnemySettings settings,
-        Random rng)
+        Random rng,
+        BossOverrideConfig? overrides)
     {
-        // For each slot, look up the canonical vanilla model via BossIds so we
-        // know which model to avoid placing back in the same slot (derangement).
+        // Canonical vanilla models for derangement (avoid assigning a boss its own slot).
         var vanillaModels = bossSlots
             .Select(b => BossIds.ByEntityId(b.EntityId)?.ModelId ?? b.ModelId)
             .ToList();
 
-        if (settings.AllowDuplicateBosses)
+        var assignment = new string[bossSlots.Count];
+
+        // ── Pass 1: apply pinned overrides ────────────────────────────────────
+        var pinnedModels = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (overrides != null)
         {
-            // Simple shuffle of the pool; wrap-around if pool is smaller than slots.
-            var shuffled = pool.ToList();
-            Shuffle(shuffled, rng);
-            return Enumerable.Range(0, bossSlots.Count)
-                             .Select(i => shuffled[i % shuffled.Count])
-                             .ToList();
+            for (int i = 0; i < bossSlots.Count; i++)
+            {
+                string? forced = overrides.GetForcedModel(bossSlots[i].EntityId);
+                if (forced != null)
+                {
+                    assignment[i] = forced;
+                    pinnedModels.Add(forced);
+                }
+            }
         }
 
-        // No duplicates: assign each slot a unique model from the pool,
-        // ensuring no slot keeps its own vanilla model (derangement).
-        // If the pool is smaller than the slot count we allow wrap-around
-        // for the overflow slots but still avoid self-assignment.
-        var poolShuffled = pool.ToList();
+        // Collect indices still needing an assignment.
+        var unassigned = Enumerable.Range(0, bossSlots.Count)
+            .Where(i => assignment[i] == null)
+            .ToList();
+
+        if (unassigned.Count == 0)
+            return assignment.ToList();
+
+        // ── Pass 2: build per-slot candidate lists ────────────────────────────
+        // Exclude models already consumed by pins when duplicates are off.
+        var basePool = settings.AllowDuplicateBosses
+            ? pool
+            : pool.Where(m => !pinnedModels.Contains(m)).ToList();
+
+        if (basePool.Count == 0)
+            basePool = pool; // fallback: ignore pin exclusions if pool is exhausted
+
+        var poolShuffled = basePool.ToList();
         Shuffle(poolShuffled, rng);
 
-        var assignment = new List<string>(bossSlots.Count);
-        var used       = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        // ── Pass 3: assign remaining slots ────────────────────────────────────
+        var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        for (int i = 0; i < bossSlots.Count; i++)
+        if (settings.AllowDuplicateBosses)
         {
-            string vanilla = vanillaModels[i];
+            for (int n = 0; n < unassigned.Count; n++)
+                assignment[unassigned[n]] = poolShuffled[n % poolShuffled.Count];
+        }
+        else
+        {
+            foreach (int i in unassigned)
+            {
+                string vanilla = vanillaModels[i];
+                var blocked    = overrides?.GetBlockedModels(bossSlots[i].EntityId)
+                                 ?? new HashSet<string>();
 
-            // Pick the first unused model that isn't the vanilla one for this slot.
-            string? chosen = poolShuffled.FirstOrDefault(
-                m => !used.Contains(m) &&
-                     !string.Equals(m, vanilla, StringComparison.OrdinalIgnoreCase));
+                // Best: unused, not vanilla, not blocked.
+                string? chosen = poolShuffled.FirstOrDefault(m =>
+                    !used.Contains(m) &&
+                    !blocked.Contains(m) &&
+                    !string.Equals(m, vanilla, StringComparison.OrdinalIgnoreCase));
 
-            // Fallback 1: allow reuse if pool is exhausted.
-            if (chosen == null)
-                chosen = poolShuffled.FirstOrDefault(
-                    m => !string.Equals(m, vanilla, StringComparison.OrdinalIgnoreCase));
+                // Fallback 1: allow reuse if pool is exhausted.
+                if (chosen == null)
+                    chosen = poolShuffled.FirstOrDefault(m =>
+                        !blocked.Contains(m) &&
+                        !string.Equals(m, vanilla, StringComparison.OrdinalIgnoreCase));
 
-            // Fallback 2: all pool models equal vanilla (single-boss edge case).
-            if (chosen == null)
-                chosen = poolShuffled[i % poolShuffled.Count];
+                // Fallback 2: ignore blocked if every candidate is blocked.
+                if (chosen == null)
+                    chosen = poolShuffled.FirstOrDefault(m =>
+                        !string.Equals(m, vanilla, StringComparison.OrdinalIgnoreCase));
 
-            assignment.Add(chosen);
-            used.Add(chosen);
+                // Fallback 3: single-boss edge case — accept vanilla.
+                chosen ??= poolShuffled[i % poolShuffled.Count];
+
+                assignment[i] = chosen;
+                used.Add(chosen);
+            }
         }
 
-        return assignment;
+        return assignment.ToList();
     }
 
     // ── Placement factory ─────────────────────────────────────────────────────

@@ -14,7 +14,8 @@ public class EnemyRandomizer
         AnnotationData ann,
         GameData gameData,
         FogGateResult? fogResult,
-        Random rng)
+        Random rng,
+        BossOverrideConfig? bossOverrides = null)
     {
         Emit("Collecting enemy pool from maps...");
         var pool = new EnemyPool();
@@ -41,7 +42,7 @@ public class EnemyRandomizer
         {
             Emit($"Randomizing {bosses.Count} boss encounters...");
             var bossRando = new BossRandomizer();
-            allPlacements.AddRange(bossRando.Randomize(settings, bosses, gameData.KnownEnemyModels, rng));
+            allPlacements.AddRange(bossRando.Randomize(settings, bosses, gameData.KnownEnemyModels, rng, bossOverrides));
         }
 
         if (settings.RandomizeMinibosses)
