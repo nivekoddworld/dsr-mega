@@ -154,10 +154,9 @@ public class StartingLoadoutRandomizer
     /// <summary>
     /// Rolls an independent starting loadout for every player class. Weapons are rolled
     /// only when <see cref="ItemSettings.RandomizeStartingLoadout"/> is set; armor only
-    /// when <see cref="ItemSettings.FashionSouls"/> is set; gift only when
-    /// <see cref="ItemSettings.RandomizeStartingGift"/> is set. Slots for a group that
-    /// isn't being randomized are left as <see cref="StartingLoadout.Keep"/> so the
-    /// class's vanilla gear in that group is preserved.
+    /// when <see cref="ItemSettings.FashionSouls"/> is set. Slots for a group that isn't
+    /// being randomized are left as <see cref="StartingLoadout.Keep"/> so the class's
+    /// vanilla gear in that group is preserved.
     /// </summary>
     public List<StartingLoadout> RandomizePerClass(ItemSettings settings, Random rng)
     {
