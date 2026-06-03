@@ -71,10 +71,10 @@ public class ItemPool
     }
 
     private static bool IsBossSoul(int itemId) => itemId is
-        ItemIds.SoulOfSif or ItemIds.SoulOfGwyn or ItemIds.CoreOfIronGolem or
-        ItemIds.SoulOfQuelaag or ItemIds.SoulOfOrnstein or ItemIds.SoulOfSmough or
-        ItemIds.SoulOfNito or ItemIds.SoulOfBedOfChaos or ItemIds.SoulOfFourKings or
-        ItemIds.SoulOfSeath or ItemIds.SoulOfArtorias or ItemIds.SoulOfManus;
+        ItemIds.SoulOfQuelaag or ItemIds.SoulOfSif or ItemIds.SoulOfGwyn or
+        ItemIds.CoreOfIronGolem or ItemIds.SoulOfOrnstein or ItemIds.SoulOfMoonlightButterfly or
+        ItemIds.SoulOfSmough or ItemIds.SoulOfPriscilla or ItemIds.SoulOfGwyndolin or
+        ItemIds.SoulOfArtorias or ItemIds.SoulOfManus;
 }
 
 public class PoolItem

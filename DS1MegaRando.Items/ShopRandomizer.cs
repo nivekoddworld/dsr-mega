@@ -12,10 +12,10 @@ public class ShopRandomizer
 
     private static readonly IReadOnlyList<int> BossSoulIds = new[]
     {
-        ItemIds.SoulOfSif, ItemIds.SoulOfGwyn, ItemIds.CoreOfIronGolem,
-        ItemIds.SoulOfQuelaag, ItemIds.SoulOfOrnstein, ItemIds.SoulOfSmough,
-        ItemIds.SoulOfNito, ItemIds.SoulOfBedOfChaos, ItemIds.SoulOfFourKings,
-        ItemIds.SoulOfSeath, ItemIds.SoulOfArtorias, ItemIds.SoulOfManus,
+        ItemIds.SoulOfQuelaag, ItemIds.SoulOfSif, ItemIds.SoulOfGwyn,
+        ItemIds.CoreOfIronGolem, ItemIds.SoulOfOrnstein, ItemIds.SoulOfMoonlightButterfly,
+        ItemIds.SoulOfSmough, ItemIds.SoulOfPriscilla, ItemIds.SoulOfGwyndolin,
+        ItemIds.SoulOfArtorias, ItemIds.SoulOfManus,
     };
 
     public (Dictionary<int, int> Items, Dictionary<int, int> Prices) Randomize(

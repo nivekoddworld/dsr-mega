@@ -207,19 +207,20 @@ public static class ItemIds
     public const int CovetousGoldSerpentRing = 20060;
     public const int CovetousSilverSerpentRing = 20050;
 
-    // ── Boss souls ────────────────────────────────────────────────────────
-    public const int SoulOfSif        = 3010200;
-    public const int SoulOfGwyn       = 3010300;
-    public const int CoreOfIronGolem  = 3020000;
-    public const int SoulOfQuelaag    = 3020100;
-    public const int SoulOfOrnstein   = 3020200;
-    public const int SoulOfSmough     = 3020300;
-    public const int SoulOfNito       = 3020400;
-    public const int SoulOfBedOfChaos = 3020500;
-    public const int SoulOfFourKings  = 3020600;
-    public const int SoulOfSeath      = 3020700;
-    public const int SoulOfArtorias   = 3020800;
-    public const int SoulOfManus      = 3020900;
+    // ── Boss souls (consumable boss-soul goods, IDs 700-711) ─────────────────
+    // Note: Nito, Four Kings, Bed of Chaos and Seath do NOT have boss-soul goods —
+    // they drop the Lord Souls (2500-2503), which are key items (see KeyItemList).
+    public const int SoulOfQuelaag          = 700;
+    public const int SoulOfSif              = 701;
+    public const int SoulOfGwyn             = 702;
+    public const int CoreOfIronGolem        = 703;
+    public const int SoulOfOrnstein         = 704;
+    public const int SoulOfMoonlightButterfly = 705;
+    public const int SoulOfSmough           = 706;
+    public const int SoulOfPriscilla        = 707;
+    public const int SoulOfGwyndolin        = 708;
+    public const int SoulOfArtorias         = 710;
+    public const int SoulOfManus            = 711;
 
     // Items considered "useless" for exclude-useless-items setting
     public static readonly IReadOnlySet<int> UselessItems = new HashSet<int>
