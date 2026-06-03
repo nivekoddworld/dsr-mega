@@ -54,6 +54,10 @@ public class GameFileWriter
         // Maps are always written: in-memory MSB mutations can come from
         // sources outside of fog/enemy results (e.g. mimic position shuffles).
         WriteMapFiles(outDir, gameData, fogResult, enemyResult, ann, fogSettings);
+
+        // Merge enemy-specific visual effects into the CommonEffects SFX bundle
+        // so replacement bosses/enemies display their particles in any map.
+        BossSfxMerger.MergeEnemyEffectsIntoCommon(_settings.GameDirectory, outDir);
     }
 
     // ── Items ──────────────────────────────────────────────────────────────

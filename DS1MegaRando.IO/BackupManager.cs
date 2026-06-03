@@ -9,6 +9,7 @@ public class BackupManager
         @"param\GameParam\GameParam.parambnd.dcx",
         @"msg\ENGLISH\menu.msgbnd.dcx",
         @"msg\ENGLISH\item.msgbnd.dcx",
+        @"sfx\FRPG_SfxBnd_CommonEffects.ffxbnd.dcx",
     };
 
     public void BackupAll(GlobalSettings settings)
