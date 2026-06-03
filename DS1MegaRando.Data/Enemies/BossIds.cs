@@ -39,42 +39,45 @@ public static class BossIds
         // c2232 has IsIgnored AI, so it behaves oddly if placed as a replacement
         // elsewhere — but its own slot is replaceable.  Use boss_overrides.json
         // "positions" to fine-tune the spawn point if a replacement clips geometry.
-        new("m18_01_00_00", 1801800, "c2232", "Asylum Demon",
+        new("m18_01_00_00", 1810800, "c2232", "Asylum Demon",
             CanReplace: true,
             EmevdPatches: new[] { new EmevdPatch(11810310, ForceAnim, WarpChar) }),
+        new("m18_01_00_00", 1810810, "c2230", "Stray Demon"),
 
         // ── Undead Parish ─────────────────────────────────────────────────────
-        new("m10_01_00_00", 1010800, "c5350", "Bell Gargoyles",
+        new("m10_01_00_00", 1010800, "c5350", "Bell Gargoyle 1",
             EmevdPatches: new[]
             {
                 new EmevdPatch(11015382, ForceAnim, WarpChar),
                 new EmevdPatch(11015396, ForceAnim, WarpChar),
             }),
+        // Second gargoyle spawns mid-fight; no separate intro EMEVD needed
+        new("m10_01_00_00", 1010801, "c5350", "Bell Gargoyle 2"),
 
         // ── The Depths ────────────────────────────────────────────────────────
         new("m10_00_00_00", 1000800, "c5260", "Gaping Dragon",
             EmevdPatches: new[] { new EmevdPatch(11005382, ForceAnim, WarpChar) }),
 
         // ── Undead Burg / Lower Undead Burg ──────────────────────────────────
-        new("m10_02_00_00", 1002990, "c2250", "Taurus Demon",
-            EmevdPatches: new[] { new EmevdPatch(11025300, ForceAnim, WarpChar) }),
-        new("m10_02_00_00", 1002800, "c2240", "Capra Demon"),
+        // Both entities live in m10_01_00_00 (entity IDs 1010xxx confirmed via fog.txt)
+        new("m10_01_00_00", 1010700, "c2250", "Taurus Demon"),
+        new("m10_01_00_00", 1010750, "c2240", "Capra Demon"),
 
         // ── Blighttown ────────────────────────────────────────────────────────
         new("m14_00_00_00", 1400800, "c5280", "Chaos Witch Quelaag"),
 
         // ── Painted World ────────────────────────────────────────────────────
-        new("m11_00_00_00", 1100800, "c2730", "Crossbreed Priscilla"),
+        new("m11_00_00_00", 1100160, "c2730", "Crossbreed Priscilla"),
 
         // ── Darkroot Garden ──────────────────────────────────────────────────
         new("m12_00_00_01", 1200800, "c5210", "Sif the Great Wolf"),
         // Moonlight Butterfly: IsIgnored model — always kept vanilla
-        new("m12_00_00_01", 1200850, "c3230", "Moonlight Butterfly", CanReplace: false),
+        new("m12_00_00_01", 1200801, "c3230", "Moonlight Butterfly", CanReplace: false),
 
         // ── Demon Ruins / Lost Izalith ────────────────────────────────────────
-        new("m14_01_00_00", 1410800, "c5250", "Ceaseless Discharge", CanReplace: false),
-        new("m14_01_00_00", 1410850, "c2231", "Demon Firesage"),
-        new("m14_01_00_00", 1410900, "c5200", "Centipede Demon"),
+        new("m14_01_00_00", 1410600, "c5250", "Ceaseless Discharge", CanReplace: false),
+        new("m14_01_00_00", 1410400, "c2231", "Demon Firesage"),
+        new("m14_01_00_00", 1410700, "c5200", "Centipede Demon"),
         // Bed of Chaos is multi-part/scripted; never replace
         new("m14_01_00_00", 1410980, "c3230", "Bed of Chaos", CanReplace: false),
 
@@ -91,10 +94,10 @@ public static class BossIds
             EmevdPatches: new[] { new EmevdPatch(11505382, ForceAnim, WarpChar) }),
 
         // ── Anor Londo ────────────────────────────────────────────────────────
-        new("m15_01_00_00", 1500900, "c5270", "Ornstein"),
-        new("m15_01_00_00", 1500901, "c2360", "Smough"),
+        new("m15_01_00_00", 1510800, "c5270", "Ornstein"),
+        new("m15_01_00_00", 1510810, "c2360", "Smough"),
         // Gwyndolin: IsIgnored model — always kept vanilla
-        new("m15_01_00_00", 1500980, "c5320", "Dark Sun Gwyndolin", CanReplace: false),
+        new("m15_01_00_00", 1510650, "c5320", "Dark Sun Gwyndolin", CanReplace: false),
 
         // ── Duke's Archives ───────────────────────────────────────────────────
         // Seath: keep NpcParam from original so scripted crystal-prison death triggers correctly
@@ -105,11 +108,11 @@ public static class BossIds
         new("m18_00_00_00", 1800800, "c5370", "Gwyn, Lord of Cinder"),
 
         // ── DLC: Oolacile ─────────────────────────────────────────────────────
-        new("m12_01_00_00", 1210800, "c4100", "Knight Artorias"),
-        new("m12_01_00_00", 1210850, "c4510", "Black Dragon Kalameet",
+        new("m12_01_00_00", 1210800, "c3471", "Sanctuary Guardian"),
+        new("m12_01_00_00", 1210820, "c4100", "Knight Artorias"),
+        new("m12_01_00_00", 1210840, "c4500", "Manus, Father of the Abyss"),
+        new("m12_01_00_00", 1210400, "c4510", "Black Dragon Kalameet",
             EmevdPatches: new[] { new EmevdPatch(11215382, ForceAnim, WarpChar) }),
-        new("m12_01_00_00", 1210900, "c4500", "Manus, Father of the Abyss"),
-        new("m12_01_00_00", 1210950, "c3471", "Sanctuary Guardian"),
     };
 
     private static readonly IReadOnlyDictionary<int, BossDef> _byEntityId =
