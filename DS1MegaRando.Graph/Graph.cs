@@ -126,6 +126,16 @@ public class WorldGraph
         if (!settings.RandomizeWarps && isWarp)        { entrance.IsFixed = true; return; }
         if (!settings.LordvesselDoorsRandomized && isLordvessel) { entrance.IsFixed = true; return; }
         if (settings.FixKilnEntrance && entrance.Area == "kiln") { entrance.IsFixed = true; return; }
+
+        // Hard-skip / glitched-only entrances: only included when LogicMode allows it
+        bool sideHasGlitched = (entrance.ASide?.HasTag("hard") ?? false) || (entrance.ASide?.HasTag("glitched") ?? false)
+                             || (entrance.BSide?.HasTag("hard") ?? false) || (entrance.BSide?.HasTag("glitched") ?? false);
+        bool sideHasInstawarp = (entrance.ASide?.HasTag("instawarp") ?? false) || (entrance.BSide?.HasTag("instawarp") ?? false);
+
+        if (sideHasGlitched && settings.LogicMode == LogicMode.Normal && !settings.AllowHardSkips)
+            { entrance.IsFixed = true; return; }
+        if (sideHasInstawarp && !settings.AllowInstawarps && settings.LogicMode != LogicMode.NoLogic)
+            { entrance.IsFixed = true; return; }
     }
 
     // Creates a pre-connected directed edge for area.To (non-fog-gate) connections.
@@ -154,15 +164,31 @@ public class WorldGraph
         string text  = e?.Text ?? side.Text ?? (side.HasTag("hard") ? "hard skip" : "in map");
         bool isFixed = e == null || e.IsFixed;
 
+        // Gate hard/glitched-tagged edges behind a pseudo-item so GraphChecker only
+        // traverses them when the caller opts in via the preAvailable set.
+        bool isGlitched = side.HasTag("hard") || side.HasTag("glitched");
+        Expr? logicExpr  = isGlitched ? Expr.Named("allow_glitched") : null;
+        bool isInstawarp = side.HasTag("instawarp");
+        if (isInstawarp) logicExpr = logicExpr == null
+            ? Expr.Named("allow_instawarps")
+            : new Expr(new List<Expr> { logicExpr, Expr.Named("allow_instawarps") }, every: true).Simplify();
+
+        Expr? fullExpr = (side.Expr, logicExpr) switch
+        {
+            (null, var lg) => lg,
+            (var se, null) => se,
+            (var se, var lg) => new Expr(new List<Expr> { se, lg }, every: true).Simplify(),
+        };
+
         var exit = new GraphEdge
         {
             Type = EdgeType.Exit, From = side.Area, Name = name,
-            Text = text, IsFixed = isFixed, Expr = side.Expr
+            Text = text, IsFixed = isFixed, Expr = fullExpr, IsGlitchedOnly = isGlitched || isInstawarp,
         };
         var ent = new GraphEdge
         {
             Type = EdgeType.Entrance, To = side.Area, Name = name,
-            Text = text, IsFixed = isFixed, Expr = side.Expr
+            Text = text, IsFixed = isFixed, Expr = fullExpr, IsGlitchedOnly = isGlitched || isInstawarp,
         };
         exit.Pair = ent;
         ent.Pair  = exit;

@@ -329,9 +329,9 @@ public partial class DebugPage : UserControl
             sb.AppendLine();
             sb.AppendLine($"  ── NPC stat mods  ({enemies.StatModifications.Count}) ─────────────────────");
             int shown = 0;
-            foreach (var (npcId, (hp, dmg)) in enemies.StatModifications.OrderBy(kv => kv.Key))
+            foreach (var (npcId, (hp, dmg, poise)) in enemies.StatModifications.OrderBy(kv => kv.Key))
             {
-                sb.AppendLine($"  NPC {npcId,8}   HP ×{hp:F2}   DMG ×{dmg:F2}");
+                sb.AppendLine($"  NPC {npcId,8}   HP ×{hp:F2}   DMG ×{dmg:F2}   Poise ×{poise:F2}");
                 if (++shown >= 50) { sb.AppendLine($"  ... and {enemies.StatModifications.Count - shown} more"); break; }
             }
         }

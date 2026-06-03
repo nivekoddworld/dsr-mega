@@ -23,6 +23,11 @@ public class EnemyRandomizer
         Emit($"  Found: {bosses.Count} boss slots, {minibosses.Count} minibosses, {regular.Count} regular enemies");
         Emit($"  Known game models: {gameData.KnownEnemyModels.Count}");
 
+        // Apply density filter to regular enemies before placement
+        regular = ApplyDensity(regular, settings.EnemyDensityMode, rng);
+        if (settings.EnemyDensityMode != EnemyDensityMode.Vanilla)
+            Emit($"  After density filter ({settings.EnemyDensityMode}): {regular.Count} regular enemies");
+
         var allPlacements = new List<EnemyPlacement>();
 
         if (settings.RandomizeBosses)
@@ -43,10 +48,22 @@ public class EnemyRandomizer
         {
             Emit($"Randomizing {regular.Count} regular enemies...");
             var placer = new EnemyPlacer();
-            allPlacements.AddRange(placer.Place(settings, regular, gameData.KnownEnemyModels, rng));
+            var regularPlacements = placer.Place(settings, regular, gameData.KnownEnemyModels, rng);
+
+            // Shuffle patrol paths among regular enemies if enabled
+            if (settings.RandomizePatrolPaths)
+            {
+                var thinkParams = regularPlacements.Select(p => p.NewThinkParam).ToList();
+                Shuffle(thinkParams, rng);
+                for (int i = 0; i < regularPlacements.Count; i++)
+                    regularPlacements[i].NewThinkParam = thinkParams[i];
+                Emit($"Shuffled patrol paths for {regularPlacements.Count} regular enemies.");
+            }
+
+            allPlacements.AddRange(regularPlacements);
         }
 
-        Dictionary<int, (float HP, float Damage)> statMods = new();
+        Dictionary<int, (float HP, float Damage, float Poise)> statMods = new();
         if (settings.ScaleEnemyStats)
         {
             Emit("Scaling enemy stats...");
@@ -86,6 +103,31 @@ public class EnemyRandomizer
             StatModifications = statMods,
             SpoilerLog        = spoiler,
         };
+    }
+
+    private static List<EnemyEntity> ApplyDensity(List<EnemyEntity> enemies, EnemyDensityMode mode, Random rng)
+    {
+        return mode switch
+        {
+            // Reduced: randomize ~60% of regular enemies; the rest keep their vanilla model
+            EnemyDensityMode.Reduced => enemies.OrderBy(_ => rng.Next())
+                                                .Take((int)(enemies.Count * 0.6))
+                                                .ToList(),
+            // Increased: also include extra enemies from other areas (duplicate 30% of pool)
+            EnemyDensityMode.Increased => enemies
+                .Concat(enemies.OrderBy(_ => rng.Next()).Take(enemies.Count / 3))
+                .ToList(),
+            _ => enemies,
+        };
+    }
+
+    private static void Shuffle<T>(List<T> list, Random rng)
+    {
+        for (int i = list.Count - 1; i > 0; i--)
+        {
+            int j = rng.Next(i + 1);
+            (list[i], list[j]) = (list[j], list[i]);
+        }
     }
 
     private void Emit(string msg) => Log?.Invoke(this, msg);

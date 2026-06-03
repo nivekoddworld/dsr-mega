@@ -1,4 +1,5 @@
 using DS1MegaRando.Annotations;
+using DS1MegaRando.Data.Items;
 using DS1MegaRando.FogGate;
 using DS1MegaRando.Graph;
 using DS1MegaRando.Items;
@@ -8,15 +9,14 @@ namespace DS1MegaRando.Verification;
 
 public class SoftlockChecker
 {
-    // These areas must all be reachable for the game to be completable
+    // These areas must always be reachable for the game to be completable
     private static readonly string[] RequiredAreas =
     {
-        "totg_nito",         // Nito
-        "newlondo_fourkings",// Four Kings
-        "demonruins_bedofchaos", // Bed of Chaos
-        "dukes_seath2",      // Seath
-        "kiln_gwyn",         // Gwyn (final boss)
-        "parish_andre",      // Andre the Blacksmith (guarantee repair box access)
+        "totg_nito",
+        "newlondo_fourkings",
+        "demonruins_bedofchaos",
+        "dukes_seath2",
+        "kiln_gwyn",
     };
 
     public VerificationResult Verify(
@@ -33,7 +33,8 @@ public class SoftlockChecker
         // Build item areas from key item placements
         var itemAreas = BuildItemAreas(ann, itemResult);
 
-        var check  = checker.Check(graph, fogResult.StartArea, itemAreas);
+        var logicTokens = BuildLogicTokens(settings.FogGate);
+        var check  = checker.Check(graph, fogResult.StartArea, itemAreas, logicTokens);
         var issues = new List<string>();
 
         foreach (var required in RequiredAreas)
@@ -42,9 +43,35 @@ public class SoftlockChecker
                 issues.Add($"Required area '{required}' is not reachable.");
         }
 
+        // Andre the Blacksmith — conditional guarantee
+        if (settings.FogGate.GuaranteeBlacksmithAccess && !check.Reachable.Contains("parish_andre"))
+            issues.Add("Andre the Blacksmith ('parish_andre') is not reachable.");
+
         // Verify Duke's Prison escape (archive_tower_giant_door_key must be obtainable before being required)
         if (!VerifyDukesPrisonEscape(check))
             issues.Add("Duke's Prison escape may be softlocked (archive_tower_giant_door_key unreachable before needed).");
+
+        // Upgrade material access — at least one basic upgrade material must be in a reachable lot
+        if (settings.Items.EnsureUpgradeMaterialAccess && itemResult != null)
+        {
+            bool hasUpgrade = itemResult.LotAssignments
+                .Any(kvp => IsUpgradeMaterial(kvp.Value.ItemId) &&
+                            ann.LotLocations.TryGetValue(kvp.Key, out var a) &&
+                            check.Reachable.Contains(a));
+            if (!hasUpgrade)
+                issues.Add("No upgrade materials are accessible in any reachable area.");
+        }
+
+        // Repair Box guarantee
+        if (settings.Items.GuaranteeRepairBox && itemResult != null)
+        {
+            bool hasRepairBox = itemResult.LotAssignments
+                .Any(kvp => kvp.Value.ItemId == ItemIds.RepairBox &&
+                            ann.LotLocations.TryGetValue(kvp.Key, out var a) &&
+                            check.Reachable.Contains(a));
+            if (!hasRepairBox)
+                issues.Add("Repair Box is not accessible in any reachable area.");
+        }
 
         return issues.Count == 0
             ? VerificationResult.Success()
@@ -91,6 +118,19 @@ public class SoftlockChecker
         var parts = id.Split(':');
         return parts.Length == 2 && int.TryParse(parts[1], out int v) ? v : 0;
     }
+
+    private static IReadOnlyList<string> BuildLogicTokens(FogGateSettings fog)
+    {
+        var tokens = new List<string>();
+        if (fog.AllowHardSkips || fog.LogicMode != LogicMode.Normal) tokens.Add("allow_glitched");
+        if (fog.AllowInstawarps || fog.LogicMode == LogicMode.NoLogic)  tokens.Add("allow_instawarps");
+        return tokens;
+    }
+
+    private static bool IsUpgradeMaterial(int itemId) => itemId is
+        ItemIds.TitaniteShard or ItemIds.LargeTitaniteShard or
+        ItemIds.ChunkTitanite or ItemIds.TwininklingTitanite or
+        ItemIds.DemonTitanite or ItemIds.DragonScale;
 
     private static bool VerifyDukesPrisonEscape(GraphChecker.CheckResult check)
     {

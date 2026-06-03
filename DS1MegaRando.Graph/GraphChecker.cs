@@ -12,14 +12,21 @@ public class GraphChecker
     /// Returns all areas reachable from startArea given the current items/areas available.
     /// Items listed in itemAreas become available once their hosting area is reached.
     /// </summary>
+    /// <param name="preAvailable">
+    /// Optional tokens to seed into the available set before BFS begins.
+    /// Pass "allow_glitched" to enable hard-skip edges; "allow_instawarps" for instawarp routes.
+    /// </param>
     public CheckResult Check(
         WorldGraph graph,
         string startArea,
-        Dictionary<string, List<string>> itemAreas)
+        Dictionary<string, List<string>> itemAreas,
+        IEnumerable<string>? preAvailable = null)
     {
         var reachable = new HashSet<string>();
         var available = new HashSet<string>();  // areas + items currently known
-        var queue     = new Queue<string>();
+        if (preAvailable != null)
+            foreach (var tok in preAvailable) available.Add(tok);
+        var queue = new Queue<string>();
 
         void Reach(string area)
         {

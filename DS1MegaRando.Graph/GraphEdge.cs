@@ -12,6 +12,8 @@ public class GraphEdge
     public string? Name { get; set; }
     public string? Text { get; set; }
     public bool IsFixed { get; set; }
+    /// <summary>True when this edge requires a glitch/hard-skip to traverse (tagged "hard" or "glitched" in YAML).</summary>
+    public bool IsGlitchedOnly { get; set; }
     public Expr? Expr { get; set; }
     public Expr? LinkedExpr { get; set; }
 

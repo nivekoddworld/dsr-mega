@@ -5,13 +5,13 @@ namespace DS1MegaRando.Enemies;
 
 public class EnemyScaler
 {
-    public Dictionary<int, (float HP, float Damage)> Scale(
+    public Dictionary<int, (float HP, float Damage, float Poise)> Scale(
         List<EnemyPlacement> placements,
         Dictionary<string, (float Health, float Damage)>? areaRatios,
         EnemySettings settings,
         GameData gameData)
     {
-        var result = new Dictionary<int, (float, float)>();
+        var result = new Dictionary<int, (float, float, float)>();
 
         var entityArea = BuildEntityAreaMap(gameData);
 
@@ -20,12 +20,13 @@ public class EnemyScaler
             if (!entityArea.TryGetValue(placement.EntityId, out string? area)) continue;
 
             (float hpRatio, float dmgRatio) = GetScaleRatios(area, areaRatios, settings);
-            float finalHP  = hpRatio  * settings.ScaleHPFactor;
-            float finalDmg = dmgRatio * settings.ScaleDamageFactor;
+            float finalHP    = hpRatio  * settings.ScaleHPFactor;
+            float finalDmg   = dmgRatio * settings.ScaleDamageFactor;
+            float finalPoise = settings.ScalePoiseArmor ? hpRatio * settings.ScaleHPFactor : 1.0f;
 
             int npcParamId = placement.NewNpcParam;
             if (npcParamId > 0)
-                result[npcParamId] = (finalHP, finalDmg);
+                result[npcParamId] = (finalHP, finalDmg, finalPoise);
         }
 
         return result;

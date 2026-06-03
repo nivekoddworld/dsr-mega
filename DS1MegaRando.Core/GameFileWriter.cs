@@ -38,6 +38,9 @@ public class GameFileWriter
         if (itemResult != null)
             WriteItemParams(outDir, gameData, itemResult);
 
+        if (enemyResult != null && enemyResult.StatModifications.Count > 0)
+            WriteEnemyStatParams(outDir, gameData, enemyResult);
+
         // Patch all bonfire TalkESDs to enable Level Up unconditionally.
         // In vanilla DS1R the Level Up bonfire option is gated behind a flag set
         // only when you first arrive at Firelink via the crow.  With fog gate
@@ -162,6 +165,33 @@ public class GameFileWriter
     {
         if (value != StartingLoadout.Keep)
             TrySetCell(row, field, value);
+    }
+
+    // ── Enemy stat params ──────────────────────────────────────────────────
+
+    private void WriteEnemyStatParams(string outDir, GameData gameData, EnemyResult enemyResult)
+    {
+        if (gameData.NpcParam?.AppliedParamdef == null || gameData.ParamBnd == null) return;
+
+        foreach (var (npcParamId, mods) in enemyResult.StatModifications)
+        {
+            var row = gameData.NpcParam.Rows.FirstOrDefault(r => r.ID == npcParamId);
+            if (row == null) continue;
+
+            // Scale HP (u32 field)
+            if (mods.HP != 1.0f && row["hp"]?.Value is uint baseHp)
+                TrySetCell(row, "hp", (uint)(baseHp * mods.HP));
+
+            // Scale poise (superArmorDurability, s16 field) when ScalePoiseArmor is on
+            if (mods.Poise != 1.0f && row["superArmorDurability"]?.Value is short basePoise)
+                TrySetCell(row, "superArmorDurability", (short)Math.Clamp(basePoise * mods.Poise, short.MinValue, short.MaxValue));
+        }
+
+        RepackParamIntoBnd(gameData.ParamBnd, "NpcParam", gameData.NpcParam);
+
+        string dest = Path.Combine(outDir, @"param\GameParam\GameParam.parambnd.dcx");
+        Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+        gameData.ParamBnd.Write(dest, gameData.ParamBndCompression);
     }
 
     // ── Maps ───────────────────────────────────────────────────────────────

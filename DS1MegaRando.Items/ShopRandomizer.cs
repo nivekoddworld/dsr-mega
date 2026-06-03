@@ -10,6 +10,14 @@ public class ShopRandomizer
     // Shop rows that should never be randomized (Feeding Frampt, covenant offerings, etc.)
     private static readonly HashSet<int> NeverRandomize = new() { 99000, 99001, 99002 };
 
+    private static readonly IReadOnlyList<int> BossSoulIds = new[]
+    {
+        ItemIds.SoulOfSif, ItemIds.SoulOfGwyn, ItemIds.CoreOfIronGolem,
+        ItemIds.SoulOfQuelaag, ItemIds.SoulOfOrnstein, ItemIds.SoulOfSmough,
+        ItemIds.SoulOfNito, ItemIds.SoulOfBedOfChaos, ItemIds.SoulOfFourKings,
+        ItemIds.SoulOfSeath, ItemIds.SoulOfArtorias, ItemIds.SoulOfManus,
+    };
+
     public (Dictionary<int, int> Items, Dictionary<int, int> Prices) Randomize(
         ItemSettings settings,
         GameData gameData,
@@ -31,6 +39,14 @@ public class ShopRandomizer
             .Select(r => GetCell<int>(r, "equipId"))
             .Where(id => id > 0)
             .ToList();
+
+        // Inject key items into shop pool when enabled
+        if (settings.AllowKeyItemsInShops)
+            shopItemIds.AddRange(KeyItemList.All.Select(k => k.ItemId));
+
+        // Inject boss souls into shop pool for AllowTranspose mode
+        if (settings.BossSoulHandling == BossSoulHandling.AllowTranspose)
+            shopItemIds.AddRange(BossSoulIds);
 
         Shuffle(shopItemIds, rng);
 

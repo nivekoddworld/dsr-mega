@@ -15,8 +15,12 @@ public class ItemPool
     {
         10010, // Estus Flask lot — always given at start via Oscar
         1082,  // Estus Flask lot used by the asylum corpse (ApplyStartingEstus / GuaranteeStartingEstus)
-        11000, // Lordvessel — given by Gwynevere (handled separately if setting enabled)
+        // Lot 11000 (Lordvessel) is gated by RandomizeLordvessel — handled in Build() below
     };
+
+    // Lord Soul item IDs in DS1R ItemLotParam (must match KeyItemList values)
+    private static readonly HashSet<int> LordSoulItemIds = new() { 2005, 2006, 2007, 2008 };
+    private const int LordvesselLotId  = 11000;
 
     public List<PoolItem> Build(ItemSettings settings, GameData gameData)
     {
@@ -28,6 +32,8 @@ public class ItemPool
         {
             int lotId = (int)row.ID;
             if (NeverRandomize.Contains(lotId)) continue;
+            // Lordvessel lot: only randomize when setting is enabled
+            if (lotId == LordvesselLotId && !settings.RandomizeLordvessel) continue;
 
             int itemId   = GetCell<int>(row, "lotItemId01");
             int category = GetCell<int>(row, "lotItemCategory01");
@@ -39,6 +45,10 @@ public class ItemPool
             bool isBoss    = IsBossSoul(itemId);
 
             if (settings.ExcludeUselessItems && isUseless) continue;
+            // Lord Souls: keep vanilla when setting is disabled
+            if (!settings.RandomizeLordSouls && LordSoulItemIds.Contains(itemId)) continue;
+            // ReplaceWithConsumable: remove boss souls from pool; their lots get regular random items
+            if (settings.BossSoulHandling == BossSoulHandling.ReplaceWithConsumable && isBoss) continue;
 
             items.Add(new PoolItem
             {
