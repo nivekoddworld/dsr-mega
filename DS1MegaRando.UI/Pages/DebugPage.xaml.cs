@@ -206,7 +206,7 @@ public partial class DebugPage : UserControl
             foreach (var (area, (hp, dmg)) in fog.AreaRatios.OrderBy(kv => kv.Value.Health))
                 sb.AppendLine($"  {area,-32}  HP {hp:F2}×   DMG {dmg:F2}×");
         }
-
+        
         return sb.ToString();
     }
 

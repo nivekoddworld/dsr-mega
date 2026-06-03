@@ -55,6 +55,16 @@ public class SpoilerLog
             foreach (var (name, area, loc) in itemResult.KeyItemPlacements.OrderBy(x => x.Item1))
                 sb.AppendLine($"  {name,-35} : {area} ({loc})");
             sb.AppendLine();
+
+            if (itemResult.GiftLotAssignments.Count > 0)
+            {
+                sb.AppendLine("  STARTING GIFT REPLACEMENTS");
+                sb.AppendLine("  (vanilla gift choice → randomized item ID / category / count)");
+                foreach (var (row, (itemId, cat, count)) in itemResult.GiftLotAssignments.OrderBy(x => x.Key))
+                    sb.AppendLine($"  Lot row {row,-8} → item {itemId,7}  cat {cat,12}  ×{count}");
+                sb.AppendLine();
+            }
+
             log.ItemSection = sb.ToString();
             sb.Clear();
         }

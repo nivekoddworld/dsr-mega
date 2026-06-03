@@ -47,16 +47,28 @@ public class ItemRandomizer
             startingLoadouts = new StartingLoadoutRandomizer().RandomizePerClass(settings, rng);
         }
 
+
         var keyPlacements = BuildKeyItemSpoiler(keyAssignments, ann, locationPool);
         Emit($"Item randomization complete. {allAssignments.Count} lots assigned.");
 
+        var giftLots = new Dictionary<int, (int, int, int)>();
+        if (settings.RandomizeStartingGift)
+        {
+            Emit("Randomizing starting gifts...");
+            var gr = new GiftLotRandomizer();
+            gr.Log += (_, m) => Emit(m);
+            giftLots = gr.Randomize(gameData.ItemLotParam, itemPool, rng);
+        }
+
         return new ItemResult
         {
-            LotAssignments  = allAssignments,
-            ShopAssignments = shopItems,
-            ShopPrices      = shopPrices,
-            StartingLoadouts = startingLoadouts,
-            KeyItemPlacements = keyPlacements,
+            LotAssignments        = allAssignments,
+            ShopAssignments       = shopItems,
+            ShopPrices            = shopPrices,
+            StartingLoadouts      = startingLoadouts,
+            KeyItemPlacements     = keyPlacements,
+            AdjustStatsForWeapons = settings.AdjustStatsForWeapons,
+            GiftLotAssignments    = giftLots,
         };
     }
 
