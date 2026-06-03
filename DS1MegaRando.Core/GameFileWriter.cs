@@ -199,12 +199,12 @@ public class GameFileWriter
         [ItemIds.MailBreaker]           = ( 5, 12, 0, 0),
         [ItemIds.Rapier]                = ( 7, 12, 0, 0),
         [ItemIds.Estoc]                 = (10, 12, 0, 0),
-        [ItemIds.VelkasRapier]          = ( 8, 16, 0, 15),
+        [ItemIds.VelkasRapier]          = ( 8, 16, 0, 0),
         [ItemIds.RicardsRapier]         = ( 8, 16, 0, 0),
         // Axes
         [ItemIds.HandAxe]               = ( 8,  8, 0, 0),
         [ItemIds.BattleAxe]             = (12,  8, 0, 0),
-        [ItemIds.CrescentAxe]           = (14, 10, 0, 14),
+        [ItemIds.CrescentAxe]           = (14, 10, 0, 0),
         [ItemIds.GargoyleTailAxe]       = (14, 14, 0, 0),
         [ItemIds.GolemAxe]              = (26, 10, 0, 0),
         [ItemIds.ButchersKnife]         = (14, 14, 0, 0),
@@ -243,7 +243,7 @@ public class GameFileWriter
         [ItemIds.BlackKnightSword]      = (20, 18, 0, 0),
         [ItemIds.BlackKnightGreatsword] = (20, 18, 0, 0),
         [ItemIds.Greatsword309]         = (24, 10, 0, 0),
-        [ItemIds.ArtorisasGreatsword]   = (24, 18, 0, 20),
+        [ItemIds.ArtorisasGreatsword]   = (24, 18, 0, 0),
         [ItemIds.AbyssGreatsword]       = (20, 10, 0, 0),
         [ItemIds.Greatsword314]         = (24, 14, 0, 0),
         // Ultra Greatswords
@@ -251,7 +251,7 @@ public class GameFileWriter
         [ItemIds.Greatsword]            = (28, 10, 0, 0),
         [ItemIds.StoneGreatsword]       = (40,  0, 0, 0),
         [ItemIds.UltraGreatsword354]    = (30, 14, 0, 0),
-        [ItemIds.MoonlightGreatsword]   = (16,  0, 16, 0),
+        [ItemIds.MoonlightGreatsword]   = (16,  0, 11, 0),
         // Curved Greatswords / Katanas
         [ItemIds.Murakumo]              = (28, 13, 0, 0),
         [ItemIds.CurvedGreatsword453]   = (20, 20, 0, 0),
@@ -274,7 +274,7 @@ public class GameFileWriter
         // Great Spears
         [ItemIds.Pike]                  = (24, 14, 0, 0),
         [ItemIds.GreatSpear1051]        = (20, 14, 0, 0),
-        [ItemIds.GreatSpear1052]        = (12,  0, 0, 14),
+        [ItemIds.GreatSpear1052]        = (12,  0, 14, 0),  // Moonlight Butterfly Horn: INT req, not FTH
         [ItemIds.GreatSpear1054]        = (24, 14, 0, 0),
         // Halberds
         [ItemIds.Halberd]               = (16, 12, 0, 0),
