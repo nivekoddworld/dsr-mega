@@ -31,6 +31,7 @@ public class BossRandomizer
         // whose slot is marked replaceable.
         var canonicalPool = BossIds.Replaceable
             .Where(b => knownModels.Contains(b.ModelId))
+            .Where(b => !(EnemyIds.ByModelId(b.ModelId)?.IsIgnored ?? false))
             .Select(b => b.ModelId)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();

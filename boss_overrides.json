@@ -264,6 +264,10 @@
     // Override where a boss spawns in its arena.  Any component you leave out
     // keeps the vanilla MSB value.
 
+    // Taurus Demon rampart — vanilla gargoyle-wall spawn point is inside the wall
+    // geometry for many replacements; this drops the boss onto the open walkway.
+    "Taurus Demon": { "x": 3.372, "y": 15.814, "z": -115.055, "rotY": -73.54 },
+
     // Ceaseless Discharge arena centre — vanilla spawn is inside a pillar; this
     // places the replacement on the open lava floor where it can pathfind.
     "Ceaseless Discharge": { "x": 246.494, "y": -283.147, "z": 68.164 }

@@ -51,8 +51,11 @@ public static class BossIds
                 new EmevdPatch(11015382, ForceAnim, WarpChar),
                 new EmevdPatch(11015396, ForceAnim, WarpChar),
             }),
-        // Second gargoyle spawns mid-fight; no separate intro EMEVD needed
+        // Gargoyle 2 (mid-fight drop-in) and Gargoyle 3 (a scripted reserve instance)
+        // both use model-specific jump-down navigation; non-gargoyle models cannot perform
+        // that entry, so both are kept vanilla.
         new("m10_01_00_00", 1010801, "c5350", "Bell Gargoyle 2", CanReplace: false),
+        new("m10_01_00_00", 1010802, "c5350", "Bell Gargoyle 3", CanReplace: false),
 
         // ── The Depths ────────────────────────────────────────────────────────
         new("m10_00_00_00", 1000800, "c5260", "Gaping Dragon",

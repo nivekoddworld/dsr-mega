@@ -25,4 +25,12 @@
     <Resource Include="Assets\Fonts\OptimusPrincepsSemiBold.ttf" Condition="Exists('Assets\Fonts\OptimusPrincepsSemiBold.ttf')" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- User-editable boss override config — copied to output so the app can find it at runtime -->
+    <Content Include="..\boss_overrides.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>boss_overrides.json</Link>
+    </Content>
+  </ItemGroup>
+
 </Project>
