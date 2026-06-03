@@ -159,8 +159,12 @@ public class BossRandomizer
         EnemySettings settings,
         BossOverrideConfig? overrides)
     {
-        // Always keep the original slot's NpcParam so scripted boss triggers
-        // (health thresholds, death events) fire correctly for this arena.
+        // Use the replacement's own NpcParam so its attack animations and combat
+        // behaviour match the actual model — using the original slot's NpcParam causes
+        // T-poses when close to the player because the slot's attack animation IDs
+        // don't exist on the replacement model.
+        // EMEVD arena triggers reference entity IDs not NpcParams, so they still fire.
+        int newNpc   = newDef?.NpcParamId > 0 ? newDef.NpcParamId : target.NpcParam;
         int newThink = settings.RandomizeEnemyAI
             ? (newDef?.NpcParamId > 0 ? newDef.NpcParamId : target.ThinkParam)
             : target.ThinkParam;
@@ -176,7 +180,7 @@ public class BossRandomizer
             OldModelId    = target.ModelId,
             NewModelId    = newModelId,
             OldNpcParam   = target.NpcParam,
-            NewNpcParam   = target.NpcParam,
+            NewNpcParam   = newNpc,
             OldThinkParam = target.ThinkParam,
             NewThinkParam = newThink,
             NewInitAnimId = -1,

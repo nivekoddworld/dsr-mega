@@ -29,9 +29,12 @@ public static class BossIds
     // Common instruction pairs stripped from boss intros:
     //   2003[18] = ForceAnimationPlayback  — plays model-specific entrance anim
     //   2004[41] = WarpCharacter           — teleports boss to scripted position
-    //   2004[56] = MoveEntityToEntity      — used by some entrance sequences
-    private static readonly (int, int) ForceAnim = (2003, 18);
-    private static readonly (int, int) WarpChar  = (2004, 41);
+    //   2004[12] = SetImmortality          — Seath's crystal-prison immortality flag
+    //   2004[22] = CreateMultipartNpc      — Seath's tail part (invisible on other models)
+    private static readonly (int, int) ForceAnim      = (2003, 18);
+    private static readonly (int, int) WarpChar       = (2004, 41);
+    private static readonly (int, int) SetImmortal    = (2004, 12);
+    private static readonly (int, int) CreateMultipart= (2004, 22);
 
     public static readonly IReadOnlyList<BossDef> All = new BossDef[]
     {
@@ -74,8 +77,9 @@ public static class BossIds
 
         // ── Darkroot Garden ──────────────────────────────────────────────────
         new("m12_00_00_01", 1200800, "c5210", "Sif the Great Wolf"),
-        // Moonlight Butterfly: IsIgnored model — always kept vanilla
-        new("m12_00_00_01", 1200801, "c3230", "Moonlight Butterfly", CanReplace: false),
+        // Moonlight Butterfly: IsIgnored in EnemyIds so it won't appear as a replacement
+        // in other arenas, but its own slot is randomizable.
+        new("m12_00_00_01", 1200801, "c3230", "Moonlight Butterfly"),
 
         // ── Demon Ruins / Lost Izalith ────────────────────────────────────────
         new("m14_01_00_00", 1410600, "c5250", "Ceaseless Discharge"),
@@ -99,13 +103,21 @@ public static class BossIds
         // ── Anor Londo ────────────────────────────────────────────────────────
         new("m15_01_00_00", 1510800, "c5270", "Ornstein"),
         new("m15_01_00_00", 1510810, "c2360", "Smough"),
-        // Gwyndolin: IsIgnored model — always kept vanilla
-        new("m15_01_00_00", 1510650, "c5320", "Dark Sun Gwyndolin", CanReplace: false),
+        // Gwyndolin: IsIgnored in EnemyIds so it won't appear as a replacement elsewhere,
+        // but its own slot is randomizable.
+        new("m15_01_00_00", 1510650, "c5320", "Dark Sun Gwyndolin"),
 
         // ── Duke's Archives ───────────────────────────────────────────────────
-        // Seath: keep NpcParam from original so scripted crystal-prison death triggers correctly
+        // 11705396: strip SetImmortality so the replacement isn't locked unkillable
+        //   during the crystal-prison sequence (that flag is Seath-specific).
+        // 11705397: strip CreateMultipartNpc to prevent an invisible indestructible
+        //   tail part being spawned on the replacement model.
         new("m17_00_00_00", 1700800, "c5290", "Seath the Scaleless",
-            EmevdPatches: new[] { new EmevdPatch(11705396, ForceAnim, WarpChar) }),
+            EmevdPatches: new[]
+            {
+                new EmevdPatch(11705396, SetImmortal),
+                new EmevdPatch(11705397, CreateMultipart),
+            }),
 
         // ── Kiln of the First Flame ───────────────────────────────────────────
         new("m18_00_00_00", 1800800, "c5370", "Gwyn, Lord of Cinder"),
