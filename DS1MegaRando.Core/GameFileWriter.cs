@@ -37,7 +37,7 @@ public class GameFileWriter
         Directory.CreateDirectory(outDir);
 
         if (itemResult != null)
-            WriteItemParams(outDir, gameData, itemResult);
+            WriteItemParams(outDir, gameData, itemResult, fogSettings);
 
         if (enemyResult != null && enemyResult.StatModifications.Count > 0)
             WriteEnemyStatParams(outDir, gameData, enemyResult);
@@ -58,7 +58,8 @@ public class GameFileWriter
 
     // ── Items ──────────────────────────────────────────────────────────────
 
-    private void WriteItemParams(string outDir, GameData gameData, ItemResult itemResult)
+    private void WriteItemParams(string outDir, GameData gameData, ItemResult itemResult,
+        FogGateSettings? fogSettings = null)
     {
         if (gameData.ParamBnd == null) return;
 
@@ -66,6 +67,14 @@ public class GameFileWriter
         ApplyGiftLotAssignments(gameData.ItemLotParam, itemResult);
         ApplyShopAssignments(gameData.ShopLineupParam, itemResult);
         ApplyStartingLoadout(gameData.CharaInitParam, itemResult);
+
+        // Vanilla DS1 hands the Estus Flask to the player during Oscar's death scene.
+        // Fog-gate / start-area randomization can skip Oscar entirely, so guarantee the
+        // flask by putting it directly in every starting class's inventory. (DS1 has no
+        // "set charges" mechanism — the flask fills to 5 on the first bonfire rest, and
+        // the randomizer enables every bonfire, so this matches vanilla post-Oscar.)
+        if (fogSettings?.GuaranteeStartingEstus == true)
+            ApplyStartingEstusToClasses(gameData.CharaInitParam);
 
         // Rewrite modified param bytes back into the BND entries
         RepackParamIntoBnd(gameData.ParamBnd, "ItemLotParam",    gameData.ItemLotParam);
@@ -334,6 +343,54 @@ public class GameFileWriter
     {
         if (value != StartingLoadout.Keep)
             TrySetCell(row, field, value);
+    }
+
+    // ── Starting Estus Flask ────────────────────────────────────────────────
+
+    /// <summary>DS1 goods ID for the Estus Flask.</summary>
+    private const int EstusFlaskGoodsId = 200;
+
+    /// <summary>
+    /// Puts an Estus Flask in every starting class's inventory (CharaInitParam rows
+    /// 2000-2009 spawn rows + 3000-3009 preview rows) so the player always has it,
+    /// even when Oscar's flask-granting scene is skipped by fog/start randomization.
+    /// </summary>
+    private static void ApplyStartingEstusToClasses(PARAM? param)
+    {
+        if (param == null || param.AppliedParamdef == null) return;
+        for (int classIdx = 0; classIdx < 10; classIdx++)
+        {
+            GiveEstusToClassRow(param, 2000 + classIdx);
+            GiveEstusToClassRow(param, 3000 + classIdx);
+        }
+    }
+
+    private static void GiveEstusToClassRow(PARAM param, int rowId)
+    {
+        var row = param.Rows.FirstOrDefault(r => r.ID == rowId);
+        if (row == null) return;
+
+        // CharaInitParam stores up to 10 starting items. Despite the names, item_numNN
+        // (s32) is the goods ID and itemNumN (s8) is the count. Empty slots hold -1.
+        // Idempotent: skip if a flask is already present.
+        for (int i = 1; i <= 10; i++)
+            if (GetCellInt(row, $"item_num{i:D2}") == EstusFlaskGoodsId) return;
+
+        for (int i = 1; i <= 10; i++)
+        {
+            if (GetCellInt(row, $"item_num{i:D2}") == -1)
+            {
+                TrySetCell(row, $"item_num{i:D2}", EstusFlaskGoodsId);
+                TrySetCell(row, $"itemNum{i}", (sbyte)1);
+                return;
+            }
+        }
+    }
+
+    private static int GetCellInt(PARAM.Row row, string name)
+    {
+        var cell = row[name];
+        return cell?.Value == null ? 0 : Convert.ToInt32(cell.Value);
     }
 
     // ── Enemy stat params ──────────────────────────────────────────────────
