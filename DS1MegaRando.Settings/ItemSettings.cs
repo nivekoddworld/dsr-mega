@@ -23,12 +23,6 @@ public class ItemSettings
     public StartingLoadoutMode StartingLoadoutMode { get; set; } = StartingLoadoutMode.ShieldAnd1H;
     /// <summary>Randomize each starting class's armor (helm/chest/gauntlets/legs) per piece.</summary>
     public bool FashionSouls { get; set; } = false;
-    /// <summary>
-    /// Randomize the item given by each character-creation gift choice.
-    /// Seven of the nine non-None gifts are supported (Binoculars and Old Witch's Ring
-    /// have no valid DSR lot rows and will remain vanilla regardless).
-    /// </summary>
-    public bool RandomizeStartingGift { get; set; } = false;
     /// <summary>Boost a class's base STR/DEX/INT/FTH (and soul level) to meet the minimum requirements of their randomized starting weapons.</summary>
     public bool AdjustStatsForWeapons { get; set; } = false;
     public bool RandomizeNPCDropArmor { get; set; } = false;

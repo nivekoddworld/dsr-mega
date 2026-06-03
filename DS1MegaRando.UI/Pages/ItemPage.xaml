@@ -136,9 +136,6 @@
                 <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,8,0,0"
                           Content="Fashion Souls (randomize starting armor per class)"
                           IsChecked="{Binding Items.FashionSouls}"/>
-                <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,8,0,0"
-                          Content="Randomize starting gift (6 of 9 supported — Humanity, Binoculars &amp; Old Witch's Ring stay vanilla)"
-                          IsChecked="{Binding Items.RandomizeStartingGift}"/>
                 <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,4,0,0"
                           Content="Adjust stats to meet weapon requirements — auto-enabled when starting loadout is randomized (boosts STR/DEX/INT/FTH + soul level as needed)"
                           IsChecked="{Binding Items.AdjustStatsForWeapons}"/>

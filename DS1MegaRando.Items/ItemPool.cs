@@ -17,8 +17,9 @@ public class ItemPool
         // Lot 11000 (Lordvessel) is gated by RandomizeLordvessel — handled in Build() below
     };
 
-    // Lord Soul item IDs in DS1R ItemLotParam (must match KeyItemList values)
-    private static readonly HashSet<int> LordSoulItemIds = new() { 2005, 2006, 2007, 2008 };
+    // DS1R Lord Soul / Bequeathed Lord Soul Shard goods IDs (Nito, Bed of Chaos,
+    // Four Kings, Seath). Previously listed as 2005-2008, which are actually keys.
+    private static readonly HashSet<int> LordSoulItemIds = new() { 2500, 2501, 2502, 2503 };
     private const int LordvesselLotId  = 11000;
 
     public List<PoolItem> Build(ItemSettings settings, GameData gameData)

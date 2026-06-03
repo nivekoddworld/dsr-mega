@@ -51,15 +51,6 @@ public class ItemRandomizer
         var keyPlacements = BuildKeyItemSpoiler(keyAssignments, ann, locationPool);
         Emit($"Item randomization complete. {allAssignments.Count} lots assigned.");
 
-        var giftLots = new Dictionary<int, (int, int, int)>();
-        if (settings.RandomizeStartingGift)
-        {
-            Emit("Randomizing starting gifts...");
-            var gr = new GiftLotRandomizer();
-            gr.Log += (_, m) => Emit(m);
-            giftLots = gr.Randomize(gameData.ItemLotParam, rng);
-        }
-
         return new ItemResult
         {
             LotAssignments        = allAssignments,
@@ -67,10 +58,7 @@ public class ItemRandomizer
             ShopPrices            = shopPrices,
             StartingLoadouts      = startingLoadouts,
             KeyItemPlacements     = keyPlacements,
-            // Auto-enable stat adjustment whenever the loadout itself is randomized
-            // so players can always wield their starting weapon.
-            AdjustStatsForWeapons = settings.AdjustStatsForWeapons || settings.RandomizeStartingLoadout,
-            GiftLotAssignments    = giftLots,
+            AdjustStatsForWeapons = settings.AdjustStatsForWeapons,
         };
     }
 
