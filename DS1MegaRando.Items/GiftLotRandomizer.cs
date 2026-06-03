@@ -1,3 +1,4 @@
+using DS1MegaRando.Data.Items;
 using SoulsFormats;
 
 namespace DS1MegaRando.Items;
@@ -5,24 +6,29 @@ namespace DS1MegaRando.Items;
 /// <summary>
 /// Randomizes the items given by the character-creation starting-gift choices.
 ///
+/// Each gift now delivers a random item drawn from the full game catalog
+/// (<see cref="GiftItemCatalog"/>) — every real weapon, shield, armor piece, ring,
+/// spell and consumable — excluding developer/debug entries and progression-critical
+/// keys (so a gift can never break key-item logic).
+///
 /// Gift lot row IDs confirmed from DarkSoulsItemRandomizer-master/items_setup.py
 /// (the PTDE Python randomizer in this repo), cross-checked against DSR-Gadget:
 ///
-///   1010 → Tiny Being's Ring  (ring 111)
-///   2060 → Firekeeper Soul    (goods 390)
-///   2070 → Pendant            (goods 376)
-///   4073 → Master Key         (goods 2100)
-///   6371 → Twin Humanities ×2 (goods 501)
+///   1010 → Tiny Being's Ring
+///   1082 → Black Firebombs ×5
+///   2060 → Firekeeper Soul
+///   2070 → Pendant
+///   4073 → Master Key
+///   6371 → Twin Humanities ×2
 ///
-/// Lot 1082 (Black Firebombs ×5) is intentionally excluded: it is also the lot
-/// used by ApplyStartingEstus to deliver a guaranteed Estus Flask when fog gate
-/// randomization is active, so modifying it here would break that guarantee.
-///
-/// Humanity (single), Binoculars, and Old Witch's Ring are delivered
-/// engine-side and cannot be changed through ItemLotParam.
+/// (The Estus Flask is no longer delivered through lot 1082 — it is granted via
+/// CharaInitParam — so lot 1082 is once again a normal randomizable gift lot.)
 /// </summary>
 public class GiftLotRandomizer
 {
+    /// <summary>Raw ItemLotParam category for goods/consumables.</summary>
+    private const int GoodsCategory = 0x40000000;
+
     private static readonly HashSet<int> GiftLotIds = new()
     {
         1010, // Tiny Being's Ring
@@ -37,45 +43,39 @@ public class GiftLotRandomizer
 
     public Dictionary<int, (int ItemId, int Category, int Count)> Randomize(
         PARAM? itemLotParam,
-        List<PoolItem> itemPool,
         Random rng)
     {
         var result = new Dictionary<int, (int, int, int)>();
 
-        if (itemLotParam == null)
+        if (itemLotParam?.AppliedParamdef == null)
         {
-            Log?.Invoke(this, "GiftLot: ItemLotParam is null — skipping");
-            return result;
-        }
-        if (itemLotParam.AppliedParamdef == null)
-        {
-            Log?.Invoke(this, "GiftLot: ItemLotParam has no paramdef applied — skipping");
+            Log?.Invoke(this, "GiftLot: ItemLotParam unavailable — skipping");
             return result;
         }
 
-        Log?.Invoke(this, $"GiftLot: targeting {GiftLotIds.Count} known gift lot row IDs...");
-
-        var giftable = itemPool
-            .Where(i => !i.IsKey && !i.IsBoss)
-            .ToList();
-
-        if (giftable.Count == 0)
+        var catalog = GiftItemCatalog.Items;
+        if (catalog.Length == 0)
         {
-            Log?.Invoke(this, "GiftLot: item pool is empty — skipping");
+            Log?.Invoke(this, "GiftLot: catalog is empty — skipping");
             return result;
         }
+
+        Log?.Invoke(this, $"GiftLot: picking from full catalog of {catalog.Length} items...");
 
         foreach (var row in itemLotParam.Rows)
         {
             if (!GiftLotIds.Contains((int)row.ID))
                 continue;
 
-            var pick = giftable[rng.Next(giftable.Count)];
-            result[(int)row.ID] = (pick.ItemId, pick.LotCategory, Math.Max(1, pick.Count));
-            Log?.Invoke(this, $"GiftLot: row {row.ID} → item {pick.ItemId} cat {pick.LotCategory} ×{pick.Count}");
+            var (itemId, category) = catalog[rng.Next(catalog.Length)];
+            // Consumable goods are handed out in a small stack; equipment is a single item.
+            int count = category == GoodsCategory ? rng.Next(2, 6) : 1;
+
+            result[(int)row.ID] = (itemId, category, count);
+            Log?.Invoke(this, $"GiftLot: row {row.ID} → item {itemId} cat 0x{category:X8} ×{count}");
         }
 
-        Log?.Invoke(this, $"GiftLot: {result.Count}/{GiftLotIds.Count} gift lot(s) found and replaced.");
+        Log?.Invoke(this, $"GiftLot: {result.Count}/{GiftLotIds.Count} gift lot(s) replaced.");
         return result;
     }
 }

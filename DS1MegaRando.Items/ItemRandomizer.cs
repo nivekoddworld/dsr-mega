@@ -57,7 +57,7 @@ public class ItemRandomizer
             Emit("Randomizing starting gifts...");
             var gr = new GiftLotRandomizer();
             gr.Log += (_, m) => Emit(m);
-            giftLots = gr.Randomize(gameData.ItemLotParam, itemPool, rng);
+            giftLots = gr.Randomize(gameData.ItemLotParam, rng);
         }
 
         return new ItemResult
