@@ -668,6 +668,20 @@ public class GameFileWriter
                 enemy.InitAnimID   = placement.NewInitAnimId;
                 enemy.DamageAnimID = -1;
             }
+
+            // Apply per-component positional overrides from boss_overrides.json.
+            // Null components keep the vanilla MSB value.
+            if (placement.PosX.HasValue || placement.PosY.HasValue || placement.PosZ.HasValue)
+                enemy.Position = new Vector3(
+                    placement.PosX ?? enemy.Position.X,
+                    placement.PosY ?? enemy.Position.Y,
+                    placement.PosZ ?? enemy.Position.Z);
+
+            if (placement.RotX.HasValue || placement.RotY.HasValue || placement.RotZ.HasValue)
+                enemy.Rotation = new Vector3(
+                    placement.RotX ?? enemy.Rotation.X,
+                    placement.RotY ?? enemy.Rotation.Y,
+                    placement.RotZ ?? enemy.Rotation.Z);
         }
     }
 

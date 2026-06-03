@@ -41,4 +41,13 @@ public class EnemyPlacement
     /// idle animation for the model.
     /// </summary>
     public int NewInitAnimId { get; set; } = -1;
+
+    // Per-component position/rotation overrides from boss_overrides.json.
+    // Null = keep the vanilla MSB value for that component.
+    public float? PosX { get; set; }
+    public float? PosY { get; set; }
+    public float? PosZ { get; set; }
+    public float? RotX { get; set; }
+    public float? RotY { get; set; }
+    public float? RotZ { get; set; }
 }

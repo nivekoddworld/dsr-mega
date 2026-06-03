@@ -49,7 +49,7 @@ public class BossRandomizer
             string newModel = assignment[i];
             var    newDef   = EnemyIds.ByModelId(newModel);
 
-            placements.Add(MakePlacement(target, newModel, newDef, settings));
+            placements.Add(MakePlacement(target, newModel, newDef, settings, overrides));
         }
         return placements;
     }
@@ -155,13 +155,16 @@ public class BossRandomizer
         EnemyEntity target,
         string newModelId,
         EnemyDef? newDef,
-        EnemySettings settings)
+        EnemySettings settings,
+        BossOverrideConfig? overrides)
     {
         // Always keep the original slot's NpcParam so scripted boss triggers
         // (health thresholds, death events) fire correctly for this arena.
         int newThink = settings.RandomizeEnemyAI
             ? (newDef?.NpcParamId > 0 ? newDef.NpcParamId : target.ThinkParam)
             : target.ThinkParam;
+
+        var pos = overrides?.GetPositionOverride(target.EntityId);
 
         return new EnemyPlacement
         {
@@ -176,6 +179,12 @@ public class BossRandomizer
             OldThinkParam = target.ThinkParam,
             NewThinkParam = newThink,
             NewInitAnimId = newDef?.DefaultInitAnim ?? -1,
+            PosX          = pos?.X,
+            PosY          = pos?.Y,
+            PosZ          = pos?.Z,
+            RotX          = pos?.RotX,
+            RotY          = pos?.RotY,
+            RotZ          = pos?.RotZ,
         };
     }
 
