@@ -80,7 +80,7 @@ if not defined MSBUILD (
 )
 "%MSBUILD%" "%REPO%DS1Mod\DS1Mod.Injector\DS1Mod.Injector.vcxproj" ^
     /p:Configuration=Release /p:Platform=x64 ^
-    /p:SolutionDir="%REPO%" ^
+    /p:SolutionDir="%REPO:~0,-1%" ^
     /v:minimal /nologo
 if errorlevel 1 (
     echo [FAIL] MSBuild injector
