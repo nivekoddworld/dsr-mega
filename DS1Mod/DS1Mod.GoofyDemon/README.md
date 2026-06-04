@@ -38,6 +38,11 @@ flags `11817000..09` (clears all ten, sets one). Three readers consume that:
 2. **Console / log** — `OnTick()` polls the flags and prints to the console and
    `mods/GoofyDemon.log`.
 
+> The mood events are registered at the **top** of the map constructor
+> (event 0), before its multiplayer `SKIP`/`END IF` control flow — otherwise
+> registrations appended at the end can be skipped and never run. The patcher
+> self-heals older installs that registered them at the end.
+
 The fart works the same way: a `Display Message` inserted right after the
 `9060` landing animation in the entrance event (`11810310`), with `*farts*`
 added to the FMG.

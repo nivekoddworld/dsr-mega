@@ -22,7 +22,7 @@ namespace DS1Mod.GoofyDemon;
 public sealed class GoofyDemonMod : ModBase, IGamePatcher
 {
     public override string Name    => "Goofy Demon";
-    public override string Version => "1.1.0";
+    public override string Version => "1.1.1";
     public override string Author  => "DS1MegaRando";
 
     // ── AI swap ──
@@ -149,9 +149,13 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
             }
         }
 
-        // (b) 10 mood-watcher events + register them in the constructor (event 0)
+        // (b) 10 mood-watcher events + register them at the TOP of the
+        //     constructor (event 0). It MUST be the top: event 0 has multiplayer
+        //     SKIPs and an END IF partway through, so registrations appended at
+        //     the end can be skipped/terminated and never run. Event 0 has no
+        //     parameters, and SKIP offsets are relative, so prepending is safe.
         EMEVD.Event? ev0 = evd.Events.FirstOrDefault(e => e.ID == 0);
-        int added = 0, regs = 0;
+        int added = 0;
         for (int i = 0; i < MoodHud.Length; i++)
         {
             long eid = MoodEventBase + i; int flag = MoodFlagBase + i, msg = MoodMsgBase + i;
@@ -163,11 +167,18 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
                 me.Instructions.Add(new EMEVD.Instruction(3, 0, new List<object> { (sbyte)0, (byte)0, (byte)0, flag })); // IF flag OFF
                 evd.Events.Add(me); added++;
             }
-            if (ev0 != null && !ev0.Instructions.Any(x => x.Bank == 2000 && x.ID == 0 && InitId(x) == eid))
-            {
-                ev0.Instructions.Add(new EMEVD.Instruction(2000, 0, new List<object> { (int)0, (uint)eid, (uint)0 }));
-                regs++;
-            }
+        }
+        int regs = 0;
+        if (ev0 != null)
+        {
+            // drop stale mood registrations (incl. v1.1.0's broken end-appended
+            // ones), then prepend fresh ones so they always initialize.
+            ev0.Instructions.RemoveAll(x => x.Bank == 2000 && x.ID == 0 && IsMoodInit(x));
+            var inits = new List<EMEVD.Instruction>();
+            for (int i = 0; i < MoodHud.Length; i++)
+                inits.Add(new EMEVD.Instruction(2000, 0, new List<object> { (int)0, (uint)(MoodEventBase + i), (uint)0 }));
+            ev0.Instructions.InsertRange(0, inits);
+            regs = inits.Count;
         }
         File.WriteAllBytes(path, DCX.Compress(evd.Write(), dcx));
         Log($"mood HUD: {added} new events, {regs} registrations.");
@@ -175,6 +186,7 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
 
     private static int MsgId(EMEVD.Instruction i) { try { return Convert.ToInt32(i.UnpackArgs(new[] { ArgType.Int32, ArgType.Byte })[0]); } catch { return -1; } }
     private static long InitId(EMEVD.Instruction i) { try { return Convert.ToInt64(i.UnpackArgs(new[] { ArgType.Int32, ArgType.UInt32, ArgType.UInt32 })[1]); } catch { return -1; } }
+    private static bool IsMoodInit(EMEVD.Instruction i) { long id = InitId(i); return id >= MoodEventBase && id < MoodEventBase + 10; }
 
     // ── IGameMod (console readout) ──────────────────────────────────────────────
     public override void OnLoad(IModContext ctx)
