@@ -9,6 +9,7 @@ toolchain to compile and repack them into the game — no MeowScript, no Windows
 | File | Target | Effect |
 |---|---|---|
 | `asylum_demon_slam.lua` | Asylum Demon (223200) | Slam attacks only: leap/body slam (3007) from range, butt slam (3008) up close. |
+| `goofy_demon.lua` | Asylum Demon (223200) | Goofy: mostly shimmies, breakdance-spins, flees, and has existential crises; rarely attacks. |
 
 ## How the toolchain works
 
