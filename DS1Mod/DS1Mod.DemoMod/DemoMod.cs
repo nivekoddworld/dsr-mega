@@ -82,12 +82,12 @@ public sealed class DemoMod : ModBase, IGamePatcher
         Log("All hooks subscribed — waiting for game events");
 
         // ── IGameWriter round-trip demo ────────────────────────────────────
-        // Read flag 11010000 (Asylum Demon kill), write the same value back,
-        // then verify. This is a no-op in practice but exercises the writer path.
-        bool before = ctx.Reader.GetEventFlag(11010000);
-        ctx.Writer.SetEventFlag(11010000, before);
-        bool after  = ctx.Reader.GetEventFlag(11010000);
-        Log($"Writer round-trip: flag 11010000 = {before} → wrote {before} → read {after} " +
+        // Read flag 16 (Asylum Demon kill), write the same value back, then
+        // verify. This is a no-op in practice but exercises the writer path.
+        bool before = ctx.Reader.GetEventFlag(16);
+        ctx.Writer.SetEventFlag(16, before);
+        bool after  = ctx.Reader.GetEventFlag(16);
+        Log($"Writer round-trip: flag 16 = {before} → wrote {before} → read {after} " +
             $"({(before == after ? "OK" : "MISMATCH!")})");
     }
 
@@ -126,8 +126,8 @@ public sealed class DemoMod : ModBase, IGamePatcher
         Log($"[Souls] SL {level}  —  {souls:N0} souls held");
 
         // ── IGameReader: spot-check a known event flag ─────────────────────
-        bool asylumDone = _ctx.Reader.GetEventFlag(11010000);
-        bool gargoyles  = _ctx.Reader.GetEventFlag(11010100);
+        bool asylumDone = _ctx.Reader.GetEventFlag(16);   // Asylum Demon
+        bool gargoyles  = _ctx.Reader.GetEventFlag(3);    // Bell Gargoyles
         Log($"[Flags] Asylum Demon killed: {asylumDone}  |  Bell Gargoyles killed: {gargoyles}");
     }
 
