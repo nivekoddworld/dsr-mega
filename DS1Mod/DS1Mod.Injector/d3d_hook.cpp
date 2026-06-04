@@ -256,6 +256,8 @@ static HRESULT __stdcall HookedPresent(IDXGISwapChain* sc, UINT syncInterval, UI
 
 bool D3DHook::Initialize()
 {
+    Log(L"[D3DHook] Initialize — creating probe device to read DXGI vtable...");
+
     // Create a throw-away window + D3D11 device + swap chain.
     // We only need them long enough to read the DXGI vtable and patch Present.
     WNDCLASSEXW wc  = { sizeof(wc) };
@@ -266,7 +268,14 @@ bool D3DHook::Initialize()
 
     HWND hwnd = CreateWindowExW(0, wc.lpszClassName, L"", WS_OVERLAPPEDWINDOW,
                                 0, 0, 8, 8, nullptr, nullptr, wc.hInstance, nullptr);
-    if (!hwnd) { UnregisterClassW(wc.lpszClassName, wc.hInstance); return false; }
+    if (!hwnd)
+    {
+        wchar_t msg[128];
+        swprintf_s(msg, L"[D3DHook] CreateWindowEx FAILED — GetLastError=%u", GetLastError());
+        Log(msg);
+        UnregisterClassW(wc.lpszClassName, wc.hInstance);
+        return false;
+    }
 
     DXGI_SWAP_CHAIN_DESC sd       = {};
     sd.BufferCount                 = 1;
@@ -289,6 +298,9 @@ bool D3DHook::Initialize()
 
     if (FAILED(hr) || !sc)
     {
+        wchar_t msg[128];
+        swprintf_s(msg, L"[D3DHook] D3D11CreateDeviceAndSwapChain FAILED hr=0x%08X", (unsigned)hr);
+        Log(msg);
         DestroyWindow(hwnd);
         UnregisterClassW(wc.lpszClassName, wc.hInstance);
         return false;
