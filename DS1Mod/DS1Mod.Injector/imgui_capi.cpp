@@ -15,6 +15,8 @@ extern "C"
     // Windows
     __declspec(dllexport) bool igBegin(const char* name, bool* p_open, int flags)
         { return ImGui::Begin(name, p_open, (ImGuiWindowFlags)flags); }
+    __declspec(dllexport) bool igBeginNoClose(const char* name, void* /*unused*/, int flags)
+        { return ImGui::Begin(name, nullptr, (ImGuiWindowFlags)flags); }
     __declspec(dllexport) void igEnd() { ImGui::End(); }
 
     // Layout
