@@ -2,24 +2,28 @@
 #include <windows.h>
 #include "modloader.h"
 
-void ApplyHeapFix(); // defined in heapfix.cpp
+void ApplyHeapFix();
 
 static DWORD WINAPI WorkerThread(LPVOID)
 {
-    // Wait for Steam DRM to finish unpacking before touching memory.
+    // Open log immediately so any crash during Sleep or HeapFix is visible.
+    LogInit();
+    Log(L"WorkerThread started");
+
     Sleep(1000);
+    Log(L"Sleep done, applying heap fix...");
 
     ApplyHeapFix();
+    Log(L"Heap fix applied");
 
-    // Determine game directory from the process executable path.
     wchar_t exePath[MAX_PATH];
     GetModuleFileNameW(nullptr, exePath, MAX_PATH);
-
-    // Strip the filename, keep the directory.
     wchar_t* lastSlash = wcsrchr(exePath, L'\\');
     if (lastSlash) *lastSlash = L'\0';
 
-    InitModLoader(exePath);
+    Log(L"Calling InitModLoader...");
+    bool ok = InitModLoader(exePath);
+    Log(ok ? L"InitModLoader succeeded" : L"InitModLoader FAILED");
 
     return 0;
 }
