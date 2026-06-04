@@ -52,6 +52,28 @@ internal sealed class ModAssemblyLoadContext : AssemblyLoadContext
         return null; // fall through to the default context
     }
 
+    // Absolute path to the host's own directory, where the shared assemblies are
+    // deployed. Derived from this assembly's location rather than
+    // AppContext.BaseDirectory, which is empty under hostfxr component activation
+    // (passing a relative path to LoadFromAssemblyPath throws ArgumentException).
+    private static readonly string HostDir = ResolveHostDir();
+
+    private static string ResolveHostDir()
+    {
+        string? dir = Path.GetDirectoryName(typeof(ModAssemblyLoadContext).Assembly.Location);
+        if (!string.IsNullOrEmpty(dir)) return dir;
+
+        // Fallbacks: an already-loaded shared assembly, then AppContext.
+        foreach (Assembly asm in Default.Assemblies)
+        {
+            if (!SharedAssemblies.Contains(asm.GetName().Name ?? "")) continue;
+            dir = Path.GetDirectoryName(asm.Location);
+            if (!string.IsNullOrEmpty(dir)) return dir;
+        }
+
+        return string.IsNullOrEmpty(AppContext.BaseDirectory) ? "" : AppContext.BaseDirectory;
+    }
+
     /// <summary>
     /// Returns the host's copy of a shared assembly so the mod links against the
     /// exact same types the host uses.
@@ -69,10 +91,10 @@ internal sealed class ModAssemblyLoadContext : AssemblyLoadContext
         // 2. Not loaded yet (DS1Mod.SDK — the host references it but never uses a
         //    type from it, so it was never loaded). Load it from the host's own
         //    directory *into the default context* so it's shared with every mod.
-        if (name is not null)
+        if (name is not null && HostDir.Length > 0)
         {
-            string hostDll = Path.Combine(AppContext.BaseDirectory, name + ".dll");
-            if (File.Exists(hostDll))
+            string hostDll = Path.Combine(HostDir, name + ".dll");
+            if (File.Exists(hostDll) && Path.IsPathRooted(hostDll))
                 return Default.LoadFromAssemblyPath(hostDll);
         }
 
