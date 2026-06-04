@@ -8,33 +8,30 @@ public sealed class GameReader : IGameReader
 
     public PlayerState? GetPlayerState()
     {
-        nint wcm = GameMemory.Read<nint>(GameMemory.ModuleBase + Offsets.WorldChrManPtr);
-        if (wcm == 0) return null;
+        nint chr = GamePointers.PlayerChr;
+        if (chr == 0) return null;
 
-        nint playerBase = GameMemory.Read<nint>(wcm + Offsets.WCM_PlayerOff);
-        if (playerBase == 0) return null;
+        nint mapData = GameMemory.Read<nint>(chr + Offsets.Chr_MapDataOff);
+        if (mapData == 0) return new PlayerState(0f, 0f, 0f, "");
 
-        nint posAddr = playerBase + Offsets.Player_PosOff;
-        float x = GameMemory.Read<float>(posAddr);
-        float y = GameMemory.Read<float>(posAddr + 4);
-        float z = GameMemory.Read<float>(posAddr + 8);
+        nint posData = GameMemory.Read<nint>(mapData + Offsets.ChrMap_PosDataOff);
+        if (posData == 0) return new PlayerState(0f, 0f, 0f, "");
 
-        string mapId = ReadMapId();
-        return new PlayerState(x, y, z, mapId);
+        float x = GameMemory.Read<float>(posData + Offsets.Pos_XOff);
+        float y = GameMemory.Read<float>(posData + Offsets.Pos_YOff);
+        float z = GameMemory.Read<float>(posData + Offsets.Pos_ZOff);
+        return new PlayerState(x, y, z, "");
     }
 
     public PlayerStats? GetPlayerStats()
     {
-        nint wcm = GameMemory.Read<nint>(GameMemory.ModuleBase + Offsets.WorldChrManPtr);
-        if (wcm == 0) return null;
+        nint chr = GamePointers.PlayerChr;
+        if (chr == 0) return null;
 
-        nint playerBase = GameMemory.Read<nint>(wcm + Offsets.WCM_PlayerOff);
-        if (playerBase == 0) return null;
-
-        int   hp    = GameMemory.Read<int>  (playerBase + Offsets.Player_HpOff);
-        int   maxHp = GameMemory.Read<int>  (playerBase + Offsets.Player_MaxHpOff);
-        float st    = GameMemory.Read<float>(playerBase + Offsets.Player_StaminaOff);
-        float maxSt = GameMemory.Read<float>(playerBase + Offsets.Player_MaxStaminaOff);
+        int   hp    = GameMemory.Read<int>  (chr + Offsets.Chr_HpOff);
+        int   maxHp = GameMemory.Read<int>  (chr + Offsets.Chr_MaxHpOff);
+        float st    = GameMemory.Read<float>(chr + Offsets.Chr_StaminaOff);
+        float maxSt = GameMemory.Read<float>(chr + Offsets.Chr_MaxStaminaOff);
 
         if (maxHp <= 0 || maxHp > 99_999) return null;
 
@@ -47,32 +44,13 @@ public sealed class GameReader : IGameReader
 
     public int GetSoulLevel()
     {
-        nint gdm = GameMemory.Read<nint>(GameMemory.ModuleBase + Offsets.GameDataManPtr);
-        if (gdm == 0) return 0;
-        nint playerData = GameMemory.Read<nint>(gdm + Offsets.GDM_PlayerDataOff);
-        if (playerData == 0) return 0;
-        return GameMemory.Read<int>(playerData + Offsets.PGD_SoulLevelOff);
+        nint pgd = GamePointers.PlayerGameData;
+        return pgd == 0 ? 0 : GameMemory.Read<int>(pgd + Offsets.PGD_SoulLevelOff);
     }
 
     public int GetSouls()
     {
-        nint gdm = GameMemory.Read<nint>(GameMemory.ModuleBase + Offsets.GameDataManPtr);
-        if (gdm == 0) return 0;
-        nint playerData = GameMemory.Read<nint>(gdm + Offsets.GDM_PlayerDataOff);
-        if (playerData == 0) return 0;
-        return GameMemory.Read<int>(playerData + Offsets.PGD_SoulsOff);
-    }
-
-    private static string ReadMapId()
-    {
-        nint gdm = GameMemory.Read<nint>(GameMemory.ModuleBase + Offsets.GameDataManPtr);
-        if (gdm == 0) return "";
-        nint playerData = GameMemory.Read<nint>(gdm + Offsets.GDM_PlayerDataOff);
-        if (playerData == 0) return "";
-        int areaId = GameMemory.Read<int>(playerData + Offsets.PGD_AreaOff);
-        if (areaId == 0) return "";
-        int major = areaId / 1_000_000;
-        int minor = (areaId / 100_000) % 10;
-        return $"m{major:D2}_{minor:D2}_00_00";
+        nint pgd = GamePointers.PlayerGameData;
+        return pgd == 0 ? 0 : GameMemory.Read<int>(pgd + Offsets.PGD_SoulsOff);
     }
 }

@@ -113,6 +113,103 @@ public static class GameMemory
 
     private static readonly nint MbiSize = Marshal.SizeOf<MEMORY_BASIC_INFORMATION>();
 
+    // ── AOB (signature) scanning ───────────────────────────────────────────
+
+    /// <summary>
+    /// Scans the main module for a byte pattern ("48 8B 05 ? ? ? ?", '?' =
+    /// wildcard). Returns the absolute address of the first match, or 0.
+    /// Walks committed, readable regions only so it never faults.
+    /// </summary>
+    public static nint Scan(string pattern)
+    {
+        (byte[] bytes, bool[] match) = ParsePattern(pattern);
+        if (bytes.Length == 0) return 0;
+
+        GetModuleBounds(out nint start, out nint size);
+        if (start == 0 || size == 0) return 0;
+
+        nint end  = start + size;
+        nint addr = start;
+        while (addr < end)
+        {
+            if (VirtualQuery(addr, out MEMORY_BASIC_INFORMATION mbi, MbiSize) == 0) break;
+            nint regionEnd = mbi.BaseAddress + mbi.RegionSize;
+            if (mbi.RegionSize <= 0) break;
+
+            bool readable = mbi.State == MEM_COMMIT
+                && (mbi.Protect & (PAGE_GUARD | PAGE_NOACCESS)) == 0
+                && (mbi.Protect & PageReadMask) != 0;
+
+            if (readable)
+            {
+                nint scanEnd = regionEnd < end ? regionEnd : end;
+                nint hit = ScanRegion(addr, scanEnd, bytes, match);
+                if (hit != 0) return hit;
+            }
+
+            addr = regionEnd;
+        }
+        return 0;
+    }
+
+    private static unsafe nint ScanRegion(nint start, nint end, byte[] pat, bool[] match)
+    {
+        long len = (long)end - (long)start;
+        int plen = pat.Length;
+        byte* p = (byte*)start;
+        for (long i = 0; i + plen <= len; i++)
+        {
+            int j = 0;
+            for (; j < plen; j++)
+                if (match[j] && p[i + j] != pat[j]) break;
+            if (j == plen) return start + (nint)i;
+        }
+        return 0;
+    }
+
+    private static (byte[], bool[]) ParsePattern(string pattern)
+    {
+        string[] tokens = pattern.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var bytes = new byte[tokens.Length];
+        var match = new bool[tokens.Length];
+        for (int i = 0; i < tokens.Length; i++)
+        {
+            if (tokens[i] is "?" or "??")
+            {
+                match[i] = false;
+            }
+            else
+            {
+                bytes[i] = Convert.ToByte(tokens[i], 16);
+                match[i] = true;
+            }
+        }
+        return (bytes, match);
+    }
+
+    private static void GetModuleBounds(out nint baseAddr, out nint size)
+    {
+        baseAddr = ModuleBase;
+        size = 0;
+        if (baseAddr == 0) return;
+        if (GetModuleInformation(GetCurrentProcess(), baseAddr, out MODULEINFO mi, (uint)Marshal.SizeOf<MODULEINFO>()))
+            size = (nint)mi.SizeOfImage;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MODULEINFO
+    {
+        public nint lpBaseOfDll;
+        public uint SizeOfImage;
+        public nint EntryPoint;
+    }
+
+    [DllImport("psapi.dll", SetLastError = true)]
+    private static extern bool GetModuleInformation(nint hProcess, nint hModule, out MODULEINFO lpmodinfo, uint cb);
+
+    [DllImport("kernel32.dll")]
+    private static extern nint GetCurrentProcess();
+
     [DllImport("kernel32.dll")]
     private static extern nint VirtualQuery(nint lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer, nint dwLength);
 

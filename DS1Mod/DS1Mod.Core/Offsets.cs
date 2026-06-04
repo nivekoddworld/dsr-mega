@@ -1,43 +1,46 @@
 namespace DS1Mod.Core;
 
 /// <summary>
-/// DSR 1.03.1 memory offsets. Verify against JohrnaJohrna/RemasterCETable
-/// after any game update.
+/// DSR memory layout. Pointer bases are found at runtime by AOB scan (see
+/// <see cref="GamePointers"/>) rather than hardcoded RVAs, so they survive the
+/// image layout/version drift that broke the old static offsets.
+///
+/// Patterns and chain offsets are from JKAnderson/DSR-Gadget (DSROffsets.cs).
+/// Each AOB matches a `mov reg, [rip+disp32]`: 3-byte opcode, 4-byte
+/// displacement at +3, instruction length 7 → the referenced static address is
+/// `hit + 7 + int32@(hit+3)`, and that address holds the manager pointer.
 /// </summary>
 internal static class Offsets
 {
-    // ── EventFlagMan ──────────────────────────────────────────────────────
-    // [base + EventFlagManPtr] → EventFlagMan*
-    // EventFlagMan + 0x18 → uint[] flag bit array
-    // Flag N: word[N >> 5] bit (31 - (N & 31))  (big-endian within each word)
-    public static readonly nint EventFlagManPtr = 0x1D2F10C0;
+    // ── AOB patterns ('?' = wildcard byte) ────────────────────────────────
+    public const string WorldChrBaseAOB =
+        "48 8B 05 ? ? ? ? 48 8B 48 68 48 85 C9 0F 84 ? ? ? ? 48 39 5E 10 0F 84 ? ? ? ? 48";
+    public const string ChrClassBaseAOB =
+        "48 8B 05 ? ? ? ? 48 85 C0 ? ? F3 0F 58 80 AC 00 00 00";
+    public const string EventFlagsAOB =
+        "48 8B 0D ? ? ? ? 99 33 C2 45 33 C0 2B C2 8D 50 F6";
 
-    // ── WorldChrMan / player character ────────────────────────────────────
-    // [base + WorldChrManPtr] → WorldChrMan*
-    // WorldChrMan + WCM_PlayerOff → ChrIns* (player)
-    // ChrIns + Player_PosOff     → float x, y, z
-    // ChrIns + Player_HpOff      → int32 current HP
-    // ChrIns + Player_MaxHpOff   → int32 max HP
-    // ChrIns + Player_StaminaOff → float current stamina
-    public static readonly nint WorldChrManPtr      = 0x1D2FE018;
-    public const int  WCM_PlayerOff       = 0x80;
-    public const int  Player_PosOff       = 0x70;
-    public const int  Player_HpOff        = 0xD8;
-    public const int  Player_MaxHpOff     = 0xDC;
-    public const int  Player_StaminaOff   = 0xF0;
-    public const int  Player_MaxStaminaOff = 0xF4;
+    public const int RipDispAt   = 3;   // displacement starts here
+    public const int RipInstrLen = 7;   // length of the mov instruction
 
-    // ── GameDataMan / player save data ────────────────────────────────────
-    // [base + GameDataManPtr] → GameDataMan*
-    // GameDataMan + GDM_PlayerDataOff → PlayerGameData*
-    // PlayerGameData + PGD_SoulsOff      → int32 held souls
-    // PlayerGameData + PGD_SoulLevelOff  → int32 soul level
-    // PlayerGameData + PGD_AreaOff       → int32 last bonfire area ID
-    //
-    // ⚠ VERIFY these if level / souls reads return 0.
-    public static readonly nint GameDataManPtr     = 0x1D2F7158;
-    public const int  GDM_PlayerDataOff  = 0x08;
-    public const int  PGD_SoulsOff       = 0x40;
-    public const int  PGD_SoulLevelOff   = 0x68;
-    public const int  PGD_AreaOff        = 0xA4;
+    // ── WorldChrMan → player character (ChrData1) ─────────────────────────
+    // WorldChrMan = *(worldChrTarget); player = *(WorldChrMan + 0x68)
+    public const int WCM_PlayerChrOff   = 0x68;
+    public const int Chr_HpOff          = 0x3D8;   // int32
+    public const int Chr_MaxHpOff       = 0x3DC;   // int32
+    public const int Chr_StaminaOff     = 0x3E8;   // float
+    public const int Chr_MaxStaminaOff  = 0x3EC;   // float
+    public const int Chr_MapDataOff     = 0x48;    // ChrData1 → ChrMapData
+
+    // ── ChrMapData → ChrPosData → world position ──────────────────────────
+    public const int ChrMap_PosDataOff  = 0x28;
+    public const int Pos_XOff           = 0x10;    // float
+    public const int Pos_YOff           = 0x14;    // float
+    public const int Pos_ZOff           = 0x18;    // float
+
+    // ── GameDataMan → PlayerGameData (ChrData2) ───────────────────────────
+    // GameDataMan = *(chrClassTarget); PlayerGameData = *(GameDataMan + 0x10)
+    public const int GDM_PlayerDataOff  = 0x10;
+    public const int PGD_SoulLevelOff   = 0x90;    // int32
+    public const int PGD_SoulsOff       = 0x94;    // int32
 }

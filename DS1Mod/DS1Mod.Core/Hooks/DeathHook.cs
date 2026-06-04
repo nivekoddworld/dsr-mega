@@ -10,26 +10,19 @@ internal sealed class DeathHook
 
     public void Poll()
     {
-        nint playerBase = GetPlayerBase();
-        if (playerBase == 0)
+        nint chr = GamePointers.PlayerChr;
+        if (chr == 0)
         {
             _wasDead = false;
             return;
         }
 
-        int hp = GameMemory.Read<int>(playerBase + Offsets.Player_HpOff);
+        int hp = GameMemory.Read<int>(chr + Offsets.Chr_HpOff);
         bool isDead = hp <= 0;
 
         if (isDead && !_wasDead)
             PlayerDied?.Invoke();
 
         _wasDead = isDead;
-    }
-
-    private static nint GetPlayerBase()
-    {
-        nint wcm = GameMemory.Read<nint>(GameMemory.ModuleBase + Offsets.WorldChrManPtr);
-        if (wcm == 0) return 0;
-        return GameMemory.Read<nint>(wcm + Offsets.WCM_PlayerOff);
     }
 }

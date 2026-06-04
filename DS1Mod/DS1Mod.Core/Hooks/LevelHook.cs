@@ -10,21 +10,15 @@ internal sealed class LevelHook
 
     public void Poll()
     {
-        int level = ReadSoulLevel();
+        nint pgd = GamePointers.PlayerGameData;
+        if (pgd == 0) return;
+
+        int level = GameMemory.Read<int>(pgd + Offsets.PGD_SoulLevelOff);
         if (level <= 0) return;
 
         if (_lastLevel >= 0 && level > _lastLevel)
             PlayerLeveledUp?.Invoke(level);
 
         _lastLevel = level;
-    }
-
-    private static int ReadSoulLevel()
-    {
-        nint gdm = GameMemory.Read<nint>(GameMemory.ModuleBase + Offsets.GameDataManPtr);
-        if (gdm == 0) return 0;
-        nint playerData = GameMemory.Read<nint>(gdm + Offsets.GDM_PlayerDataOff);
-        if (playerData == 0) return 0;
-        return GameMemory.Read<int>(playerData + Offsets.PGD_SoulLevelOff);
     }
 }
