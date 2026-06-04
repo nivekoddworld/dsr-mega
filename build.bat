@@ -106,7 +106,7 @@ if exist "%PUB_INJECTOR%\dinput8.dll" (
 if exist "%PUB_BUNDLED%" rd /s /q "%PUB_BUNDLED%"
 mkdir "%PUB_BUNDLED%"
 
-set "DEMO_DLL=%REPO%DS1Mod\DS1Mod.DemoMod\bin\Release\net8.0-windows\DS1Mod.DemoMod.dll"
+set "DEMO_DLL=%REPO%DS1Mod\DS1Mod.DemoMod\bin\Release\net8.0\DS1Mod.DemoMod.dll"
 if exist "!DEMO_DLL!" (
     copy /Y "!DEMO_DLL!" "%PUB_BUNDLED%\DS1Mod.DemoMod.dll" >nul
     echo        + DS1Mod.DemoMod.dll
