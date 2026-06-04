@@ -25,5 +25,5 @@ public static class GameState
     /// Human-readable dump of the resolved pointers for diagnosing why
     /// IsInGame() is (or isn't) true.
     /// </summary>
-    public static string Describe() => GamePointers.Describe();
+    public static string Describe() => $"{GamePointers.Describe()} {DsrVersion.Describe()}";
 }

@@ -11,7 +11,8 @@ public sealed class GameReader : IGameReader
         nint chr = GamePointers.PlayerChr;
         if (chr == 0) return null;
 
-        nint mapData = GameMemory.Read<nint>(chr + Offsets.Chr_MapDataOff);
+        DsrVersion.Ensure();
+        nint mapData = GameMemory.Read<nint>(chr + Offsets.Chr_MapDataOff + DsrVersion.ChrData1Boost1);
         if (mapData == 0) return new PlayerState(0f, 0f, 0f, "");
 
         nint posData = GameMemory.Read<nint>(mapData + Offsets.ChrMap_PosDataOff);
@@ -28,10 +29,12 @@ public sealed class GameReader : IGameReader
         nint chr = GamePointers.PlayerChr;
         if (chr == 0) return null;
 
-        int   hp    = GameMemory.Read<int>  (chr + Offsets.Chr_HpOff);
-        int   maxHp = GameMemory.Read<int>  (chr + Offsets.Chr_MaxHpOff);
-        float st    = GameMemory.Read<float>(chr + Offsets.Chr_StaminaOff);
-        float maxSt = GameMemory.Read<float>(chr + Offsets.Chr_MaxStaminaOff);
+        DsrVersion.Ensure();
+        int b2 = DsrVersion.ChrData1Boost2;
+        int   hp    = GameMemory.Read<int>  (chr + Offsets.Chr_HpOff         + b2);
+        int   maxHp = GameMemory.Read<int>  (chr + Offsets.Chr_MaxHpOff      + b2);
+        float st    = GameMemory.Read<float>(chr + Offsets.Chr_StaminaOff    + b2);
+        float maxSt = GameMemory.Read<float>(chr + Offsets.Chr_MaxStaminaOff + b2);
 
         if (maxHp <= 0 || maxHp > 99_999) return null;
 

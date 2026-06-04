@@ -196,6 +196,12 @@ public static class GameMemory
             size = (nint)mi.SizeOfImage;
     }
 
+    /// <summary>SizeOfImage of the main module (used for version detection), or 0.</summary>
+    public static int ModuleSize
+    {
+        get { GetModuleBounds(out _, out nint size); return (int)size; }
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     private struct MODULEINFO
     {

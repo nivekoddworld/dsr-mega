@@ -4,7 +4,7 @@ namespace DS1Mod.Core.Hooks;
 
 internal sealed class DeathHook
 {
-    private bool _wasDead = false;
+    private bool _wasAlive = false;
 
     public event Action? PlayerDied;
 
@@ -13,16 +13,25 @@ internal sealed class DeathHook
         nint chr = GamePointers.PlayerChr;
         if (chr == 0)
         {
-            _wasDead = false;
+            _wasAlive = false;
             return;
         }
 
-        int hp = GameMemory.Read<int>(chr + Offsets.Chr_HpOff);
-        bool isDead = hp <= 0;
+        DsrVersion.Ensure();
+        int hp = GameMemory.Read<int>(chr + Offsets.Chr_HpOff + DsrVersion.ChrData1Boost2);
 
-        if (isDead && !_wasDead)
+        if (hp > 0)
+        {
+            _wasAlive = true;
+            return;
+        }
+
+        // HP has dropped to 0 — only count it as a death if we previously saw
+        // the player alive, so we never fire on a half-initialized load frame.
+        if (_wasAlive)
+        {
             PlayerDied?.Invoke();
-
-        _wasDead = isDead;
+            _wasAlive = false;
+        }
     }
 }
