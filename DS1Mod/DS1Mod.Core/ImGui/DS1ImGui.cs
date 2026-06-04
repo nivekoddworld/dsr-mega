@@ -12,7 +12,7 @@ public static partial class DS1ImGui
 
     [LibraryImport(Dll, StringMarshalling = StringMarshalling.Utf8)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool igBegin(string name, ref bool p_open, ImGuiWindowFlags flags);
+    public static partial bool igBegin(string name, [MarshalAs(UnmanagedType.Bool)] ref bool p_open, ImGuiWindowFlags flags);
 
     [LibraryImport(Dll, StringMarshalling = StringMarshalling.Utf8)]
     [return: MarshalAs(UnmanagedType.Bool)]
