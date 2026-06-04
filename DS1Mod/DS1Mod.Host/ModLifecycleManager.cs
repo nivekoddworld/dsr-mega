@@ -10,34 +10,65 @@ internal sealed class ModLifecycleManager : IDisposable
         IGameMod Mod,
         ModAssemblyLoadContext Alc);
 
-    private readonly List<LoadedMod> _mods    = new();
-    private readonly GameHooks       _hooks   = new();
-    private readonly GameReader      _reader  = new();
-    private readonly GameWriter      _writer  = new();
+    private readonly List<LoadedMod> _mods   = new();
+    private readonly GameHooks       _hooks  = new();
+    private readonly GameReader      _reader = new();
+    private readonly GameWriter      _writer = new();
     private          EventPump?      _pump;
 
-    public void LoadMods(string modsDir)
+    public void LoadMods(string gameDir, string modsDir)
     {
         if (!Directory.Exists(modsDir)) return;
 
-        var ctx = new ModContext(_hooks, _reader, _writer, modsDir);
+        // ── Phase 1: load assemblies, instantiate mods ────────────────
+        var modCtx   = new ModContext(_hooks, _reader, _writer, modsDir);
+        var patchCtx = new PatchContext(gameDir, modsDir);
 
         foreach (string dll in Directory.EnumerateFiles(modsDir, "*.dll"))
         {
+            try   { InstantiateMod(dll); }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(
+                    $"[DS1Mod.Host] Failed to instantiate {Path.GetFileName(dll)}: {ex.Message}");
+            }
+        }
+
+        // ── Phase 2: run patchers (before any map file is loaded) ─────
+        foreach (var (mod, _) in _mods)
+        {
+            if (mod is not IGamePatcher patcher) continue;
             try
             {
-                LoadMod(dll, ctx);
+                Console.WriteLine($"[DS1Mod.Host] Patching: {mod.Name}");
+                patcher.Patch(patchCtx);
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"[DS1Mod.Host] Failed to load {Path.GetFileName(dll)}: {ex.Message}");
+                Console.Error.WriteLine(
+                    $"[DS1Mod.Host] Patch failed for {mod.Name}: {ex.Message}");
+            }
+        }
+
+        // ── Phase 3: OnLoad ───────────────────────────────────────────
+        foreach (var (mod, _) in _mods)
+        {
+            try
+            {
+                mod.OnLoad(modCtx);
+                Console.WriteLine($"[DS1Mod.Host] Loaded: {mod.Name} v{mod.Version} by {mod.Author}");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(
+                    $"[DS1Mod.Host] OnLoad failed for {mod.Name}: {ex.Message}");
             }
         }
 
         _pump = new EventPump(_hooks, _mods.Select(m => m.Mod).ToList());
     }
 
-    private void LoadMod(string dllPath, ModContext ctx)
+    private void InstantiateMod(string dllPath)
     {
         var alc = new ModAssemblyLoadContext(dllPath);
         var asm = alc.LoadFromAssemblyPath(dllPath);
@@ -52,15 +83,8 @@ internal sealed class ModLifecycleManager : IDisposable
             }
         }
 
-        if (mod is null)
-        {
-            alc.Unload();
-            return;
-        }
-
-        mod.OnLoad(ctx);
+        if (mod is null) { alc.Unload(); return; }
         _mods.Add(new LoadedMod(mod, alc));
-        Console.WriteLine($"[DS1Mod.Host] Loaded: {mod.Name} v{mod.Version} by {mod.Author}");
     }
 
     public void Dispose()

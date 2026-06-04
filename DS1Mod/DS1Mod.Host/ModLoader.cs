@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using System.Text;
 using DS1Mod.Core.Memory;
 
 namespace DS1Mod.Host;
@@ -29,7 +28,7 @@ public static class ModLoader
             string modsDir = Path.Combine(gameDir, "mods");
 
             _manager = new ModLifecycleManager();
-            _manager.LoadMods(modsDir);
+            _manager.LoadMods(gameDir, modsDir);
 
             return 0;
         }
