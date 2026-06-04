@@ -54,7 +54,7 @@ public partial class MainWindow : Window
             "Items"   => new ItemPage     { DataContext = Settings },
             "Enemies" => new EnemyPage    { DataContext = Settings },
             "Spoiler" => new SpoilerPage  { Log = _lastSpoilerLog },
-            "Runtime" => new RuntimePage  { DataContext = Settings },
+            "Mods"    => new ModsPage     { DataContext = Settings },
             "Debug"   => BuildDebugPage(),
             "About"   => new AboutPage(),
             _         => PageContent.Content,

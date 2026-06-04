@@ -172,12 +172,12 @@
 
                     <RadioButton Style="{StaticResource DS1NavItem}"
                                  GroupName="Nav"
-                                 x:Name="NavRuntime"
+                                 x:Name="NavMods"
                                  Checked="NavItem_Checked"
-                                 Tag="Runtime">
+                                 Tag="Mods">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="◉ " FontSize="11" VerticalAlignment="Center"/>
-                            <TextBlock Text="RUNTIME" VerticalAlignment="Center"/>
+                            <TextBlock Text="⬡ " FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="MODS" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
 
