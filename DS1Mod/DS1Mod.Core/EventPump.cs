@@ -20,6 +20,7 @@ public sealed class EventPump : IDisposable
         long cycle      = 0;
         int  diagLogged = 0;
         const int maxDiag = 20;   // ~1 min of "waiting" diagnostics, then quiet
+        string lastFogAnim = ""; // debug: dedupe the anim-offset finder output
 
         while (!ct.IsCancellationRequested)
         {
@@ -44,6 +45,13 @@ public sealed class EventPump : IDisposable
 
                 if (inGame)
                 {
+                    // DEBUG: hunt for the current-animation-id offset. Walk through
+                    // a fog wall and this logs where the fog-pass anim (7410) lives.
+                    string fogAnim = GamePointers.FindFogAnim();
+                    if (fogAnim.Length > 0 && fogAnim != lastFogAnim)
+                        Console.WriteLine($"[AnimScan] fog-pass animation found at:{fogAnim}");
+                    lastFogAnim = fogAnim;
+
                     _hooks.PollAll();
                     foreach (var mod in _mods)
                     {
