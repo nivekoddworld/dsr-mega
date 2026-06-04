@@ -13,11 +13,4 @@
     <ProjectReference Include="..\DS1Mod.Core\DS1Mod.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- ImGui.NET provides the C# bindings and ships cimgui.dll.
-         At runtime we REPLACE cimgui.dll with our custom build from
-         DS1Mod.ImGuiNative (which includes the D3D11 + Win32 backends).
-         The C# bindings themselves are binary-compatible. -->
-    <PackageReference Include="ImGui.NET" Version="1.91.6.1" />
-  </ItemGroup>
 </Project>

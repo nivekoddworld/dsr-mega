@@ -9,9 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- SDK gives us ModBase; Core gives us IGuiMod -->
+    <!-- SDK gives us ModBase; Core gives us IGuiMod + DS1ImGui -->
     <ProjectReference Include="..\DS1Mod.SDK\DS1Mod.SDK.csproj" />
-    <!-- ImGui.NET for draw calls -->
-    <PackageReference Include="ImGui.NET" Version="1.91.6.1" />
+    <ProjectReference Include="..\DS1Mod.Core\DS1Mod.Core.csproj" />
   </ItemGroup>
 </Project>

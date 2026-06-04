@@ -88,23 +88,15 @@ if errorlevel 1 (
     goto :summary
 )
 
-:: ── 5. Build C++ ImGui native layer (cimgui.dll) ──────────────────────────
+:: ── 5. Check imgui vendor status (imgui is compiled into dinput8.dll) ────────
 echo.
-echo [5/9] Building cimgui.dll (ImGui native layer)...
-if not exist "%REPO%DS1Mod\DS1Mod.ImGuiNative\imgui\cimgui.cpp" (
-    echo        [WARN] imgui sources not vendored — skipping cimgui.dll build.
-    echo               See DS1Mod\DS1Mod.ImGuiNative\imgui\VENDOR.md for instructions.
-    echo               ImGui overlay mods will be disabled until cimgui.dll is present.
+echo [5/9] Checking imgui vendor status (imgui is compiled into dinput8.dll)...
+if not exist "%REPO%DS1Mod\DS1Mod.Injector\imgui\imgui.cpp" (
+    echo        [WARN] imgui sources not vendored into DS1Mod\DS1Mod.Injector\imgui\.
+    echo               See DS1Mod\DS1Mod.Injector\imgui\VENDOR.md for instructions.
+    echo               ImGui overlay will be disabled until sources are present and dinput8.dll is rebuilt.
 ) else (
-    "%MSBUILD%" "%REPO%DS1Mod\DS1Mod.ImGuiNative\DS1Mod.ImGuiNative.vcxproj" ^
-        /p:Configuration=Release /p:Platform=x64 ^
-        /p:OutDir="%PUB_INJECTOR%\\" ^
-        /v:minimal /nologo
-    if errorlevel 1 (
-        echo [FAIL] MSBuild cimgui.dll
-        set /a ERRORS+=1
-        goto :summary
-    )
+    echo        imgui sources present — will be compiled into dinput8.dll.
 )
 
 :: ── 6. Assemble publish folders ───────────────────────────────────────────
@@ -121,14 +113,7 @@ if exist "%PUB_INJECTOR%\dinput8.dll" (
     goto :summary
 )
 
-:: Copy cimgui.dll into the framework folder (optional — only present if
-:: imgui sources were vendored and DS1Mod.ImGuiNative built successfully)
-if exist "%PUB_INJECTOR%\cimgui.dll" (
-    copy /Y "%PUB_INJECTOR%\cimgui.dll" "%PUB_FRAMEWORK%\cimgui.dll" >nul
-    echo        + cimgui.dll
-) else (
-    echo        [WARN] cimgui.dll not built — ImGui overlay mods disabled
-)
+:: imgui is compiled into dinput8.dll — no separate cimgui.dll needed.
 
 :: Collect bundled mods
 if exist "%PUB_BUNDLED%" rd /s /q "%PUB_BUNDLED%"
@@ -245,7 +230,7 @@ if !ERRORS! EQU 0 (
     echo  BUILD SUCCEEDED
     echo.
     echo  publish\app\          — complete distributable ^(UI + framework + mods^)
-    echo    framework\          — dinput8.dll + cimgui.dll + DS1Mod.Host/Core/SDK/Rendering
+    echo    framework\          — dinput8.dll ^(with ImGui built-in^) + DS1Mod.Host/Core/SDK/Rendering
     echo    bundled-mods\       — DS1Mod.DemoMod.dll, DS1Mod.ImGuiDemo.dll, ...
     echo    DS1MegaRando.UI.exe — launch this
     echo.

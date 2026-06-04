@@ -1,7 +1,6 @@
 using DS1Mod.Core;
+using DS1Mod.Core.ImGui;
 using DS1Mod.SDK;
-using ImGuiNET;
-using System.Numerics;
 
 namespace DS1Mod.ImGuiDemo;
 
@@ -79,9 +78,9 @@ public sealed class ImGuiDemoMod : ModBase, IGuiMod
         if (!_showStats) return;
 
         // Pin to top-left, no title bar, no resize.
-        ImGui.SetNextWindowPos(new Vector2(10, 10), ImGuiCond.Always);
-        ImGui.SetNextWindowSize(new Vector2(220, 0), ImGuiCond.Always);
-        ImGui.SetNextWindowBgAlpha(0.65f);
+        DS1ImGui.SetNextWindowPos(10, 10, ImGuiCond.Always);
+        DS1ImGui.SetNextWindowSize(220, 0, ImGuiCond.Always);
+        DS1ImGui.SetNextWindowBgAlpha(0.65f);
 
         var flags = ImGuiWindowFlags.NoTitleBar
                   | ImGuiWindowFlags.NoResize
@@ -89,46 +88,46 @@ public sealed class ImGuiDemoMod : ModBase, IGuiMod
                   | ImGuiWindowFlags.NoScrollbar
                   | ImGuiWindowFlags.AlwaysAutoResize;
 
-        if (!ImGui.Begin("##StatsPanel", flags))
+        if (!DS1ImGui.Begin("##StatsPanel", flags))
         {
-            ImGui.End();
+            DS1ImGui.End();
             return;
         }
 
         // HP bar
         float hpFrac = _maxHp > 0 ? (float)_hp / _maxHp : 0f;
-        ImGui.PushStyleColor(ImGuiCol.PlotHistogram, new Vector4(0.75f, 0.1f, 0.1f, 1f));
-        ImGui.ProgressBar(hpFrac, new Vector2(-1, 0), $"HP  {_hp} / {_maxHp}");
-        ImGui.PopStyleColor();
+        DS1ImGui.PushStyleColor(ImGuiCol.PlotHistogram, 0.75f, 0.1f, 0.1f, 1f);
+        DS1ImGui.ProgressBar(hpFrac, -1, 0, $"HP  {_hp} / {_maxHp}");
+        DS1ImGui.PopStyleColor();
 
-        ImGui.Spacing();
-        ImGui.Text($"SL {_level}   |   {_souls:N0} souls");
-        ImGui.Text($"Map: {(_mapId.Length > 0 ? _mapId : "—")}");
-        ImGui.Text($"Pos: ({_x:F1}, {_y:F1}, {_z:F1})");
+        DS1ImGui.Spacing();
+        DS1ImGui.Text($"SL {_level}   |   {_souls:N0} souls");
+        DS1ImGui.Text($"Map: {(_mapId.Length > 0 ? _mapId : "—")}");
+        DS1ImGui.Text($"Pos: ({_x:F1}, {_y:F1}, {_z:F1})");
 
-        ImGui.End();
+        DS1ImGui.End();
     }
 
     private void DrawDebugWindow()
     {
         if (!_showDebug) return;
 
-        ImGui.SetNextWindowPos(new Vector2(10, 130), ImGuiCond.FirstUseEver);
-        ImGui.SetNextWindowSize(new Vector2(240, 140), ImGuiCond.FirstUseEver);
-        ImGui.SetNextWindowBgAlpha(0.75f);
+        DS1ImGui.SetNextWindowPos(10, 130, ImGuiCond.FirstUseEver);
+        DS1ImGui.SetNextWindowSize(240, 140, ImGuiCond.FirstUseEver);
+        DS1ImGui.SetNextWindowBgAlpha(0.75f);
 
-        if (!ImGui.Begin("DS1Mod Debug", ref _showDebug))
+        if (!DS1ImGui.Begin("DS1Mod Debug", ref _showDebug))
         {
-            ImGui.End();
+            DS1ImGui.End();
             return;
         }
 
-        ImGui.Checkbox("Stats panel", ref _showStats);
-        ImGui.Separator();
+        DS1ImGui.Checkbox("Stats panel", ref _showStats);
+        DS1ImGui.Separator();
 
-        ImGui.Text($"ImGui.NET {ImGui.GetVersion()}");
-        ImGui.Text($"Frame rate: {ImGui.GetIO().Framerate:F1} fps");
+        DS1ImGui.Text($"dinput8 ImGui {DS1ImGui.GetVersion()}");
+        DS1ImGui.Text($"Frame rate: {DS1ImGui.GetFramerate():F1} fps");
 
-        ImGui.End();
+        DS1ImGui.End();
     }
 }
