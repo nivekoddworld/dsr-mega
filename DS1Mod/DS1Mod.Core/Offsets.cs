@@ -32,6 +32,14 @@ internal static class Offsets
     public const long GameDataManPtr  = 0x1D2F10C0; // shares region with EventFlagMan
     public const int  GDM_AreaOff     = 0xA4;
 
+    // ── Player stats (HP, stamina) ───────────────────────────────────────
+    // Relative to the ChrIns pointer (same base chain as Player_PosOff).
+    // Source: JohrnaJohrna/RemasterCETable; verify against CE table on game update.
+    public const int Player_HpOff         = 0xD8;  // int32 — current HP
+    public const int Player_MaxHpOff      = 0xDC;  // int32 — max HP
+    public const int Player_StaminaOff    = 0xF0;  // float  — current stamina
+    public const int Player_MaxStaminaOff = 0xF4;  // float  — max stamina
+
     // ── Note ──────────────────────────────────────────────────────────────
     // These offsets target DSR 1.03.1. If FromSoftware updates the exe the
     // static pointers will shift. Pattern-scan alternatives exist but the

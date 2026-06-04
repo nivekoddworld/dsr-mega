@@ -66,6 +66,9 @@ internal static class FogGateFlags
 
 public sealed class FogGateTracker
 {
+    /// <summary>All known fog gates. Exposed for mod authors and UI.</summary>
+    public static IReadOnlyList<FogGate> KnownGates => FogGateFlags.All;
+
     private readonly EventFlags _flags;
     private readonly HashSet<int> _opened = new();
 

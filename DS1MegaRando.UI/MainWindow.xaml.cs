@@ -49,11 +49,12 @@ public partial class MainWindow : Window
     {
         PageContent.Content = page switch
         {
-            "Global"  => new GlobalPage  { DataContext = Settings },
-            "FogGate" => new FogGatePage { DataContext = Settings },
-            "Items"   => new ItemPage    { DataContext = Settings },
-            "Enemies" => new EnemyPage   { DataContext = Settings },
-            "Spoiler" => new SpoilerPage { Log = _lastSpoilerLog },
+            "Global"  => new GlobalPage   { DataContext = Settings },
+            "FogGate" => new FogGatePage  { DataContext = Settings },
+            "Items"   => new ItemPage     { DataContext = Settings },
+            "Enemies" => new EnemyPage    { DataContext = Settings },
+            "Spoiler" => new SpoilerPage  { Log = _lastSpoilerLog },
+            "Runtime" => new RuntimePage  { DataContext = Settings },
             "Debug"   => BuildDebugPage(),
             "About"   => new AboutPage(),
             _         => PageContent.Content,

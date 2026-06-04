@@ -74,6 +74,9 @@ internal static class BossKillFlags
 
 public sealed class BossTracker
 {
+    /// <summary>All known boss flag IDs and their names. Exposed for mod authors and UI.</summary>
+    public static IReadOnlyDictionary<int, string> KnownBosses => BossKillFlags.All;
+
     private readonly EventFlags _flags;
     private readonly HashSet<int> _killed = new();
 

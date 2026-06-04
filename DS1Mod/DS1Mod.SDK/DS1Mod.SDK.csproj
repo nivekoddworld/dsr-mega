@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>DS1Mod.SDK</RootNamespace>
+    <AssemblyName>DS1Mod.SDK</AssemblyName>
+    <Description>Public API surface for DS1 Mega Randomizer mod authors.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DS1Mod.Core\DS1Mod.Core.csproj" />
+  </ItemGroup>
+</Project>

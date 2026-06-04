@@ -14,12 +14,13 @@ namespace DS1Mod.Core;
 /// </summary>
 public sealed class GameSession : IDisposable
 {
-    public GameProcess      Process   { get; }
-    public EventFlags       Flags     { get; }
-    public BossTracker      Bosses    { get; }
-    public FogGateTracker   FogGates  { get; }
-    public PlayerStateReader Player   { get; }
-    public ProgressLog      Log       { get; }
+    public GameProcess       Process   { get; }
+    public EventFlags        Flags     { get; }
+    public BossTracker       Bosses    { get; }
+    public FogGateTracker    FogGates  { get; }
+    public PlayerStateReader Player    { get; }
+    public PlayerStatsReader Stats     { get; }
+    public ProgressLog       Log       { get; }
 
     private readonly List<IGameMode> _modes = new();
     private CancellationTokenSource? _cts;
@@ -31,6 +32,7 @@ public sealed class GameSession : IDisposable
         Bosses   = new BossTracker(Flags);
         FogGates = new FogGateTracker(Flags);
         Player   = new PlayerStateReader(proc);
+        Stats    = new PlayerStatsReader(proc);
         Log      = new ProgressLog(ProgressLog.DefaultPath(seed));
 
         Bosses.BossKilled    += Log.RecordBossKill;
