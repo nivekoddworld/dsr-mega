@@ -7,17 +7,14 @@ namespace DS1Mod.DiscordRPC;
 
 /// <summary>
 /// Displays Dark Souls Remastered session info in Discord Rich Presence.
-///
-/// SETUP — register a Discord application at discord.com/developers/applications,
-/// then replace the placeholder below with your Application ID.
-/// In the "Rich Presence → Art Assets" tab, add two image assets:
-///   Key "ds1_bonfire"  — any DS1 art (used as the large image)
-///   Key "ds1_skull"    — a skull icon  (used as the small image on death)
+/// Art assets required in the Discord developer portal (Rich Presence → Art Assets):
+///   Key "ds1_bonfire"  — any DS1 art (large image)
+///   Key "ds1_skull"    — a skull icon (small image)
 /// </summary>
 public sealed class DiscordRpcMod : ModBase
 {
     // ── Config ──────────────────────────────────────────────────────────────
-    private const string AppId = "YOUR_DISCORD_APP_ID_HERE"; // replace with your Application ID
+    private const string AppId = "1511993705731719268";
 
     // ── Identity ─────────────────────────────────────────────────────────────
     public override string Name    => "Discord Rich Presence";
