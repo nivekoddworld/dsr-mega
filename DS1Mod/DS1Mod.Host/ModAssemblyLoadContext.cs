@@ -6,10 +6,14 @@ namespace DS1Mod.Host;
 /// <summary>
 /// Per-mod isolated load context. DS1Mod.Core and DS1Mod.SDK are shared with
 /// the host — every mod must see the *same* type instances so the singleton
-/// hooks, events, and memory helpers line up. We hand back the host's copy
-/// rather than returning null: the default context only contains an assembly
-/// once something has actually loaded it, and the host never references a
-/// DS1Mod.SDK type, so SDK would otherwise be missing → FileNotFoundException.
+/// hooks, events, and memory helpers line up.
+///
+/// We hand these back from the *host's* load context, not AssemblyLoadContext
+/// .Default. hostfxr loads DS1Mod.Host (and its dependency DS1Mod.Core) into an
+/// isolated component context, leaving Default empty — so deferring shared
+/// assemblies to Default finds nothing, and any copy loaded into Default can't
+/// resolve its own dependencies (which live in the host context). Resolving
+/// through the host context keeps one consistent set of types.
 /// </summary>
 internal sealed class ModAssemblyLoadContext : AssemblyLoadContext
 {
@@ -52,27 +56,18 @@ internal sealed class ModAssemblyLoadContext : AssemblyLoadContext
         return null; // fall through to the default context
     }
 
+    // The context that loaded the host (and DS1Mod.Core). Under hostfxr this is
+    // an isolated component context, NOT Default; shared assemblies must come
+    // from here so the mod links against the same types the host uses.
+    private static readonly AssemblyLoadContext HostContext =
+        GetLoadContext(typeof(ModAssemblyLoadContext).Assembly) ?? Default;
+
     // Absolute path to the host's own directory, where the shared assemblies are
     // deployed. Derived from this assembly's location rather than
     // AppContext.BaseDirectory, which is empty under hostfxr component activation
     // (passing a relative path to LoadFromAssemblyPath throws ArgumentException).
-    private static readonly string HostDir = ResolveHostDir();
-
-    private static string ResolveHostDir()
-    {
-        string? dir = Path.GetDirectoryName(typeof(ModAssemblyLoadContext).Assembly.Location);
-        if (!string.IsNullOrEmpty(dir)) return dir;
-
-        // Fallbacks: an already-loaded shared assembly, then AppContext.
-        foreach (Assembly asm in Default.Assemblies)
-        {
-            if (!SharedAssemblies.Contains(asm.GetName().Name ?? "")) continue;
-            dir = Path.GetDirectoryName(asm.Location);
-            if (!string.IsNullOrEmpty(dir)) return dir;
-        }
-
-        return string.IsNullOrEmpty(AppContext.BaseDirectory) ? "" : AppContext.BaseDirectory;
-    }
+    private static readonly string HostDir =
+        Path.GetDirectoryName(typeof(ModAssemblyLoadContext).Assembly.Location) ?? "";
 
     /// <summary>
     /// Returns the host's copy of a shared assembly so the mod links against the
@@ -82,23 +77,31 @@ internal sealed class ModAssemblyLoadContext : AssemblyLoadContext
     {
         string? name = assemblyName.Name;
 
-        // 1. Already loaded in the default (host) context? Reuse that instance.
-        //    This is the normal path for DS1Mod.Core, which the host loads.
-        foreach (Assembly asm in Default.Assemblies)
+        // 1. Already loaded in the host's context? Reuse that instance. This is
+        //    the normal path for DS1Mod.Core, which the host actively uses.
+        foreach (Assembly asm in HostContext.Assemblies)
             if (string.Equals(asm.GetName().Name, name, StringComparison.OrdinalIgnoreCase))
                 return asm;
 
         // 2. Not loaded yet (DS1Mod.SDK — the host references it but never uses a
-        //    type from it, so it was never loaded). Load it from the host's own
-        //    directory *into the default context* so it's shared with every mod.
+        //    type from it). Resolve it through the host's context so it, and its
+        //    dependencies, load alongside the host with one shared identity.
+        try
+        {
+            Assembly? viaName = HostContext.LoadFromAssemblyName(assemblyName);
+            if (viaName is not null) return viaName;
+        }
+        catch (FileNotFoundException) { /* fall through to direct path load */ }
+
+        // 3. Last resort: load by absolute path from the host directory into the
+        //    host's context.
         if (name is not null && HostDir.Length > 0)
         {
             string hostDll = Path.Combine(HostDir, name + ".dll");
             if (File.Exists(hostDll) && Path.IsPathRooted(hostDll))
-                return Default.LoadFromAssemblyPath(hostDll);
+                return HostContext.LoadFromAssemblyPath(hostDll);
         }
 
-        // 3. Let the runtime attempt its normal resolution as a last resort.
         return null;
     }
 }
