@@ -33,16 +33,16 @@ A `dinput8.dll` sideloader that bootstraps a .NET 8 runtime inside the DSR proce
 
 | Project | Purpose |
 |---|---|
-| **DS1Mod/DS1Mod.Injector** | C++ DLL (`dinput8.dll`): applies heap fix, loads hostfxr → .NET runtime |
-| **DS1Mod/DS1Mod.Host** | .NET bootstrapper: scans `mods/`, loads each DLL in its own `AssemblyLoadContext`, drives the event pump |
-| **DS1Mod/DS1Mod.Core** | In-process memory access, AOB pointer resolution, event hooks, game reader/writer |
-| **DS1Mod/DS1Mod.SDK** | `ModBase` abstract class — the only dependency most mods need |
-| **DS1Mod/DS1Mod.DemoMod** | SDK exercise — hits every API surface (bundled with the randomizer) |
-| **DS1Mod/DS1Mod.FogLogger** | Logs every fog wall crossed (animation-based detection) |
-| **DS1Mod/DS1Mod.HpLogger** | Polls and logs HP changes each tick |
-| **DS1Mod/DS1Mod.DiscordRPC** | Discord Rich Presence: activity, deaths, last boss, session time |
-| **DS1Mod/DS1Mod.AsylumSlam** | Asylum Demon slam-only AI (`IGamePatcher` — patches luabnd at launch) |
-| **DS1Mod/DS1Mod.GoofyDemon** | Asylum Demon 10-mood gag mod with on-screen HUD and fart entrance |
+| **DS1Mod/framework/DS1Mod.Injector** | C++ DLL (`dinput8.dll`): applies heap fix, loads hostfxr → .NET runtime |
+| **DS1Mod/framework/DS1Mod.Host** | .NET bootstrapper: scans `mods/`, loads each DLL in its own `AssemblyLoadContext`, drives the event pump |
+| **DS1Mod/framework/DS1Mod.Core** | In-process memory access, AOB pointer resolution, event hooks, game reader/writer |
+| **DS1Mod/framework/DS1Mod.SDK** | `ModBase` abstract class — the only dependency most mods need |
+| **DS1Mod/mods/DS1Mod.DemoMod** | SDK exercise — hits every API surface (bundled with the randomizer) |
+| **DS1Mod/mods/DS1Mod.FogLogger** | Logs every fog wall crossed (animation-based detection) |
+| **DS1Mod/mods/DS1Mod.HpLogger** | Polls and logs HP changes each tick |
+| **DS1Mod/mods/DS1Mod.DiscordRPC** | Discord Rich Presence: activity, deaths, last boss, session time |
+| **DS1Mod/mods/DS1Mod.AsylumSlam** | Asylum Demon slam-only AI (`IGamePatcher` — patches luabnd at launch) |
+| **DS1Mod/mods/DS1Mod.GoofyDemon** | Asylum Demon 10-mood gag mod with on-screen HUD and fart entrance |
 
 See [`DS1Mod/README.md`](DS1Mod/README.md) for architecture details and the mod-writing guide.
 

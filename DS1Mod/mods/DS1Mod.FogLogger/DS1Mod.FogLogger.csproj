@@ -3,12 +3,12 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AssemblyName>DS1Mod.DemoMod</AssemblyName>
-    <RootNamespace>DS1Mod.DemoMod</RootNamespace>
+    <AssemblyName>DS1Mod.FogLogger</AssemblyName>
+    <RootNamespace>DS1Mod.FogLogger</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- SDK gives us ModBase + pulls in Core transitively -->
-    <ProjectReference Include="..\DS1Mod.SDK\DS1Mod.SDK.csproj" />
+    <ProjectReference Include="..\..\framework\DS1Mod.SDK\DS1Mod.SDK.csproj" />
   </ItemGroup>
 </Project>

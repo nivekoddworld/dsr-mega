@@ -8,10 +8,10 @@ the .NET 8 runtime in-process via `hostfxr` and loads every `*.dll` found in
 
 ```
 DarkSoulsRemastered.exe
-└── dinput8.dll  (C++, DS1Mod.Injector)
+└── dinput8.dll  (C++, framework/DS1Mod.Injector)
     ├── ApplyHeapFix()      — prevents crash on large heaps
     └── InitModLoader()     — loads hostfxr → .NET runtime
-        └── DS1Mod.Host.dll (DS1Mod.Host)
+        └── DS1Mod.Host.dll (framework/DS1Mod.Host)
             └── ModLifecycleManager
                 ├── scans mods/*.dll
                 ├── loads each into its own AssemblyLoadContext
@@ -20,6 +20,13 @@ DarkSoulsRemastered.exe
                     ├── polls event flags (boss kills, fog gates, deaths, levels)
                     └── calls IGameMod.OnTick() on each mod
 ```
+
+## Solutions
+
+| Solution | Purpose |
+|---|---|
+| `DS1Mod.Framework.slnx` | Framework only — Core, SDK, Host. Build this to compile the runtime you ship with the randomizer. |
+| `DS1Mod.Mods.slnx` | All bundled mods + their framework dependencies. Build this to develop or update a mod. |
 
 ## Writing a Mod
 

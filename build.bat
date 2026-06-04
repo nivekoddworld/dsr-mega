@@ -63,7 +63,7 @@ echo.
 echo [3/8] Publishing DS1Mod.Host...
 if exist "%PUB_FRAMEWORK%" rd /s /q "%PUB_FRAMEWORK%"
 mkdir "%PUB_FRAMEWORK%"
-dotnet publish "%REPO%DS1Mod\DS1Mod.Host\DS1Mod.Host.csproj" ^
+dotnet publish "%REPO%DS1Mod\framework\DS1Mod.Host\DS1Mod.Host.csproj" ^
     -c Release --no-build --nologo ^
     -o "%PUB_FRAMEWORK%"
 if errorlevel 1 ( echo [FAIL] dotnet publish DS1Mod.Host & set /a ERRORS+=1 )
@@ -78,7 +78,7 @@ if not defined MSBUILD (
     set /a ERRORS+=1
     goto :summary
 )
-"%MSBUILD%" "%REPO%DS1Mod\DS1Mod.Injector\DS1Mod.Injector.vcxproj" ^
+"%MSBUILD%" "%REPO%DS1Mod\framework\DS1Mod.Injector\DS1Mod.Injector.vcxproj" ^
     /p:Configuration=Release /p:Platform=x64 ^
     /p:OutDir="%PUB_INJECTOR%\\" ^
     /v:minimal /nologo
@@ -106,7 +106,7 @@ if exist "%PUB_INJECTOR%\dinput8.dll" (
 if exist "%PUB_BUNDLED%" rd /s /q "%PUB_BUNDLED%"
 mkdir "%PUB_BUNDLED%"
 
-set "DEMO_DIR=%REPO%DS1Mod\DS1Mod.DemoMod\bin\Release\net8.0"
+set "DEMO_DIR=%REPO%DS1Mod\mods\DS1Mod.DemoMod\bin\Release\net8.0"
 set "DEMO_DLL=%DEMO_DIR%\DS1Mod.DemoMod.dll"
 if exist "!DEMO_DLL!" (
     copy /Y "!DEMO_DLL!" "%PUB_BUNDLED%\DS1Mod.DemoMod.dll" >nul
@@ -121,7 +121,7 @@ if exist "!DEMO_DLL!" (
     echo        [WARN] DS1Mod.DemoMod.dll not found at expected path — skipping.
 )
 
-set "FOG_DIR=%REPO%DS1Mod\DS1Mod.FogLogger\bin\Release\net8.0"
+set "FOG_DIR=%REPO%DS1Mod\mods\DS1Mod.FogLogger\bin\Release\net8.0"
 set "FOG_DLL=%FOG_DIR%\DS1Mod.FogLogger.dll"
 if exist "!FOG_DLL!" (
     copy /Y "!FOG_DLL!" "%PUB_BUNDLED%\DS1Mod.FogLogger.dll" >nul
@@ -134,7 +134,7 @@ if exist "!FOG_DLL!" (
     echo        [WARN] DS1Mod.FogLogger.dll not found at expected path — skipping.
 )
 
-set "HP_DIR=%REPO%DS1Mod\DS1Mod.HpLogger\bin\Release\net8.0"
+set "HP_DIR=%REPO%DS1Mod\mods\DS1Mod.HpLogger\bin\Release\net8.0"
 set "HP_DLL=%HP_DIR%\DS1Mod.HpLogger.dll"
 if exist "!HP_DLL!" (
     copy /Y "!HP_DLL!" "%PUB_BUNDLED%\DS1Mod.HpLogger.dll" >nul

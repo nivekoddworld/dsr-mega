@@ -37,23 +37,23 @@ Entry point: `DS1MegaRando.UI` → `MegaRandomizer.cs` orchestrates everything.
 
 | File | Role |
 |---|---|
-| `DS1Mod/DS1Mod.Injector/modloader.cpp` | C++ DLL entry; applies heap fix, bootstraps .NET runtime via hostfxr |
-| `DS1Mod/DS1Mod.Host/ModLifecycleManager.cs` | Scans `mods/`, loads each DLL into its own `AssemblyLoadContext`, drives the tick loop |
-| `DS1Mod/DS1Mod.Core/GameMemory.cs` | Direct in-process pointer reads/writes (no ReadProcessMemory) |
-| `DS1Mod/DS1Mod.Core/GamePointers.cs` | AOB scan to resolve DSR version-specific base pointers |
-| `DS1Mod/DS1Mod.Core/EventPump.cs` | 500 ms poll loop; fires `BossKilled`, `FogGateEntered`, `PlayerDied`, `PlayerLeveledUp` |
-| `DS1Mod/DS1Mod.SDK/ModBase.cs` | Abstract base class for mods — implement `Name/Version/Author` and override hooks |
+| `DS1Mod/framework/DS1Mod.Injector/modloader.cpp` | C++ DLL entry; applies heap fix, bootstraps .NET runtime via hostfxr |
+| `DS1Mod/framework/DS1Mod.Host/ModLifecycleManager.cs` | Scans `mods/`, loads each DLL into its own `AssemblyLoadContext`, drives the tick loop |
+| `DS1Mod/framework/DS1Mod.Core/GameMemory.cs` | Direct in-process pointer reads/writes (no ReadProcessMemory) |
+| `DS1Mod/framework/DS1Mod.Core/GamePointers.cs` | AOB scan to resolve DSR version-specific base pointers |
+| `DS1Mod/framework/DS1Mod.Core/EventPump.cs` | 500 ms poll loop; fires `BossKilled`, `FogGateEntered`, `PlayerDied`, `PlayerLeveledUp` |
+| `DS1Mod/framework/DS1Mod.SDK/ModBase.cs` | Abstract base class for mods — implement `Name/Version/Author` and override hooks |
 
 ## Bundled Mods
 
 | Mod | Purpose |
 |---|---|
-| `DS1Mod/DS1Mod.DemoMod` | SDK exercise — hits every surface: patcher, all hooks, reader, writer, tick, unload |
-| `DS1Mod/DS1Mod.FogLogger` | Logs every fog wall crossed (animation-based detection, not flag-based) |
-| `DS1Mod/DS1Mod.HpLogger` | Polls player HP each tick; logs changes with delta and session minimum |
-| `DS1Mod/DS1Mod.DiscordRPC` | Discord Rich Presence — shows current activity, deaths, last boss, session time |
-| `DS1Mod/DS1Mod.AsylumSlam` | Asylum Demon slam-only AI (implements `IGamePatcher`, swaps the luabnd at load) |
-| `DS1Mod/DS1Mod.GoofyDemon` | Asylum Demon with 10 random moods + on-screen HUD + fart entrance (v1.1.x) |
+| `DS1Mod/mods/DS1Mod.DemoMod` | SDK exercise — hits every surface: patcher, all hooks, reader, writer, tick, unload |
+| `DS1Mod/mods/DS1Mod.FogLogger` | Logs every fog wall crossed (animation-based detection, not flag-based) |
+| `DS1Mod/mods/DS1Mod.HpLogger` | Polls player HP each tick; logs changes with delta and session minimum |
+| `DS1Mod/mods/DS1Mod.DiscordRPC` | Discord Rich Presence — shows current activity, deaths, last boss, session time |
+| `DS1Mod/mods/DS1Mod.AsylumSlam` | Asylum Demon slam-only AI (implements `IGamePatcher`, swaps the luabnd at load) |
+| `DS1Mod/mods/DS1Mod.GoofyDemon` | Asylum Demon with 10 random moods + on-screen HUD + fart entrance (v1.1.x) |
 
 ## Ground Truth References
 
