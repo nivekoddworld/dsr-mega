@@ -124,6 +124,41 @@ static std::wstring GetHostDllPath()
     return hostDll.wstring();
 }
 
+// ── SEH-safe wrappers (no C++ objects → __try allowed) ───────────────────────
+
+static int SafePfnLoad(load_asm_fn pfn,
+                       const wchar_t* dll, const wchar_t* type,
+                       const wchar_t* method, void** out)
+{
+    __try
+    {
+        return pfn(dll, type, method, nullptr, nullptr, out);
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        wchar_t buf[64];
+        swprintf_s(buf, L"EXCEPTION in pfn_load: 0x%08X", GetExceptionCode());
+        Log(buf);
+        return -1;
+    }
+}
+
+static int SafeInitialize(int (*fn)(const wchar_t*, int),
+                          const wchar_t* gameDir, int bytes)
+{
+    __try
+    {
+        return fn(gameDir, bytes);
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        wchar_t buf[64];
+        swprintf_s(buf, L"EXCEPTION in Initialize: 0x%08X", GetExceptionCode());
+        Log(buf);
+        return -1;
+    }
+}
+
 // ── public ────────────────────────────────────────────────────────────────────
 
 bool InitModLoader(const wchar_t* gameDir)
@@ -189,24 +224,11 @@ bool InitModLoader(const wchar_t* gameDir)
     using entry_fn = int (*)(const wchar_t*, int);
     entry_fn pfn_initialize = nullptr;
 
-    __try
-    {
-        rc = pfn_load(
-            hostDll.c_str(),
-            L"DS1Mod.Host.ModLoader, DS1Mod.Host",
-            L"Initialize",
-            nullptr,
-            nullptr,
-            reinterpret_cast<void**>(&pfn_initialize));
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
-        wchar_t buf[64];
-        swprintf_s(buf, L"EXCEPTION in pfn_load: 0x%08X", GetExceptionCode());
-        Log(buf);
-        pfn_close(ctx);
-        return false;
-    }
+    rc = SafePfnLoad(pfn_load,
+                     hostDll.c_str(),
+                     L"DS1Mod.Host.ModLoader, DS1Mod.Host",
+                     L"Initialize",
+                     reinterpret_cast<void**>(&pfn_initialize));
 
     pfn_close(ctx);
     LogHR(L"load_assembly_and_get_function_pointer", rc);
@@ -218,18 +240,7 @@ bool InitModLoader(const wchar_t* gameDir)
 
     Log(L"Calling managed Initialize...");
     int gameDirBytes = static_cast<int>((wcslen(gameDir) + 1) * sizeof(wchar_t));
-
-    __try
-    {
-        rc = pfn_initialize(gameDir, gameDirBytes);
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
-        wchar_t buf[64];
-        swprintf_s(buf, L"EXCEPTION in Initialize: 0x%08X", GetExceptionCode());
-        Log(buf);
-        return false;
-    }
+    rc = SafeInitialize(pfn_initialize, gameDir, gameDirBytes);
 
     LogHR(L"Initialize returned", rc);
     Log(rc == 0 ? L"Mod loader OK" : L"FAIL: Initialize non-zero");
