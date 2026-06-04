@@ -104,6 +104,10 @@ function MiniGreaterDemon223200Battle_Activate(ai, goal)
         goal:AddSubGoal(GOAL_COMMON_SidewayMove, 1.5, TARGET_ENE_0, 0, ai:GetRandam_Int(35, 50), true, true, -1)
         goal:AddSubGoal(GOAL_COMMON_SidewayMove, 1.5, TARGET_ENE_0, 0, ai:GetRandam_Int(35, 50), true, true, -1)
     end
+
+    -- Hold the mood for a couple seconds before re-rolling, so a quick action
+    -- (a flee, a single spin) can't finish instantly and snap to a new mood.
+    goal:AddSubGoal(GOAL_COMMON_Wait, ai:GetRandam_Float(2.0, 3.5), TARGET_ENE_0, 0, 0, 0)
 end
 
 function MiniGreaterDemon223200Battle_Update(ai, goal)

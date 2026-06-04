@@ -1,57 +1,49 @@
 # DS1Mod.GoofyDemon
 
-The Asylum Demon (entity 223200) has given up on being a boss. Every time it
-picks an action it re-rolls its **mood** (now 10 of them):
+The Asylum Demon has given up on being a boss. **One mod, everything:**
 
-| # | Roll | Mood | What it does |
-|---|---|---|---|
-| 0 | 1–18  | 💃 The Shimmy | side-steps back and forth like it's at a wedding |
-| 1 | 19–34 | 🕺 The Breakdance | spin-steps in place, repeatedly, for no reason |
-| 2 | 35–48 | 😱 The Coward | sprints to the far wall in abject terror |
-| 3 | 49–60 | 🤔 Existential Crisis | stands still, slowly turns, stands still again |
-| 4 | 61–66 | 😈 Surprise! | a sudden flying body slam (3007) — then immediately flees |
-| 5 | 67–72 | 👊 Fine. Fight. | the rare butt slam (3008) where it acts like a boss |
-| 6 | 73–82 | 🌀 The Zoomies | frantic shimmy/spin combo, like a cat at 3am |
-| 7 | 83–90 | 🦵 Hokey Pokey | step in, step back, step in, shake it all about |
-| 8 | 91–95 | 😶 Stage Fright | freezes (forgot its lines), then a tiny embarrassed turn |
-| 9 | 96–100| 🏆 Victory Lap | celebrates prematurely, running a circle around you |
+- **Goofy AI** — 10 random "moods" (swaps `script/m18_01_00_00.luabnd.dcx`).
+- **On-screen mood HUD** — the current mood pops up on the game HUD.
+- **Console readout** — the same mood, also printed to the mod console + log.
+- **Fart entrance** — a big `*farts*` message the instant he lands his intro.
 
-It also `return false`s on interrupt, so it keeps dancing even while being hit.
+## Moods (longer-lasting)
 
-## Mood readout (console)
+| # | Roll | Mood (console) | HUD text | What he does |
+|---|---|---|---|---|
+| 0 | 1–18  | 💃 The Shimmy | the demon shimmies | side-steps like he's at a wedding |
+| 1 | 19–34 | 🕺 The Breakdance | the demon breakdances | spin-steps in place |
+| 2 | 35–48 | 😱 The Coward | the demon flees in terror | sprints to the far wall |
+| 3 | 49–60 | 🤔 Existential Crisis | the demon questions its existence | stands, turns, stands |
+| 4 | 61–66 | 😈 Surprise! | SURPRISE ATTACK | leap slam, then flees |
+| 5 | 67–72 | 👊 Fine. Fight. | the demon remembers it is a boss | a real butt slam |
+| 6 | 73–82 | 🌀 Zoomies | the demon has the zoomies | frantic shimmy/spin combo |
+| 7 | 83–90 | 🦵 Hokey Pokey | the demon does the hokey pokey | in, out, in, shake it about |
+| 8 | 91–95 | 😶 Stage Fright | the demon has stage fright | freezes, embarrassed turn |
+| 9 | 96–100| 🏆 Victory Lap | premature victory lap | circles you celebrating |
 
-The enemy AI can't draw player-facing text on its own, so each cycle the demon
-**broadcasts its mood** over an unused event-flag block (`11817000..11817009`,
-m18_01 local flags in a high unused range): it clears all ten
-and sets exactly one. The mod's `OnTick()` polls that block and writes the live
-mood to BOTH the console window and a log file (`<ModsDir>/GoofyDemon.log`), e.g.:
+Each mood now ends with a 2–3.5 s dwell, so a quick action (a flee, a single
+spin) can't finish instantly and snap to the next mood.
 
-```
-[GoofyDemon] mood → 🌀 The Zoomies
-[GoofyDemon] mood → 😱 The Coward (fleeing)
-```
+## How the mood HUD works
 
-`OnUnload()` clears the flags so they don't linger in your save.
+The AI can't draw text itself, so each cycle it broadcasts its mood over event
+flags `11817000..09` (clears all ten, sets one). Three readers consume that:
 
-> ⚠️ Don't run alongside FogMod's region-flag remapping — it reuses the same
-> flag base.
+1. **EMEVD** — `Patch()` adds 10 new events (`11819000..09`) to
+   `event/m18_01_00_00.emevd.dcx` and registers them in the map constructor
+   (event 0). Each waits for its flag, shows its message, waits for the flag to
+   clear. Mood text is added to the `Event_text` FMG in every
+   `msg/<lang>/menu.msgbnd.dcx`.
+2. **Console / log** — `OnTick()` polls the flags and prints to the console and
+   `mods/GoofyDemon.log`.
 
-## In-game HUD pop-up — not wired yet
+The fart works the same way: a `Display Message` inserted right after the
+`9060` landing animation in the entrance event (`11810310`), with `*farts*`
+added to the FMG.
 
-Showing the mood as text *over the fight* needs an EMEVD event + an FMG string
-(the AI sets the flag → an event watches it → `display_*` draws the text). That
-part isn't built: it requires the game's `event/` and `msg/` files, which
-weren't available in the build environment, and editing them blind risks
-breaking the Undead Asylum. See the repo chat / `ds1_ai_mods/` for how to
-finish it against real files.
-
-## How the patch works
-
-`IGamePatcher.Patch()` backs up and swaps the `223200_battle.lua` entry inside
-`script/m18_01_00_00.luabnd.dcx` for the embedded precompiled Lua 5.0 bytecode
-(`223200_battle.luac`), repacking via SoulsFormats. Every sub-goal uses a call
-signature taken verbatim from the vanilla Asylum/Stray Demon AI, so the
-animations exist on this model.
+All edits (luabnd, emevd, every menu.msgbnd) are surgical, **idempotent**, and
+backed up via SoulsFormats.
 
 ## Install
 
@@ -60,29 +52,17 @@ animations exist on this model.
 - `DS1Mod.GoofyDemon.dll`
 - `SoulsFormats.dll`
 
-Don't run this and `DS1Mod.AsylumSlam` together — they patch the same file.
+(The old standalone `FartEntrance` mod is **folded in here** — don't run both.)
 
 ## Revert
 
-Remove the DLLs and restore `m18_01_00_00.luabnd.dcx` from the `.bak`.
+Remove the DLLs and restore the `.bak` files next to
+`m18_01_00_00.luabnd.dcx`, `m18_01_00_00.emevd.dcx`, and each `menu.msgbnd.dcx`.
 
 ## Status
 
-Built and unit-exercised on Linux: compiles, round-trips, `Patch()` backs up +
-swaps + repacks, and the mood readout was simulated end-to-end (correct mood
-per flag, de-dupes repeats, clears on unload). **Not tested in a live game.**
-
-## Don't see any output?
-
-All messages also go to `<game>/mods/GoofyDemon.log`. Check there first.
-
-- **No log file at all** → the mod didn't load. Confirm `DS1Mod.GoofyDemon.dll`
-  **and** `SoulsFormats.dll` are in `<game>/mods/`, and that you launched via the
-  mod framework (not a plain game launch).
-- **Log shows `Flag self-test ... MISMATCH`** → the chosen flag IDs aren't
-  readable on your build; tell me and I'll pick another range.
-- **Heartbeats but never a `mood →`** → the AI isn't setting the flags: either
-  the `luabnd` wasn't patched (check the `Patch:` line) or you're not in the
-  Asylum Demon fight yet.
-- **No heartbeats** → `OnTick` isn't running — you're not in a loaded map, or
-  the mod isn't loaded.
+Built and verified on Linux against the real game files: the AI compiles and
+round-trips, and `Patch()` applies the luabnd swap + fart + 10 mood events +
+all FMG text, re-decompiles cleanly, and is idempotent (running twice leaves 55
+events and a single fart). **Not yet tested in a live game.** Output logs to
+`<game>/mods/GoofyDemon.log`.
