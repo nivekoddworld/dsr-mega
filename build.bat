@@ -109,58 +109,26 @@ dotnet test "%REPO%DS1MegaRando.Test\DS1MegaRando.Test.csproj" ^
     -c Release --no-build --nologo --logger "console;verbosity=minimal"
 if errorlevel 1 ( echo [FAIL] tests & set /a ERRORS+=1 )
 
-:: ── 7. Deploy ─────────────────────────────────────────────────────────────
+:: ── 7. Stage UI output ────────────────────────────────────────────────────
 echo.
-echo [7/7] Deploying...
+echo [7/7] Staging UI output...
 
-:: Copy framework + bundled-mods next to the UI exe (so it can deploy them)
+:: Copy framework + bundled-mods next to the UI exe.
+:: The UI reads these folders and deploys them — nothing goes to the game dir
+:: from here.  All game-dir deployment happens through the UI:
+::   framework/     → "Launch with Mod Framework" button
+::   bundled-mods/  → Mods tab Install button
 if exist "%UI_OUT%" (
-    :: framework/
-    if exist "%UI_OUT%\framework" rd /s /q "%UI_OUT%\framework"
-    xcopy /E /I /Y /Q "%PUB_FRAMEWORK%" "%UI_OUT%\framework\" >nul
-    echo        Copied framework\ to UI output
+    if exist "%UI_OUT%\framework"     rd /s /q "%UI_OUT%\framework"
+    if exist "%UI_OUT%\bundled-mods"  rd /s /q "%UI_OUT%\bundled-mods"
 
-    :: bundled-mods/
-    if exist "%UI_OUT%\bundled-mods" rd /s /q "%UI_OUT%\bundled-mods"
-    xcopy /E /I /Y /Q "%PUB_BUNDLED%" "%UI_OUT%\bundled-mods\" >nul
-    echo        Copied bundled-mods\ to UI output
+    xcopy /E /I /Y /Q "%PUB_FRAMEWORK%" "%UI_OUT%\framework\"    >nul
+    xcopy /E /I /Y /Q "%PUB_BUNDLED%"   "%UI_OUT%\bundled-mods\" >nul
+
+    echo        framework\    → %UI_OUT%\framework\
+    echo        bundled-mods\ → %UI_OUT%\bundled-mods\
 ) else (
-    echo        [WARN] UI output folder not found — skipping copy to UI output.
-    echo               Build the C# solution first.
-)
-
-:: Auto-deploy framework to DSR game folder
-set "DSR_DIR="
-
-for /f "tokens=2*" %%A in (
-    'reg query "HKLM\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 570940" /v InstallLocation 2^>nul'
-) do set "DSR_DIR=%%B"
-
-if not defined DSR_DIR (
-    for /f "tokens=2*" %%A in (
-        'reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 570940" /v InstallLocation 2^>nul'
-    ) do set "DSR_DIR=%%B"
-)
-
-if not defined DSR_DIR (
-    set "SETTINGS=%APPDATA%\DS1MegaRando\settings.json"
-    if exist "!SETTINGS!" (
-        for /f "usebackq delims=" %%A in (
-            `powershell -NoProfile -Command "try { (Get-Content '!SETTINGS!' | ConvertFrom-Json).Global.GameDirectory } catch {}"`
-        ) do set "DSR_DIR=%%A"
-    )
-)
-
-if defined DSR_DIR (
-    if exist "!DSR_DIR!\DarkSoulsRemastered.exe" (
-        :: Deploy full framework to game dir
-        xcopy /E /I /Y /Q "%PUB_FRAMEWORK%" "!DSR_DIR!\" >nul
-        echo        Deployed framework to !DSR_DIR!
-    ) else (
-        echo        [SKIP] DSR folder invalid ^(no DarkSoulsRemastered.exe^): !DSR_DIR!
-    )
-) else (
-    echo        [SKIP] DSR game folder not found — deploy manually from publish\framework\
+    echo        [WARN] UI output folder not found ^(build step 2 may have failed^).
 )
 
 :: ── Summary ───────────────────────────────────────────────────────────────
@@ -169,14 +137,14 @@ echo ============================================================
 if !ERRORS! EQU 0 (
     echo  BUILD SUCCEEDED
     echo.
-    echo  Framework   : publish\framework\
-    echo    dinput8.dll, DS1Mod.Host.dll, DS1Mod.Core.dll, DS1Mod.SDK.dll, ...
+    echo  Artifacts in publish\:
+    echo    framework\    — dinput8.dll + DS1Mod.Host/Core/SDK + runtimeconfig.json
+    echo    bundled-mods\ — DS1Mod.DemoMod.dll
     echo.
-    echo  Bundled mods: publish\bundled-mods\
-    echo    DS1Mod.DemoMod.dll
-    echo.
-    echo  UI output   : DS1MegaRando.UI\bin\Release\net8.0-windows\
-    echo    framework\ and bundled-mods\ copied alongside the UI exe
+    echo  Both folders staged next to the UI exe.
+    echo  Use the UI to deploy to the game:
+    echo    "Launch with Mod Framework" — copies framework\ to game dir
+    echo    Mods tab Install button     — copies a mod to game dir\mods\
 ) else (
     echo  BUILD FAILED  ^(!ERRORS! step^(s^) failed^)
     exit /b 1
