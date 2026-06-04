@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>DS1Mod.Modding</AssemblyName>
+    <RootNamespace>DS1Mod.Modding</RootNamespace>
+    <Description>Helper library for building DSR game-data modification mods (DCX/BND/PARAM/FMG/EMEVD) on top of SoulsFormats.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\lib\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
+  </ItemGroup>
+</Project>
