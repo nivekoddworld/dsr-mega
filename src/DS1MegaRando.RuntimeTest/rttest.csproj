@@ -7,7 +7,7 @@
     <AssemblyName>rttest</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
+    <ProjectReference Include="..\..\lib\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
     <ProjectReference Include="..\DS1MegaRando.Core\DS1MegaRando.Core.csproj" />
     <ProjectReference Include="..\DS1MegaRando.Data\DS1MegaRando.Data.csproj" />
   </ItemGroup>

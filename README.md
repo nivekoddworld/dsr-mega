@@ -6,22 +6,24 @@ A combined Dark Souls 1 Remastered randomizer that shuffles **fog gates** (area 
 
 ## Project Map
 
+All randomizer source projects live under [`src/`](src/). Third-party libraries are in [`lib/`](lib/).
+
 | Project | Purpose | Key files |
 |---|---|---|
-| **DS1MegaRando.UI** | WPF frontend — settings pages, progress overlay, spoiler viewer | `MainWindow.xaml`, `Pages/`, `ViewModels/` |
-| **DS1MegaRando.Core** | Orchestrator only — coordinates all modules | `MegaRandomizer.cs` |
-| **DS1MegaRando.Settings** | All user-configurable options | `MegaSettings.cs`, `GlobalSettings.cs`, `ItemSettings.cs`, `EnemySettings.cs`, `FogGateSettings.cs`, `SettingsSerializer.cs` |
-| **DS1MegaRando.Annotations** | World metadata loaded from YAML (areas, entrances, key items) | `AnnotationData.cs`, `AnnotationLoader.cs` |
-| **DS1MegaRando.Graph** | Directed graph of game world used for reachability analysis | `Graph.cs` (WorldGraph), `GraphConnector.cs`, `GraphChecker.cs`, `Expr.cs` |
-| **DS1MegaRando.IO** | Reads/writes DSR game files via SoulsFormats | `GameFileReader.cs`, `GameFileWriter.cs`, `GameData.cs`, `BackupManager.cs` |
-| **DS1MegaRando.FogGate** | Randomizes area entrance connections; writes MSB regions and EMEVD events | `FogGateRandomizer.cs`, `FogGateWriter.cs`, `FogGateResult.cs` |
-| **DS1MegaRando.Items** | Randomizes item lot, shop, and starting loadout assignments | `ItemRandomizer.cs`, `KeyItemPlacer.cs`, `ItemPlacement.cs`, `LocationPool.cs`, `ItemPool.cs`, `ShopRandomizer.cs`, `StartingLoadoutRandomizer.cs` |
-| **DS1MegaRando.Enemies** | Randomizes enemy and boss placements; patches EMEVD intro events | `EnemyRandomizer.cs`, `BossRandomizer.cs`, `EnemyPlacer.cs`, `EnemyPool.cs`, `EnemyScaler.cs`, `BossEmevdPatcher.cs`, `MimicRandomizer.cs` |
-| **DS1MegaRando.Verification** | Checks the randomized world graph for softlocks | `SoftlockChecker.cs`, `ItemAccessibilityChecker.cs` |
-| **DS1MegaRando.Spoiler** | Builds and serializes the spoiler log | `SpoilerLog.cs`, `SpoilerSerializer.cs` |
-| **DS1MegaRando.Data** | Static game data — item IDs, enemy IDs, area definitions, embedded YAML/XML/ESD resources | `Areas/`, `Enemies/`, `Items/`, `Annotations/`, `Params/`, `ESDs/` |
-| **SoulsFormats** | Binary format library for DSR files (BND3, PARAM, MSB1, EMEVD, DCX, …) | third-party, read-only |
-| **SoulsIds** | Game ID utilities and event scripting helpers | third-party, read-only |
+| **src/DS1MegaRando.UI** | WPF frontend — settings pages, progress overlay, spoiler viewer | `MainWindow.xaml`, `Pages/`, `ViewModels/` |
+| **src/DS1MegaRando.Core** | Orchestrator only — coordinates all modules | `MegaRandomizer.cs` |
+| **src/DS1MegaRando.Settings** | All user-configurable options | `MegaSettings.cs`, `GlobalSettings.cs`, `ItemSettings.cs`, `EnemySettings.cs`, `FogGateSettings.cs`, `SettingsSerializer.cs` |
+| **src/DS1MegaRando.Annotations** | World metadata loaded from YAML (areas, entrances, key items) | `AnnotationData.cs`, `AnnotationLoader.cs` |
+| **src/DS1MegaRando.Graph** | Directed graph of game world used for reachability analysis | `Graph.cs` (WorldGraph), `GraphConnector.cs`, `GraphChecker.cs`, `Expr.cs` |
+| **src/DS1MegaRando.IO** | Reads/writes DSR game files via SoulsFormats | `GameFileReader.cs`, `GameFileWriter.cs`, `GameData.cs`, `BackupManager.cs` |
+| **src/DS1MegaRando.FogGate** | Randomizes area entrance connections; writes MSB regions and EMEVD events | `FogGateRandomizer.cs`, `FogGateWriter.cs`, `FogGateResult.cs` |
+| **src/DS1MegaRando.Items** | Randomizes item lot, shop, and starting loadout assignments | `ItemRandomizer.cs`, `KeyItemPlacer.cs`, `ItemPlacement.cs`, `LocationPool.cs`, `ItemPool.cs`, `ShopRandomizer.cs`, `StartingLoadoutRandomizer.cs` |
+| **src/DS1MegaRando.Enemies** | Randomizes enemy and boss placements; patches EMEVD intro events | `EnemyRandomizer.cs`, `BossRandomizer.cs`, `EnemyPlacer.cs`, `EnemyPool.cs`, `EnemyScaler.cs`, `BossEmevdPatcher.cs`, `MimicRandomizer.cs` |
+| **src/DS1MegaRando.Verification** | Checks the randomized world graph for softlocks | `SoftlockChecker.cs`, `ItemAccessibilityChecker.cs` |
+| **src/DS1MegaRando.Spoiler** | Builds and serializes the spoiler log | `SpoilerLog.cs`, `SpoilerSerializer.cs` |
+| **src/DS1MegaRando.Data** | Static game data — item IDs, enemy IDs, area definitions, embedded YAML/XML/ESD resources | `Areas/`, `Enemies/`, `Items/`, `Annotations/`, `Params/`, `ESDs/` |
+| **lib/SoulsFormats** | Binary format library for DSR files (BND3, PARAM, MSB1, EMEVD, DCX, …) | third-party, read-only |
+| **lib/SoulsIds** | Game ID utilities and event scripting helpers | third-party, read-only |
 
 ---
 
@@ -131,17 +133,17 @@ MegaRandomizer.Randomize(MegaSettings)
 
 | Goal | Go to |
 |---|---|
-| Change which options the user sees | `DS1MegaRando.UI/Pages/` |
-| Add/change a setting field | `DS1MegaRando.Settings/` — add property then wire up in the relevant Page |
-| Change how areas/entrances are defined | `DS1MegaRando.Data/Annotations/ds1-fog.yaml` + `AnnotationData.cs` |
-| Change graph reachability logic | `DS1MegaRando.Graph/GraphChecker.cs` or `GraphConnector.cs` |
-| Change how game files are read or written | `DS1MegaRando.IO/GameFileReader.cs` or `GameFileWriter.cs` |
-| Add a new fog-gate behaviour | `DS1MegaRando.FogGate/FogGateRandomizer.cs` + `FogGateWriter.cs` |
-| Change item placement / key item logic | `DS1MegaRando.Items/KeyItemPlacer.cs` or `ItemPlacement.cs` |
-| Change enemy placement / boss logic | `DS1MegaRando.Enemies/EnemyRandomizer.cs` or `BossRandomizer.cs` |
-| Add a new softlock check | `DS1MegaRando.Verification/SoftlockChecker.cs` |
-| Change the spoiler log format | `DS1MegaRando.Spoiler/SpoilerLog.cs` |
-| Add static game data (new item IDs, enemy IDs) | `DS1MegaRando.Data/Items/` or `Enemies/` |
+| Change which options the user sees | `src/DS1MegaRando.UI/Pages/` |
+| Add/change a setting field | `src/DS1MegaRando.Settings/` — add property then wire up in the relevant Page |
+| Change how areas/entrances are defined | `src/DS1MegaRando.Data/Annotations/ds1-fog.yaml` + `AnnotationData.cs` |
+| Change graph reachability logic | `src/DS1MegaRando.Graph/GraphChecker.cs` or `GraphConnector.cs` |
+| Change how game files are read or written | `src/DS1MegaRando.IO/GameFileReader.cs` or `GameFileWriter.cs` |
+| Add a new fog-gate behaviour | `src/DS1MegaRando.FogGate/FogGateRandomizer.cs` + `FogGateWriter.cs` |
+| Change item placement / key item logic | `src/DS1MegaRando.Items/KeyItemPlacer.cs` or `ItemPlacement.cs` |
+| Change enemy placement / boss logic | `src/DS1MegaRando.Enemies/EnemyRandomizer.cs` or `BossRandomizer.cs` |
+| Add a new softlock check | `src/DS1MegaRando.Verification/SoftlockChecker.cs` |
+| Change the spoiler log format | `src/DS1MegaRando.Spoiler/SpoilerLog.cs` |
+| Add static game data (new item IDs, enemy IDs) | `src/DS1MegaRando.Data/Items/` or `Enemies/` |
 
 ---
 
@@ -152,7 +154,7 @@ MegaRandomizer.Randomize(MegaSettings)
 dotnet build DS1MegaRando.slnx
 
 # Run the UI
-dotnet run --project DS1MegaRando.UI
+dotnet run --project src/DS1MegaRando.UI
 ```
 
 Requires **.NET 8 SDK** on Windows. The app targets `net8.0-windows` (WPF).
@@ -165,7 +167,7 @@ The game directory must contain an unpacked (UXM-extracted) copy of Dark Souls R
 
 ### How it works
 
-Every DSR boss is defined in `DS1MegaRando.Data/Enemies/BossIds.cs` as a `BossDef` record with:
+Every DSR boss is defined in `src/DS1MegaRando.Data/Enemies/BossIds.cs` as a `BossDef` record with:
 
 | Field | Purpose |
 |---|---|

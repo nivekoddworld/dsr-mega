@@ -7,6 +7,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../SoulsFormats/SoulsFormats/SoulsFormats.csproj" />
+    <ProjectReference Include="../../../lib/SoulsFormats/SoulsFormats/SoulsFormats.csproj" />
   </ItemGroup>
 </Project>

@@ -27,7 +27,7 @@
 
   <ItemGroup>
     <!-- User-editable boss override config -->
-    <Content Include="..\boss_overrides.json">
+    <Content Include="..\..\boss_overrides.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>boss_overrides.json</Link>
     </Content>

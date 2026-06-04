@@ -12,7 +12,7 @@
     <!-- SDK gives us ModBase + pulls in Core transitively -->
     <ProjectReference Include="..\DS1Mod.SDK\DS1Mod.SDK.csproj" />
     <!-- SoulsFormats for reading/repacking the luabnd.dcx archive -->
-    <ProjectReference Include="..\..\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
+    <ProjectReference Include="..\..\lib\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
   </ItemGroup>
 
   <ItemGroup>

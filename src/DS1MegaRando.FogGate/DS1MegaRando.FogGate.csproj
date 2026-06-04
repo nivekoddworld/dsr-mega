@@ -12,7 +12,7 @@
     <ProjectReference Include="..\DS1MegaRando.IO\DS1MegaRando.IO.csproj" />
     <ProjectReference Include="..\DS1MegaRando.Settings\DS1MegaRando.Settings.csproj" />
     <ProjectReference Include="..\DS1MegaRando.Data\DS1MegaRando.Data.csproj" />
-    <ProjectReference Include="..\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
+    <ProjectReference Include="..\..\lib\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
   </ItemGroup>
 
 </Project>

@@ -24,14 +24,14 @@ Entry point: `DS1MegaRando.UI` → `MegaRandomizer.cs` orchestrates everything.
 
 | File | Role |
 |---|---|
-| `DS1MegaRando.Data/Enemies/BossIds.cs` | All 32 boss slot definitions (EntityID, ModelID, EMEVD patches) |
-| `DS1MegaRando.Enemies/BossRandomizer.cs` | Boss assignment, NpcParam selection, InitAnimId |
-| `DS1MegaRando.Enemies/BossEmevdPatcher.cs` | Strips model-specific EMEVD instructions from boss intro events |
-| `DS1MegaRando.Core/BossSfxMerger.cs` | Merges enemy effect entries into CommonEffects bundle (VFX fix) |
-| `DS1MegaRando.Core/GameFileWriter.cs` | Write pipeline — calls SFX merge after MSB write |
-| `DS1MegaRando.IO/BackupManager.cs` | .bak backups of all modified game files |
+| `src/DS1MegaRando.Data/Enemies/BossIds.cs` | All 32 boss slot definitions (EntityID, ModelID, EMEVD patches) |
+| `src/DS1MegaRando.Enemies/BossRandomizer.cs` | Boss assignment, NpcParam selection, InitAnimId |
+| `src/DS1MegaRando.Enemies/BossEmevdPatcher.cs` | Strips model-specific EMEVD instructions from boss intro events |
+| `src/DS1MegaRando.Core/BossSfxMerger.cs` | Merges enemy effect entries into CommonEffects bundle (VFX fix) |
+| `src/DS1MegaRando.Core/GameFileWriter.cs` | Write pipeline — calls SFX merge after MSB write |
+| `src/DS1MegaRando.IO/BackupManager.cs` | .bak backups of all modified game files |
 | `boss_overrides.json` | User config: pinned replacements, blocked combos, spawn positions |
-| `DS1MegaRando.UI/DS1MegaRando.UI.csproj` | Includes boss_overrides.json as Content/PreserveNewest |
+| `src/DS1MegaRando.UI/DS1MegaRando.UI.csproj` | Includes boss_overrides.json as Content/PreserveNewest |
 
 ## Key Files — DS1Mod Framework
 
@@ -120,7 +120,7 @@ dotnet build DS1MegaRando.slnx
 dotnet build DS1MegaRando.sln
 
 # Run the UI
-dotnet run --project DS1MegaRando.UI
+dotnet run --project src/DS1MegaRando.UI
 
 # Full production build (randomizer + mod framework + C++ injector)
 build.bat

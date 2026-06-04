@@ -17,7 +17,7 @@ set "PUB_FRAMEWORK=%PUB%\framework"
 set "PUB_BUNDLED=%PUB%\bundled-mods"
 set "PUB_INJECTOR=%PUB%\injector"
 set "PUB_APP=%PUB%\app"
-set "UI_OUT=%REPO%DS1MegaRando.UI\bin\Release\net8.0-windows"
+set "UI_OUT=%REPO%src\DS1MegaRando.UI\bin\Release\net8.0-windows"
 
 :: ── Locate MSBuild (vswhere → PATH fallback) ──────────────────────────────
 set "MSBUILD="
@@ -150,7 +150,7 @@ if exist "!HP_DLL!" (
 :: ── 6. Run tests ──────────────────────────────────────────────────────────
 echo.
 echo [6/8] Running tests...
-dotnet test "%REPO%DS1MegaRando.Test\DS1MegaRando.Test.csproj" ^
+dotnet test "%REPO%src\DS1MegaRando.Test\DS1MegaRando.Test.csproj" ^
     -c Release --no-build --nologo --logger "console;verbosity=minimal"
 if errorlevel 1 ( echo [FAIL] tests & set /a ERRORS+=1 )
 
@@ -181,7 +181,7 @@ echo.
 echo [8/8] Publishing complete app to publish\app\...
 if exist "%PUB_APP%" rd /s /q "%PUB_APP%"
 mkdir "%PUB_APP%"
-dotnet publish "%REPO%DS1MegaRando.UI\DS1MegaRando.UI.csproj" ^
+dotnet publish "%REPO%src\DS1MegaRando.UI\DS1MegaRando.UI.csproj" ^
     -c Release --nologo ^
     -o "%PUB_APP%"
 if errorlevel 1 (

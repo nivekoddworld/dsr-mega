@@ -121,11 +121,11 @@
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\SoulsFormats\SoulsFormats\SoulsFormats.csproj">
+    <ProjectReference Include="..\..\..\lib\SoulsFormats\SoulsFormats\SoulsFormats.csproj">
       <Project>{22c664bd-877b-44df-8ecf-2808522469a8}</Project>
       <Name>SoulsFormats</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\SoulsIds\SoulsIds\SoulsIds.csproj">
+    <ProjectReference Include="..\..\..\lib\SoulsIds\SoulsIds\SoulsIds.csproj">
       <Project>{c46d537c-54dc-48bf-b824-8a950dd9d4f8}</Project>
       <Name>SoulsIds</Name>
     </ProjectReference>
