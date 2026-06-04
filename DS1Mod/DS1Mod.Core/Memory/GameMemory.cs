@@ -24,14 +24,19 @@ public static class GameMemory
 
     public static unsafe T Read<T>(nint address) where T : unmanaged
     {
-        // Guard-page / null check — anything below 64 KB is invalid on Windows.
-        if ((ulong)address < 0x10000) return default;
+        // Validate the page before dereferencing. During loading screens and
+        // quit-outs the game's manager structures are torn down, leaving stale
+        // pointers that look valid (>= 64 KB) but point at unmapped memory.
+        // Dereferencing those raises an AccessViolationException — a Corrupted
+        // State Exception the pump's try/catch cannot swallow, so it would kill
+        // the whole process. VirtualQuery turns that into a graceful default.
+        if (!IsReadable(address, sizeof(T))) return default;
         return *(T*)address;
     }
 
     public static unsafe void Write<T>(nint address, T value) where T : unmanaged
     {
-        if ((ulong)address < 0x10000) return;
+        if (!IsWritable(address, sizeof(T))) return;
         *(T*)address = value;
     }
 
@@ -54,6 +59,59 @@ public static class GameMemory
         }
         return addr;
     }
+
+    // ── page validation ───────────────────────────────────────────────────
+
+    /// <summary>True if [address, address+size) is committed and readable.</summary>
+    private static bool IsReadable(nint address, int size)
+        => ValidateRange(address, size, PageReadMask);
+
+    /// <summary>True if [address, address+size) is committed and writable.</summary>
+    private static bool IsWritable(nint address, int size)
+        => ValidateRange(address, size, PageWriteMask);
+
+    private static bool ValidateRange(nint address, int size, uint allowedProtect)
+    {
+        // Reject null / guard-page region without paying for a syscall.
+        if ((ulong)address < 0x10000 || size <= 0) return false;
+
+        if (VirtualQuery(address, out MEMORY_BASIC_INFORMATION mbi, MbiSize) == 0)
+            return false;
+
+        if (mbi.State != MEM_COMMIT) return false;
+        // PAGE_GUARD / PAGE_NOACCESS are never safe to touch.
+        if ((mbi.Protect & (PAGE_GUARD | PAGE_NOACCESS)) != 0) return false;
+        if ((mbi.Protect & allowedProtect) == 0) return false;
+
+        // The whole read/write must fit inside this single committed region.
+        ulong regionEnd = (ulong)mbi.BaseAddress + (ulong)mbi.RegionSize;
+        return (ulong)address + (ulong)size <= regionEnd;
+    }
+
+    private const uint MEM_COMMIT    = 0x1000;
+    private const uint PAGE_NOACCESS = 0x001;
+    private const uint PAGE_GUARD    = 0x100;
+
+    // Page protections that permit reads / writes respectively.
+    private const uint PageReadMask  = 0x02 | 0x04 | 0x08 | 0x20 | 0x40 | 0x80; // RO, RW, WC, XR, XRW, XWC
+    private const uint PageWriteMask = 0x04 | 0x08 | 0x40 | 0x80;               // RW, WC, XRW, XWC
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MEMORY_BASIC_INFORMATION
+    {
+        public nint  BaseAddress;
+        public nint  AllocationBase;
+        public uint  AllocationProtect;
+        public nint  RegionSize;
+        public uint  State;
+        public uint  Protect;
+        public uint  Type;
+    }
+
+    private static readonly nint MbiSize = Marshal.SizeOf<MEMORY_BASIC_INFORMATION>();
+
+    [DllImport("kernel32.dll")]
+    private static extern nint VirtualQuery(nint lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer, nint dwLength);
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
     private static extern nint GetModuleHandle(string? lpModuleName);

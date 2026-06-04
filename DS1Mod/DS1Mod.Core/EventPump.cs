@@ -20,11 +20,18 @@ public sealed class EventPump : IDisposable
         {
             try
             {
-                _hooks.PollAll();
-                foreach (var mod in _mods)
+                // Don't touch game memory at the main menu, on loading screens,
+                // or mid quit-out. The manager pointer chains are null or being
+                // torn down in those states, so polling would read garbage or
+                // fault. Skip the whole cycle until the world is actually loaded.
+                if (GameState.IsInGame())
                 {
-                    try { mod.OnTick(); }
-                    catch { /* isolate per-mod exceptions */ }
+                    _hooks.PollAll();
+                    foreach (var mod in _mods)
+                    {
+                        try { mod.OnTick(); }
+                        catch { /* isolate per-mod exceptions */ }
+                    }
                 }
             }
             catch { /* guard against hook exceptions */ }
