@@ -97,12 +97,26 @@ public partial class MainWindow : Window
         string frameworkSrc = Path.Combine(AppContext.BaseDirectory, "framework");
         string dinputSrc    = Path.Combine(frameworkSrc, "dinput8.dll");
 
+        if (!Directory.Exists(frameworkSrc))
+        {
+            MessageBox.Show(
+                "The framework\\ folder was not found next to the executable.\n\n" +
+                "Run build.bat to build and stage all framework files, then try again.",
+                "Mod Framework Not Built", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
         if (!File.Exists(dinputSrc))
         {
             MessageBox.Show(
-                "Mod Framework not found.\n\n" +
-                "Run build.bat first to build and place the framework files, then try again.",
-                "Mod Framework Not Built", MessageBoxButton.OK, MessageBoxImage.Information);
+                "dinput8.dll is missing from the framework\\ folder.\n\n" +
+                "This file is the C++ mod loader and must be compiled separately.\n\n" +
+                "To build it:\n" +
+                "  1. Install Visual Studio 2022\n" +
+                "  2. Add the \"Desktop development with C++\" workload\n" +
+                "  3. Run build.bat again — step 4 will build dinput8.dll\n\n" +
+                "The C# framework files are present and ready; only dinput8.dll is missing.",
+                "dinput8.dll Not Built", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
