@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>DS1Mod.ImGuiDemo</AssemblyName>
+    <RootNamespace>DS1Mod.ImGuiDemo</RootNamespace>
+    <Description>Demonstrates an ImGui overlay mod using IGuiMod.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- SDK gives us ModBase; Core gives us IGuiMod -->
+    <ProjectReference Include="..\DS1Mod.SDK\DS1Mod.SDK.csproj" />
+    <!-- ImGui.NET for draw calls -->
+    <PackageReference Include="ImGui.NET" Version="1.91.6.1" />
+  </ItemGroup>
+</Project>
