@@ -46,10 +46,12 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="heapfix.cpp" />
     <ClCompile Include="dinput8_proxy.cpp" />
+    <ClCompile Include="modloader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="heapfix.h" />
     <ClInclude Include="dinput8_proxy.h" />
+    <ClInclude Include="modloader.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />

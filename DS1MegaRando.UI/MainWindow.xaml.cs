@@ -92,31 +92,31 @@ public partial class MainWindow : Window
             return;
         }
 
-        var dllDst = Path.Combine(gameDir, "dinput8.dll");
+        // The framework folder is placed next to the UI exe by build.bat.
+        // It contains dinput8.dll + DS1Mod.Host.dll + DS1Mod.Core.dll + etc.
+        string frameworkSrc = Path.Combine(AppContext.BaseDirectory, "framework");
+        string dinputSrc    = Path.Combine(frameworkSrc, "dinput8.dll");
 
-        if (!File.Exists(dllDst))
+        if (!File.Exists(dinputSrc))
         {
-            // Try to copy from the app folder (placed there by build.bat)
-            var dllSrc = Path.Combine(AppContext.BaseDirectory, "dinput8.dll");
-            if (File.Exists(dllSrc))
-            {
-                try { File.Copy(dllSrc, dllDst); }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(
-                        $"Could not copy Mod Framework to game folder:\n{ex.Message}",
-                        "Deploy Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-            }
-            else
-            {
-                MessageBox.Show(
-                    "Mod Framework (dinput8.dll) not found.\n\n" +
-                    "Run build.bat first to build and install it, then try again.",
-                    "Mod Framework Not Installed", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
+            MessageBox.Show(
+                "Mod Framework not found.\n\n" +
+                "Run build.bat first to build and place the framework files, then try again.",
+                "Mod Framework Not Built", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        try
+        {
+            foreach (string src in Directory.EnumerateFiles(frameworkSrc))
+                File.Copy(src, Path.Combine(gameDir, Path.GetFileName(src)), overwrite: true);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Could not deploy Mod Framework to game folder:\n{ex.Message}",
+                "Deploy Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
         }
 
         LaunchViaSteam();

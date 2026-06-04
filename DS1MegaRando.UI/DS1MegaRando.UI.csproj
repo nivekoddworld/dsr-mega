@@ -26,10 +26,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- User-editable boss override config — copied to output so the app can find it at runtime -->
+    <!-- User-editable boss override config -->
     <Content Include="..\boss_overrides.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>boss_overrides.json</Link>
+    </Content>
+    <!-- Bundled mod — copied to bundled-mods\ next to the UI exe.
+         build.bat also copies this, but this ensures IDE builds work too. -->
+    <Content Include="..\DS1Mod\DS1Mod.DemoMod\bin\Release\net8.0-windows\DS1Mod.DemoMod.dll"
+             Condition="Exists('..\DS1Mod\DS1Mod.DemoMod\bin\Release\net8.0-windows\DS1Mod.DemoMod.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>bundled-mods\DS1Mod.DemoMod.dll</Link>
     </Content>
   </ItemGroup>
 

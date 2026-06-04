@@ -6,11 +6,21 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>DS1Mod.Host</AssemblyName>
     <RootNamespace>DS1Mod.Host</RootNamespace>
-    <!-- Publish alongside output so C++ can load it by path -->
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DS1Mod.Core\DS1Mod.Core.csproj"/>
+    <!-- SDK must be in the framework folder so mods that reference it can
+         resolve it from the shared (default) AssemblyLoadContext. -->
+    <ProjectReference Include="..\DS1Mod.SDK\DS1Mod.SDK.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Include alongside the DLL so hostfxr can find it -->
+    <Content Include="DS1Mod.Host.runtimeconfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 </Project>
