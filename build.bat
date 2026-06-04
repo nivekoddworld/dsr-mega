@@ -19,18 +19,18 @@ set "PUB_INJECTOR=%PUB%\injector"
 set "PUB_APP=%PUB%\app"
 set "UI_OUT=%REPO%DS1MegaRando.UI\bin\Release\net8.0-windows"
 
-:: ── Locate MSBuild ────────────────────────────────────────────────────────
+:: ── Locate MSBuild (via vswhere → PATH fallback) ──────────────────────────
 set "MSBUILD="
-for %%P in (
-    "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
-    "C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe"
-    "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
-    "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe"
-) do (
-    if exist "%%~P" ( set "MSBUILD=%%~P" & goto :found_msbuild )
+set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
+if exist "%VSWHERE%" (
+    for /f "usebackq delims=" %%i in (
+        `"%VSWHERE%" -latest -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe" 2^>nul`
+    ) do set "MSBUILD=%%i"
 )
-where msbuild >nul 2>&1 && set "MSBUILD=msbuild"
-:found_msbuild
+if not defined MSBUILD (
+    where msbuild >nul 2>&1
+    if not errorlevel 1 set "MSBUILD=msbuild"
+)
 
 echo.
 echo ============================================================
