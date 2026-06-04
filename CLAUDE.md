@@ -3,11 +3,13 @@
 ## Repository
 
 - Repo: `nivekoddworld/dsr-mega`
-- Active branch: `claude/brave-wozniak-ceEJ1`
+- Primary branch: `main`
 
 ## Project Overview
 
-WPF app (.NET 8, Windows only) that randomizes Dark Souls Remastered. Four independent systems:
+Two parallel systems live in this repo:
+
+**DS1 Mega Randomizer** — WPF app (.NET 8, Windows only) that randomizes Dark Souls Remastered. Four independent systems:
 
 - **Fog Gate** — shuffles where fog doors lead
 - **Item** — randomizes pickups, shops, starting gear
@@ -16,7 +18,9 @@ WPF app (.NET 8, Windows only) that randomizes Dark Souls Remastered. Four indep
 
 Entry point: `DS1MegaRando.UI` → `MegaRandomizer.cs` orchestrates everything.
 
-## Key Files
+**DS1Mod Framework** — a `dinput8.dll` sideloader that runs .NET 8 code inside the DSR process. Mods implement `IGameMod` and are hot-loaded from `<game>/mods/` at startup. The randomizer UI has a MODS tab for installing/removing mods.
+
+## Key Files — Randomizer
 
 | File | Role |
 |---|---|
@@ -29,12 +33,37 @@ Entry point: `DS1MegaRando.UI` → `MegaRandomizer.cs` orchestrates everything.
 | `boss_overrides.json` | User config: pinned replacements, blocked combos, spawn positions |
 | `DS1MegaRando.UI/DS1MegaRando.UI.csproj` | Includes boss_overrides.json as Content/PreserveNewest |
 
+## Key Files — DS1Mod Framework
+
+| File | Role |
+|---|---|
+| `DS1Mod/DS1Mod.Injector/modloader.cpp` | C++ DLL entry; applies heap fix, bootstraps .NET runtime via hostfxr |
+| `DS1Mod/DS1Mod.Host/ModLifecycleManager.cs` | Scans `mods/`, loads each DLL into its own `AssemblyLoadContext`, drives the tick loop |
+| `DS1Mod/DS1Mod.Core/GameMemory.cs` | Direct in-process pointer reads/writes (no ReadProcessMemory) |
+| `DS1Mod/DS1Mod.Core/GamePointers.cs` | AOB scan to resolve DSR version-specific base pointers |
+| `DS1Mod/DS1Mod.Core/EventPump.cs` | 500 ms poll loop; fires `BossKilled`, `FogGateEntered`, `PlayerDied`, `PlayerLeveledUp` |
+| `DS1Mod/DS1Mod.SDK/ModBase.cs` | Abstract base class for mods — implement `Name/Version/Author` and override hooks |
+
+## Bundled Mods
+
+| Mod | Purpose |
+|---|---|
+| `DS1Mod/DS1Mod.DemoMod` | SDK exercise — hits every surface: patcher, all hooks, reader, writer, tick, unload |
+| `DS1Mod/DS1Mod.FogLogger` | Logs every fog wall crossed (animation-based detection, not flag-based) |
+| `DS1Mod/DS1Mod.HpLogger` | Polls player HP each tick; logs changes with delta and session minimum |
+| `DS1Mod/DS1Mod.DiscordRPC` | Discord Rich Presence — shows current activity, deaths, last boss, session time |
+| `DS1Mod/DS1Mod.AsylumSlam` | Asylum Demon slam-only AI (implements `IGamePatcher`, swaps the luabnd at load) |
+| `DS1Mod/DS1Mod.GoofyDemon` | Asylum Demon with 10 random moods + on-screen HUD + fart entrance (v1.1.x) |
+
 ## Ground Truth References
 
 - **Entity IDs**: `FogMod-master/dist/fog.txt` — format: `- cXXXX_YYYY (Name). NPC NNNNNN @ENTITYID`
   Every EntityID in BossIds.cs must match the `@ENTITYID` value here. Wrong EntityIDs = boss slot not randomized.
 - **EMEVD events**: `Dark-Souls-Enemy-Randomizer-master/eventscripts/Remastered/`
 - **EMEVD instruction names → Bank/ID**: `Dark-Souls-Enemy-Randomizer-master/method_names.py`
+- **EMEVD instruction definitions**: `event_tools/ds1emedf.json` (DS1 EMEDF, used by the decompile tool and for cross-referencing Bank/ID pairs)
+- **Human-readable event scripts**: `decompiled_emevd/` — one `.evd.txt` per map, produced by `event_tools/emevd_decompile`
+- **Human-readable AI Lua**: `decompiled_lua/` — decompiled via DSLuaDecompiler from `DSR_Lua_Scripts_Folder/`
 
 ## Critical Design Decisions
 
@@ -47,6 +76,10 @@ Entry point: `DS1MegaRando.UI` → `MegaRandomizer.cs` orchestrates everything.
 4. **`BossDef.CanReplace = false`** freezes a slot (never randomized). Bell Gargoyle 2+3, Stray Demon, etc. The model can still be excluded from the replacement pool separately via IsIgnored.
 
 5. **`boss_overrides.json` must be in the app's output directory** — `AppContext.BaseDirectory`, not the repo root. The `.csproj` Content/PreserveNewest entry handles this automatically.
+
+6. **Mods run inside the DSR process** — `GameMemory.Read<T>` is a direct pointer dereference. There is no inter-process overhead, but any unhandled exception in mod code will crash DSR. `ModLifecycleManager` wraps each mod call in try/catch.
+
+7. **GoofyDemon mood flags use m18_01 section-5 range (`11815700..09`)** — section 7 is not allocated by the game, which is why an earlier build showed no HUD text. Always use flags from an allocated section for EMEVD bridging.
 
 ## EMEVD Instruction Reference
 
@@ -80,8 +113,19 @@ Without both patches, every Seath replacement is permanently unkillable.
 ## Build
 
 ```sh
+# Build everything (requires .NET 9 for .slnx format support)
 dotnet build DS1MegaRando.slnx
+
+# Or build just the randomizer (works with .NET 8)
+dotnet build DS1MegaRando.sln
+
+# Run the UI
 dotnet run --project DS1MegaRando.UI
+
+# Full production build (randomizer + mod framework + C++ injector)
+build.bat
 ```
 
-Requires .NET 8 SDK on Windows. Game directory must be UXM-extracted DSR.
+Requires .NET 8 SDK (randomizer) and .NET 9 SDK (`DS1MegaRando.slnx`). The C++ injector (`DS1Mod.Injector`) requires MSVC. Game directory must be UXM-extracted DSR.
+
+`DS1MegaRando.Test` targets `net9.0-windows` (uses newer APIs); all other projects target `net8.0-windows`.

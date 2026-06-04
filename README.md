@@ -25,6 +25,43 @@ A combined Dark Souls 1 Remastered randomizer that shuffles **fog gates** (area 
 
 ---
 
+## DS1Mod — In-Process Mod Framework
+
+A `dinput8.dll` sideloader that bootstraps a .NET 8 runtime inside the DSR process and hot-loads mods from `<game dir>/mods/`. Mods implement `IGameMod` (or extend `ModBase`) and receive game hooks, a memory reader/writer, and a 500 ms tick.
+
+| Project | Purpose |
+|---|---|
+| **DS1Mod/DS1Mod.Injector** | C++ DLL (`dinput8.dll`): applies heap fix, loads hostfxr → .NET runtime |
+| **DS1Mod/DS1Mod.Host** | .NET bootstrapper: scans `mods/`, loads each DLL in its own `AssemblyLoadContext`, drives the event pump |
+| **DS1Mod/DS1Mod.Core** | In-process memory access, AOB pointer resolution, event hooks, game reader/writer |
+| **DS1Mod/DS1Mod.SDK** | `ModBase` abstract class — the only dependency most mods need |
+| **DS1Mod/DS1Mod.DemoMod** | SDK exercise — hits every API surface (bundled with the randomizer) |
+| **DS1Mod/DS1Mod.FogLogger** | Logs every fog wall crossed (animation-based detection) |
+| **DS1Mod/DS1Mod.HpLogger** | Polls and logs HP changes each tick |
+| **DS1Mod/DS1Mod.DiscordRPC** | Discord Rich Presence: activity, deaths, last boss, session time |
+| **DS1Mod/DS1Mod.AsylumSlam** | Asylum Demon slam-only AI (`IGamePatcher` — patches luabnd at launch) |
+| **DS1Mod/DS1Mod.GoofyDemon** | Asylum Demon 10-mood gag mod with on-screen HUD and fart entrance |
+
+See [`DS1Mod/README.md`](DS1Mod/README.md) for architecture details and the mod-writing guide.
+
+---
+
+## Reference Data
+
+| Folder | Contents |
+|---|---|
+| **DSR_Event_Folder/event/** | Extracted EMEVD bytecode (`.emevd.dcx`) — one per map; not modified by the randomizer |
+| **DSR_Lua_Scripts_Folder/script/** | Extracted Lua AI bytecode (`.luabnd.dcx`) — one per map; source for custom AI mods |
+| **decompiled_emevd/** | Human-readable decompilations of every EMEVD file; ground truth for event IDs and instruction args |
+| **decompiled_lua/** | Decompiled Lua AI sources (via DSLuaDecompiler); basis for hand-written AI mods |
+| **ds1_ai_mods/** | Hand-written AI scripts + fully Linux toolchain to compile and repack them |
+| **event_tools/** | EMEVD decompiler (`emevd_decompile`) + DS1 EMEDF definition (`ds1emedf.json`) |
+| **FogMod-master/** | Original C# fog gate randomizer; `dist/fog.txt` is ground truth for EntityIDs; `dist/DS1R/event/` EMEVD patches are used at runtime |
+| **Dark-Souls-Enemy-Randomizer-master/** | Original Python enemy randomizer; `method_names.py` maps EMEVD instruction names to Bank/ID |
+| **DarkSoulsItemRandomizer-master/** | Original Python item randomizer; historical reference only |
+
+---
+
 ## Dependency Order
 
 ```
