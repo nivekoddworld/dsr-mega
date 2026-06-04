@@ -8,10 +8,11 @@
 -- mood-flag block, then set exactly one, so any watcher (the C# mod's console
 -- readout, or an EMEVD event) can tell which mood is active.
 --
--- Flags 11817000..11817009 are m18_01 (Undead Asylum) local event flags in a
--- high, vanilla-unused range. This range matters: it must be decodable by the
--- mod framework's event-flag reader (group 1, area 181), which the old Kiln
--- range (15105610) was NOT — that's why the readout showed nothing.
+-- Flags 11815700..11815709 are m18_01 (Undead Asylum) **section-5** event flags
+-- in a free range. Section matters: m18_01 only allocates section-0 (11810xxx)
+-- and section-5 (11815xxx) flags, and the vanilla AI->EMEVD bridge uses
+-- section 5 — so section-5 flags are actually settable/readable. (An earlier
+-- build used 11817xxx / section 7, which isn't allocated, so nothing saw them.)
 --
 -- All sub-goals use call signatures lifted verbatim from the vanilla
 -- Asylum/Stray Demon AI, so every animation exists on this model.
@@ -22,17 +23,17 @@ REGISTER_GOAL_NO_UPDATE(GOAL_MiniGreaterDemon223200_Battle, 1)
 -- Broadcast mood index n (0-based) over the mood-flag block: clear all ten,
 -- then set exactly one. Unrolled (no loop) so it round-trips cleanly.
 function GoofyDemon_SetMood(ai, n)
-    ai:SetEventFlag(11817000, false)
-    ai:SetEventFlag(11817001, false)
-    ai:SetEventFlag(11817002, false)
-    ai:SetEventFlag(11817003, false)
-    ai:SetEventFlag(11817004, false)
-    ai:SetEventFlag(11817005, false)
-    ai:SetEventFlag(11817006, false)
-    ai:SetEventFlag(11817007, false)
-    ai:SetEventFlag(11817008, false)
-    ai:SetEventFlag(11817009, false)
-    ai:SetEventFlag(11817000 + n, true)
+    ai:SetEventFlag(11815700, false)
+    ai:SetEventFlag(11815701, false)
+    ai:SetEventFlag(11815702, false)
+    ai:SetEventFlag(11815703, false)
+    ai:SetEventFlag(11815704, false)
+    ai:SetEventFlag(11815705, false)
+    ai:SetEventFlag(11815706, false)
+    ai:SetEventFlag(11815707, false)
+    ai:SetEventFlag(11815708, false)
+    ai:SetEventFlag(11815709, false)
+    ai:SetEventFlag(11815700 + n, true)
 end
 
 function MiniGreaterDemon223200Battle_Activate(ai, goal)
