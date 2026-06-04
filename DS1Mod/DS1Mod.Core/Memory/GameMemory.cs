@@ -62,6 +62,9 @@ public static class GameMemory
 
     // ── page validation ───────────────────────────────────────────────────
 
+    /// <summary>Public probe used for diagnostics — is this address readable?</summary>
+    public static bool CanRead(nint address, int size) => IsReadable(address, size);
+
     /// <summary>True if [address, address+size) is committed and readable.</summary>
     private static bool IsReadable(nint address, int size)
         => ValidateRange(address, size, PageReadMask);

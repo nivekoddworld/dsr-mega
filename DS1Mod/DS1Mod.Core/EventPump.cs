@@ -16,6 +16,11 @@ public sealed class EventPump : IDisposable
 
     private async Task RunLoop(int intervalMs, CancellationToken ct)
     {
+        bool wasInGame  = false;
+        long cycle      = 0;
+        int  diagLogged = 0;
+        const int maxDiag = 20;   // ~1 min of "waiting" diagnostics, then quiet
+
         while (!ct.IsCancellationRequested)
         {
             try
@@ -24,7 +29,20 @@ public sealed class EventPump : IDisposable
                 // or mid quit-out. The manager pointer chains are null or being
                 // torn down in those states, so polling would read garbage or
                 // fault. Skip the whole cycle until the world is actually loaded.
-                if (GameState.IsInGame())
+                bool inGame = GameState.IsInGame();
+
+                // Diagnostics: surface the pointer chain so we can see whether
+                // IsInGame() is gated correctly (offsets/reads vs. genuine menu).
+                if (inGame && !wasInGame)
+                    Console.WriteLine($"[EventPump] In-game — polling started. {GameState.Describe()}");
+                else if (!inGame && diagLogged < maxDiag && cycle % 6 == 0)
+                {
+                    Console.WriteLine($"[EventPump] Not in-game (polling paused). {GameState.Describe()}");
+                    diagLogged++;
+                }
+                wasInGame = inGame;
+
+                if (inGame)
                 {
                     _hooks.PollAll();
                     foreach (var mod in _mods)
@@ -36,6 +54,7 @@ public sealed class EventPump : IDisposable
             }
             catch { /* guard against hook exceptions */ }
 
+            cycle++;
             await Task.Delay(intervalMs, ct).ConfigureAwait(false);
         }
     }

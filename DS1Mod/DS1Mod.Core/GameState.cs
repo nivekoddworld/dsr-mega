@@ -1,3 +1,4 @@
+using System.Text;
 using DS1Mod.Core.Memory;
 
 namespace DS1Mod.Core;
@@ -34,5 +35,28 @@ public static class GameState
         if (efm == 0) return false;
 
         return true;
+    }
+
+    /// <summary>
+    /// Human-readable dump of the manager pointer chain for diagnosing why
+    /// IsInGame() is (or isn't) true. Shows the module base, each manager's
+    /// static slot, whether that slot is mapped, and the pointer read from it.
+    /// </summary>
+    public static string Describe()
+    {
+        nint b = GameMemory.ModuleBase;
+        var sb = new StringBuilder();
+        sb.Append($"ModuleBase=0x{(ulong)b:X}");
+        AppendSlot(sb, "WorldChrMan",  b + Offsets.WorldChrManPtr);
+        AppendSlot(sb, "GameDataMan",  b + Offsets.GameDataManPtr);
+        AppendSlot(sb, "EventFlagMan", b + Offsets.EventFlagManPtr);
+        return sb.ToString();
+    }
+
+    private static void AppendSlot(StringBuilder sb, string label, nint slotAddr)
+    {
+        bool mapped = GameMemory.CanRead(slotAddr, nint.Size);
+        nint val = GameMemory.Read<nint>(slotAddr);
+        sb.Append($" | {label}@0x{(ulong)slotAddr:X} mapped={mapped} ->0x{(ulong)val:X}");
     }
 }
