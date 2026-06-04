@@ -1,0 +1,10 @@
+﻿  dinput8_proxy.cpp
+  dllmain.cpp
+  heapfix.cpp
+     Creating library Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\DS1Mod.Injector\publish\injector\dinput8.lib and object Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\DS1Mod.Injector\publish\injector\dinput8.exp
+  Generating code
+  6 of 6 functions (100.0%) were compiled.
+    1 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  DS1Mod.Injector.vcxproj -> Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\DS1Mod.Injector\publish\injector\dinput8.dll
