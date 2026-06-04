@@ -134,6 +134,19 @@ if exist "!FOG_DLL!" (
     echo        [WARN] DS1Mod.FogLogger.dll not found at expected path — skipping.
 )
 
+set "HP_DIR=%REPO%DS1Mod\DS1Mod.HpLogger\bin\Release\net8.0"
+set "HP_DLL=%HP_DIR%\DS1Mod.HpLogger.dll"
+if exist "!HP_DLL!" (
+    copy /Y "!HP_DLL!" "%PUB_BUNDLED%\DS1Mod.HpLogger.dll" >nul
+    echo        + DS1Mod.HpLogger.dll
+    if exist "!HP_DIR!\DS1Mod.HpLogger.deps.json" (
+        copy /Y "!HP_DIR!\DS1Mod.HpLogger.deps.json" "%PUB_BUNDLED%\DS1Mod.HpLogger.deps.json" >nul
+        echo        + DS1Mod.HpLogger.deps.json
+    )
+) else (
+    echo        [WARN] DS1Mod.HpLogger.dll not found at expected path — skipping.
+)
+
 :: ── 6. Run tests ──────────────────────────────────────────────────────────
 echo.
 echo [6/8] Running tests...
