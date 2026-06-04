@@ -1,6 +1,3 @@
---@package: m18_01_00_00.luabnd, 223200_battle.lua
---@battle_goal: 223200, MiniGreaterDemon223200Battle
-
 -- Asylum Demon "Slam Only" AI
 -- =============================
 -- Entity 223200 (model "MiniGreaterDemon") = the Asylum Demon, the first boss
@@ -18,13 +15,16 @@
 -- Behaviour: if you are far he leaps to close the gap; once he lands and you
 -- are within range he butt-slams. Roll away and he leaps again -> repeat.
 --
--- Build it: drag this file onto MeowScript_Build.exe (with DarkSoulsDataPath
--- pointing at your UXM-extracted DSR install). Then trigger any loading screen
--- in-game to hot-reload the AI and walk into the Asylum Demon fight.
+-- REGISTER_GOAL must stay: it binds goal 223200 (GOAL_MiniGreaterDemon223200_Battle,
+-- predefined in aiCommon/goal_list.lua) to the *Battle functions below. Without
+-- it the engine never loads this AI. (When building via MeowScript instead, drop
+-- these two lines and use the --@battle_goal directive, which injects them.)
 --
--- Tweak: change the 8.0 threshold below to bias toward more leaps (raise it)
--- or more butt slams (lower it). To make him do ONLY one move, delete the
--- branch you don't want and unconditionally AddSubGoal the other.
+-- Build: compiled to Lua 5.0 bytecode and repacked into m18_01_00_00.luabnd.dcx.
+-- Tweak the 8.0 threshold to bias toward more leaps (raise) or butt slams (lower).
+
+REGISTER_GOAL(GOAL_MiniGreaterDemon223200_Battle, "MiniGreaterDemon223200Battle")
+REGISTER_GOAL_NO_UPDATE(GOAL_MiniGreaterDemon223200_Battle, 1)
 
 function MiniGreaterDemon223200Battle_Activate(ai, goal)
     local targetDist = ai:GetDist(TARGET_ENE_0)
