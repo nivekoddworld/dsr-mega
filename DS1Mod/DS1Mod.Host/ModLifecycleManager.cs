@@ -21,12 +21,12 @@ internal sealed class ModLifecycleManager : IDisposable
         if (!Directory.Exists(modsDir)) return;
 
         // ── Phase 1: load assemblies, instantiate mods ────────────────
-        var modCtx   = new ModContext(_hooks, _reader, _writer, modsDir);
+        var modCtx = new ModContext(_hooks, _reader, _writer, modsDir);
         var patchCtx = new PatchContext(gameDir, modsDir);
 
         foreach (string dll in Directory.EnumerateFiles(modsDir, "*.dll"))
         {
-            try   { InstantiateMod(dll); }
+            try { InstantiateMod(dll); }
             catch (Exception ex)
             {
                 Console.Error.WriteLine(
