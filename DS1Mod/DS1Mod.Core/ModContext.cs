@@ -7,7 +7,7 @@ public sealed class ModContext : IModContext
     public IGameWriter Writer  { get; }
     public string      ModsDir { get; }
 
-    internal ModContext(GameHooks hooks, GameReader reader, GameWriter writer, string modsDir)
+    public ModContext(GameHooks hooks, GameReader reader, GameWriter writer, string modsDir)
     {
         Hooks   = hooks;
         Reader  = reader;
