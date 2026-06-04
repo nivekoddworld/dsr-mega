@@ -155,7 +155,8 @@ internal sealed class ModLifecycleManager : IDisposable
 
         if (mod is null)
         {
-            Console.WriteLine($"[DS1Mod.Host]   {file}: no usable IGameMod type found — skipping.");
+            // Silently skip — this is normal for dependency DLLs (e.g. DiscordRPC.dll)
+            // that get copied next to the mod but are not mods themselves.
             alc.Unload();
             return;
         }
