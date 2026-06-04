@@ -32,32 +32,32 @@ public sealed class DemoMod : ModBase, IGamePatcher
 
     public void Patch(IPatchContext ctx)
     {
-        ctx.Log("DemoMod patcher starting");
-        ctx.Log($"  Game dir : {ctx.GameDir}");
-        ctx.Log($"  Mods dir : {ctx.ModsDir}");
+        //ctx.Log("DemoMod patcher starting");
+        //ctx.Log($"  Game dir : {ctx.GameDir}");
+        //ctx.Log($"  Mods dir : {ctx.ModsDir}");
 
-        // Inspect the event/ folder to prove we have file access.
-        string eventDir = Path.Combine(ctx.GameDir, "event");
-        if (Directory.Exists(eventDir))
-        {
-            int count = Directory.GetFiles(eventDir, "*.dcx").Length;
-            ctx.Log($"  Found {count} DCX files in event/");
-        }
-        else
-        {
-            ctx.Log("  event/ not found — is the game UXM-extracted?");
-        }
+        //// Inspect the event/ folder to prove we have file access.
+        //string eventDir = Path.Combine(ctx.GameDir, "event");
+        //if (Directory.Exists(eventDir))
+        //{
+        //    int count = Directory.GetFiles(eventDir, "*.dcx").Length;
+        //    ctx.Log($"  Found {count} DCX files in event/");
+        //}
+        //else
+        //{
+        //    ctx.Log("  event/ not found — is the game UXM-extracted?");
+        //}
 
-        // Demonstrate BackupFile on common.emevd.dcx (most mods that touch EMEVD
-        // would back it up here before patching).
-        string common = Path.Combine(ctx.GameDir, "event", "common.emevd.dcx");
-        if (File.Exists(common))
-        {
-            ctx.BackupFile(common);
-            ctx.Log("  Backed up common.emevd.dcx (first run only)");
-        }
+        //// Demonstrate BackupFile on common.emevd.dcx (most mods that touch EMEVD
+        //// would back it up here before patching).
+        //string common = Path.Combine(ctx.GameDir, "event", "common.emevd.dcx");
+        //if (File.Exists(common))
+        //{
+        //    ctx.BackupFile(common);
+        //    ctx.Log("  Backed up common.emevd.dcx (first run only)");
+        //}
 
-        ctx.Log("DemoMod patcher done — no files modified this run");
+        //ctx.Log("DemoMod patcher done — no files modified this run");
     }
 
     // ── IGameMod ──────────────────────────────────────────────────────────────
