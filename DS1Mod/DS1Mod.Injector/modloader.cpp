@@ -12,7 +12,11 @@ using hostfxr_close_fn = int (*)(void*);
 using load_asm_fn = int (*)(const wchar_t*, const wchar_t*, const wchar_t*,
     const wchar_t*, void*, void**);
 
-static constexpr int HDT_LOAD_ASSEMBLY = 4;
+// hostfxr_delegate_type::hdt_load_assembly_and_get_function_pointer.
+// NOTE: this MUST be 5. Value 4 is hdt_com_unregister, which hands back a
+// valid-looking delegate of the wrong signature; calling it with
+// load-assembly args throws E_INVALIDARG (0x80070057 / CLR 0xE0434352).
+static constexpr int HDT_LOAD_ASSEMBLY_AND_GET_FUNCTION_POINTER = 5;
 
 // ── logging ──────────────────────────────────────────────────────────────────
 
@@ -120,7 +124,7 @@ bool InitModLoader(const wchar_t* gameDir) {
     if (rc != 0 || !ctx) return false;
 
     load_asm_fn pfn_load = nullptr;
-    rc = pfn_delegate(ctx, HDT_LOAD_ASSEMBLY, (void**)&pfn_load);
+    rc = pfn_delegate(ctx, HDT_LOAD_ASSEMBLY_AND_GET_FUNCTION_POINTER, (void**)&pfn_load);
     LogHR(L"hostfxr_get_delegate", rc);
 
     if (rc == 0 && pfn_load) {
