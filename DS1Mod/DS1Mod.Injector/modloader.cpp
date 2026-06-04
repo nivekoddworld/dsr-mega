@@ -16,7 +16,7 @@ static constexpr int HDT_LOAD_ASSEMBLY = 4;
 
 // Sentinel: tells load_assembly_and_get_function_pointer that the target
 // method has [UnmanagedCallersOnly] — return a raw fn ptr, not a delegate.
-static constexpr const wchar_t* UNMANAGEDCALLERSONLY_METHOD = (const wchar_t*)-1;
+static const wchar_t* const UNMANAGEDCALLERSONLY_METHOD = (const wchar_t*)-1;
 
 // ── logging (raw Win32 so it works even if CRT is weird) ──────────────────────
 
