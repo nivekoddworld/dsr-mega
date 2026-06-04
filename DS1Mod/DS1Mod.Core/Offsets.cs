@@ -32,6 +32,12 @@ internal static class Offsets
     public const int Chr_MaxStaminaOff  = 0x3EC;   // float
     public const int Chr_MapDataOff     = 0x48;    // ChrData1 → ChrMapData
 
+    // Player current animation id (offset found via in-game scan). Fog-gate
+    // traversal plays animations 7410-7414 ("Walking through fog gate").
+    public const int Chr_AnimIdOff      = 0x16C;
+    public const int FogAnimLo          = 7410;
+    public const int FogAnimHi          = 7414;
+
     // ── ChrMapData → ChrPosData → world position ──────────────────────────
     public const int ChrMap_PosDataOff  = 0x28;
     public const int Pos_XOff           = 0x10;    // float

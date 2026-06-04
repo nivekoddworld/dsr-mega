@@ -58,4 +58,6 @@ public sealed class GameReader : IGameReader
         nint pgd = GamePointers.PlayerGameData;
         return pgd == 0 ? 0 : GameMemory.Read<int>(pgd + Offsets.PGD_SoulsOff);
     }
+
+    public int GetCurrentAnimation() => GamePointers.CurrentAnimation;
 }

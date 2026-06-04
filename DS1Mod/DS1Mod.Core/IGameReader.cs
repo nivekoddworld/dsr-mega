@@ -7,4 +7,7 @@ public interface IGameReader
     PlayerStats?  GetPlayerStats();
     int           GetSoulLevel  ();
     int           GetSouls      ();
+
+    /// <summary>The player's current animation id (0 if not loaded).</summary>
+    int           GetCurrentAnimation();
 }

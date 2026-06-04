@@ -4,17 +4,16 @@ using DS1Mod.SDK;
 namespace DS1Mod.FogLogger;
 
 /// <summary>
-/// Logs every fog wall the player passes through, with a running count and the
-/// soul level at the moment of crossing. Writes to the console and to
-/// &lt;modsDir&gt;/FogLogger.log.
-///
-/// Note: DS1 only flags entry for boss fogs, so those are the gates this can
-/// detect (see <see cref="DS1Mod.Core.Data.FogGateData"/>).
+/// Logs every fog wall the player passes through, with a running count, the
+/// player's position, and soul level at the moment of crossing. Detection is
+/// animation-based (the "walking through fog gate" animation), so it catches
+/// every fog wall — not just the boss fogs that set event flags. Writes to the
+/// console and to &lt;modsDir&gt;/FogLogger.log.
 /// </summary>
 public sealed class FogLoggerMod : ModBase
 {
     public override string Name    => "Fog Wall Logger";
-    public override string Version => "1.0.0";
+    public override string Version => "1.1.0";
     public override string Author  => "DS1MegaRando";
 
     private IModContext? _ctx;
@@ -30,7 +29,7 @@ public sealed class FogLoggerMod : ModBase
 
         ctx.Hooks.FogGateEntered += OnFogGateEntered;
 
-        Write("=== Fog Wall Logger v1.0.0 — armed, waiting for fog gates ===");
+        Write("=== Fog Wall Logger v1.1.0 — armed, waiting for fog gates ===");
     }
 
     private void OnFogGateEntered(FogGate gate)
@@ -38,9 +37,12 @@ public sealed class FogLoggerMod : ModBase
         _count++;
 
         int soulLevel = _ctx?.Reader.GetSoulLevel() ?? 0;
-        string where = string.IsNullOrEmpty(gate.MapId) ? "?" : gate.MapId;
+        var pos = _ctx?.Reader.GetPlayerState();
+        string where = pos is null
+            ? "unknown position"
+            : $"({pos.X,8:F2}, {pos.Y,8:F2}, {pos.Z,8:F2})";
 
-        Write($"#{_count}  {gate.Name}  [{where}, flag {gate.FlagId}]  (SL {soulLevel})");
+        Write($"#{_count}  passed through a fog wall at {where}  (SL {soulLevel}, anim {gate.FlagId})");
     }
 
     public override void OnUnload()
