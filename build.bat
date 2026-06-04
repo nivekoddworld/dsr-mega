@@ -106,10 +106,17 @@ if exist "%PUB_INJECTOR%\dinput8.dll" (
 if exist "%PUB_BUNDLED%" rd /s /q "%PUB_BUNDLED%"
 mkdir "%PUB_BUNDLED%"
 
-set "DEMO_DLL=%REPO%DS1Mod\DS1Mod.DemoMod\bin\Release\net8.0\DS1Mod.DemoMod.dll"
+set "DEMO_DIR=%REPO%DS1Mod\DS1Mod.DemoMod\bin\Release\net8.0"
+set "DEMO_DLL=%DEMO_DIR%\DS1Mod.DemoMod.dll"
 if exist "!DEMO_DLL!" (
     copy /Y "!DEMO_DLL!" "%PUB_BUNDLED%\DS1Mod.DemoMod.dll" >nul
     echo        + DS1Mod.DemoMod.dll
+    :: Ship the .deps.json too so the mod's load context can resolve any
+    :: NuGet / transitive dependencies it was built against.
+    if exist "!DEMO_DIR!\DS1Mod.DemoMod.deps.json" (
+        copy /Y "!DEMO_DIR!\DS1Mod.DemoMod.deps.json" "%PUB_BUNDLED%\DS1Mod.DemoMod.deps.json" >nul
+        echo        + DS1Mod.DemoMod.deps.json
+    )
 ) else (
     echo        [WARN] DS1Mod.DemoMod.dll not found at expected path — skipping.
 )

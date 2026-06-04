@@ -20,6 +20,10 @@ public static class ModLoader
     {
         try
         {
+            // Stand up the console first so every line that follows — host and
+            // mods alike — is actually visible.
+            ConsoleHost.Initialize("DS1Mod — Mod Loader");
+
             GameMemory.Initialize();
 
             string gameDir = argSizeInBytes > 0
