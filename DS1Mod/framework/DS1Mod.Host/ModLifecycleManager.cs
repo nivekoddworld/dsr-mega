@@ -1,6 +1,7 @@
 using System.Reflection;
 using DS1Mod.Core;
 using DS1Mod.Core.Memory;
+using DS1Mod.Rendering;
 
 namespace DS1Mod.Host;
 
@@ -15,12 +16,13 @@ internal sealed class ModLifecycleManager : IDisposable
     private readonly GameReader      _reader = new();
     private readonly GameWriter      _writer = new();
     private          EventPump?      _pump;
+    private          ImGuiRenderer?  _renderer;
 
     // Host/SDK assemblies that may end up beside mods but are never themselves
     // mods — skip them so we don't spin up a load context for each.
     private static readonly HashSet<string> FrameworkDlls = new(StringComparer.OrdinalIgnoreCase)
     {
-        "DS1Mod.Core.dll", "DS1Mod.SDK.dll", "DS1Mod.Host.dll",
+        "DS1Mod.Core.dll", "DS1Mod.SDK.dll", "DS1Mod.Host.dll", "DS1Mod.Rendering.dll",
     };
 
     public void LoadMods(string gameDir, string modsDir)
@@ -98,6 +100,18 @@ internal sealed class ModLifecycleManager : IDisposable
 
         _pump = new EventPump(_hooks, _mods.Select(m => m.Mod).ToList());
         Console.WriteLine("[DS1Mod.Host] Event pump started — listening for game events.");
+
+        // ── Phase 4: ImGui overlay ────────────────────────────────────
+        var guiMods = _mods
+            .Select(m => m.Mod)
+            .OfType<IGuiMod>()
+            .ToList();
+
+        if (guiMods.Count > 0)
+        {
+            _renderer = new ImGuiRenderer(guiMods);
+            Console.WriteLine($"[DS1Mod.Host] ImGui renderer started ({guiMods.Count} overlay mod(s)).");
+        }
     }
 
     private void InstantiateMod(string dllPath)
@@ -167,6 +181,7 @@ internal sealed class ModLifecycleManager : IDisposable
 
     public void Dispose()
     {
+        _renderer?.Dispose();
         _pump?.Dispose();
 
         foreach (var (mod, alc) in _mods)

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -16,6 +16,8 @@
     <!-- SDK must be in the framework folder so mods that reference it can
          resolve it from the shared (default) AssemblyLoadContext. -->
     <ProjectReference Include="..\DS1Mod.SDK\DS1Mod.SDK.csproj"/>
+    <!-- Rendering bridge: ImGuiRenderer + NativeD3DHook P/Invokes -->
+    <ProjectReference Include="..\DS1Mod.Rendering\DS1Mod.Rendering.csproj"/>
   </ItemGroup>
 
   <ItemGroup>

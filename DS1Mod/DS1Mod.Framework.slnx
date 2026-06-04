@@ -2,4 +2,5 @@
   <Project Path="framework/DS1Mod.Core/DS1Mod.Core.csproj" />
   <Project Path="framework/DS1Mod.SDK/DS1Mod.SDK.csproj" />
   <Project Path="framework/DS1Mod.Host/DS1Mod.Host.csproj" />
+  <Project Path="framework/DS1Mod.Rendering/DS1Mod.Rendering.csproj" />
 </Solution>

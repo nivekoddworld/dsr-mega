@@ -7,4 +7,5 @@
   <Project Path="mods/DS1Mod.DiscordRPC/DS1Mod.DiscordRPC.csproj" />
   <Project Path="mods/DS1Mod.AsylumSlam/DS1Mod.AsylumSlam.csproj" />
   <Project Path="mods/DS1Mod.GoofyDemon/DS1Mod.GoofyDemon.csproj" />
+  <Project Path="mods/DS1Mod.ImGuiDemo/DS1Mod.ImGuiDemo.csproj" />
 </Solution>

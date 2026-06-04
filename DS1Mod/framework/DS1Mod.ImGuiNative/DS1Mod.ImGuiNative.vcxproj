@@ -7,9 +7,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{A1B2C3D4-0001-0001-0001-000000000001}</ProjectGuid>
+    <ProjectGuid>{A1B2C3D4-0002-0002-0002-000000000002}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>DS1ModInjector</RootNamespace>
+    <RootNamespace>DS1ModImGuiNative</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -23,7 +23,8 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)publish\injector\</OutDir>
-    <TargetName>dinput8</TargetName>
+    <!-- Must be named cimgui so that ImGui.NET's [DllImport("cimgui")] finds it -->
+    <TargetName>cimgui</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -31,41 +32,40 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
+      <SDLCheck>false</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <!-- imgui needs to find its own headers -->
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
       <AdditionalDependencies>d3d11.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="heapfix.cpp" />
-    <ClCompile Include="dinput8_proxy.cpp" />
-    <ClCompile Include="modloader.cpp" />
-    <ClCompile Include="d3d_hook.cpp" />
-    <ClCompile Include="imgui_capi.cpp" />
+    <!-- cimgui C wrapper — vendored from https://github.com/cimgui/cimgui -->
+    <ClCompile Include="imgui\cimgui.cpp" />
+    <!-- imgui core — vendored from https://github.com/ocornut/imgui -->
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
-    <ClCompile Include="imgui\imgui_impl_dx11.cpp" />
-    <ClCompile Include="imgui\imgui_impl_win32.cpp" />
+    <!-- D3D11 + Win32 backends -->
+    <ClCompile Include="imgui\backends\imgui_impl_dx11.cpp" />
+    <ClCompile Include="imgui\backends\imgui_impl_win32.cpp" />
+    <!-- Our C exports wrapping the backends -->
+    <ClCompile Include="ds1mod_imgui_backends.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="heapfix.h" />
-    <ClInclude Include="dinput8_proxy.h" />
-    <ClInclude Include="modloader.h" />
-    <ClInclude Include="d3d_hook.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="exports.def" />
+    <ClInclude Include="imgui\cimgui.h" />
+    <ClInclude Include="imgui\imgui.h" />
+    <ClInclude Include="imgui\imgui_internal.h" />
+    <ClInclude Include="imgui\backends\imgui_impl_dx11.h" />
+    <ClInclude Include="imgui\backends\imgui_impl_win32.h" />
+    <ClInclude Include="ds1mod_imgui_backends.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

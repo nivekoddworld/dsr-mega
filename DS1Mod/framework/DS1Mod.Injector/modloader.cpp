@@ -3,6 +3,7 @@
 #include <string>
 #include <filesystem>
 #include "modloader.h"
+#include "d3d_hook.h"
 
 namespace fs = std::filesystem;
 
@@ -156,5 +157,18 @@ bool InitModLoader(const wchar_t* gameDir) {
     }
 
     pfn_close(ctx);
+
+    // Hook IDXGISwapChain::Present so mods implementing IGuiMod get their
+    // OnGui() called every frame.  This runs after the managed mods are loaded
+    // so the render callback (DS1Mod_SetOnGuiCallback) has already been
+    // registered by DS1Mod.Rendering during its own initialisation.
+    if (rc == 0)
+    {
+        if (D3DHook::Initialize())
+            Log(L"D3DHook: Present hook installed");
+        else
+            Log(L"D3DHook: Failed to hook Present — ImGui overlay disabled");
+    }
+
     return rc == 0;
 }
