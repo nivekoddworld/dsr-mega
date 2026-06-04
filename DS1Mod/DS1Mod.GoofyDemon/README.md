@@ -28,7 +28,7 @@ spin) can't finish instantly and snap to the next mood.
 ## How the mood HUD works
 
 The AI can't draw text itself, so each cycle it broadcasts its mood over event
-flags `11817000..09` (clears all ten, sets one). Three readers consume that:
+flags `11815700..09` (m18_01 **section-5** flags — the range vanilla actually allocates and uses for AI→EMEVD bridges; section 7 isn't allocated, which is why an earlier build showed nothing) (clears all ten, sets one). Three readers consume that:
 
 1. **EMEVD** — `Patch()` adds 10 new events (`11819000..09`) to
    `event/m18_01_00_00.emevd.dcx` and registers them in the map constructor

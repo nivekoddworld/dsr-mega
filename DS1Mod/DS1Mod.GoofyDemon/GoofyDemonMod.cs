@@ -11,7 +11,7 @@ namespace DS1Mod.GoofyDemon;
 /// given up on being a boss. This one mod does everything:
 ///
 ///   • AI swap   — 10 random "moods" (script/m18_01_00_00.luabnd.dcx).
-///   • Mood HUD  — the AI broadcasts its mood over event flags 11817000..09;
+///   • Mood HUD  — the AI broadcasts its mood over event flags 11815700..09;
 ///                 new EMEVD events (11819000..09) watch them and pop the mood
 ///                 name on-screen. Mood text lives in the Event_text FMG.
 ///   • Console   — the same mood, also printed to the mod console / log file.
@@ -22,7 +22,7 @@ namespace DS1Mod.GoofyDemon;
 public sealed class GoofyDemonMod : ModBase, IGamePatcher
 {
     public override string Name    => "Goofy Demon";
-    public override string Version => "1.1.1";
+    public override string Version => "1.1.2";
     public override string Author  => "DS1MegaRando";
 
     // ── AI swap ──
@@ -31,7 +31,7 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
     private const string ResourceLua = "223200_battle.luac";
 
     // ── mood broadcast (must match goofy_demon.lua) ──
-    private const int MoodFlagBase  = 11817000;   // AI sets one of these per cycle
+    private const int MoodFlagBase  = 11815700;   // AI sets one of these per cycle (section 5 — actually allocated)
     private const int MoodMsgBase   = 6900700;    // FMG ids for the HUD text
     private const int MoodEventBase = 11819000;   // new EMEVD watcher events
 
@@ -155,18 +155,18 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
         //     the end can be skipped/terminated and never run. Event 0 has no
         //     parameters, and SKIP offsets are relative, so prepending is safe.
         EMEVD.Event? ev0 = evd.Events.FirstOrDefault(e => e.ID == 0);
+        // Rebuild the mood events every run (remove + re-add) so flag/message
+        // changes take effect on already-patched installs.
+        evd.Events.RemoveAll(e => e.ID >= MoodEventBase && e.ID < MoodEventBase + MoodHud.Length);
         int added = 0;
         for (int i = 0; i < MoodHud.Length; i++)
         {
             long eid = MoodEventBase + i; int flag = MoodFlagBase + i, msg = MoodMsgBase + i;
-            if (!evd.Events.Any(e => e.ID == eid))
-            {
-                var me = new EMEVD.Event(eid, EMEVD.Event.RestBehaviorType.Restart);
-                me.Instructions.Add(new EMEVD.Instruction(3, 0, new List<object> { (sbyte)0, (byte)1, (byte)0, flag })); // IF flag ON
-                me.Instructions.Add(new EMEVD.Instruction(2007, 4, new List<object> { msg, (byte)0 }));                  // Display Message
-                me.Instructions.Add(new EMEVD.Instruction(3, 0, new List<object> { (sbyte)0, (byte)0, (byte)0, flag })); // IF flag OFF
-                evd.Events.Add(me); added++;
-            }
+            var me = new EMEVD.Event(eid, EMEVD.Event.RestBehaviorType.Restart);
+            me.Instructions.Add(new EMEVD.Instruction(3, 0, new List<object> { (sbyte)0, (byte)1, (byte)0, flag })); // IF flag ON
+            me.Instructions.Add(new EMEVD.Instruction(2007, 4, new List<object> { msg, (byte)0 }));                  // Display Message
+            me.Instructions.Add(new EMEVD.Instruction(3, 0, new List<object> { (sbyte)0, (byte)0, (byte)0, flag })); // IF flag OFF
+            evd.Events.Add(me); added++;
         }
         int regs = 0;
         if (ev0 != null)
