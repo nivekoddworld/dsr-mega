@@ -78,6 +78,48 @@ internal static class GamePointers
         }
     }
 
+    /// <summary>ChrAnimData struct (player → ChrMapData → ChrAnimData), or 0.</summary>
+    public static nint ChrAnimData
+    {
+        get
+        {
+            nint chr = PlayerChr;
+            if (chr == 0) return 0;
+            DsrVersion.Ensure();
+            nint map = GameMemory.Read<nint>(chr + Offsets.Chr_MapDataOff + DsrVersion.ChrData1Boost1);
+            return map == 0 ? 0 : GameMemory.Read<nint>(map + 0x18);  // ChrMapData.ChrAnimData
+        }
+    }
+
+    // Fog-gate-pass animations (soulsmodding "DS1 animation IDs"): 7410 =
+    // "Walking through fog gate", 7411-7414 related.
+    private const int FogAnimLo = 7410;
+    private const int FogAnimHi = 7414;
+
+    /// <summary>
+    /// Debug helper: scan the player and animation structs for any int field
+    /// currently holding a fog-pass animation id (7410-7414). Used to locate the
+    /// unknown "current animation id" offset by watching where it appears as the
+    /// player crosses a fog. Returns "src+0xOFF=value" hits, or "" if none.
+    /// </summary>
+    public static string FindFogAnim()
+    {
+        var sb = new System.Text.StringBuilder();
+        Probe(sb, "chr",  PlayerChr,   0x1800);
+        Probe(sb, "anim", ChrAnimData, 0x0600);
+        return sb.ToString();
+    }
+
+    private static void Probe(System.Text.StringBuilder sb, string name, nint baseAddr, int len)
+    {
+        if (baseAddr == 0) return;
+        for (int off = 0; off < len; off += 4)
+        {
+            int v = GameMemory.Read<int>(baseAddr + off);
+            if (v >= FogAnimLo && v <= FogAnimHi) sb.Append($" {name}+0x{off:X}={v}");
+        }
+    }
+
     public static string Describe()
     {
         EnsureScanned();
