@@ -5,7 +5,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include "imgui/imgui.h"
-#include <cstring>
+#include <cstdint>
 
 extern "C"
 {
@@ -13,10 +13,15 @@ extern "C"
     __declspec(dllexport) void* igGetCurrentContext() { return ImGui::GetCurrentContext(); }
 
     // Windows
-    __declspec(dllexport) bool igBegin(const char* name, bool* p_open, int flags)
-        { return ImGui::Begin(name, p_open, (ImGuiWindowFlags)flags); }
-    __declspec(dllexport) bool igBeginNoClose(const char* name, void* /*unused*/, int flags)
-        { return ImGui::Begin(name, nullptr, (ImGuiWindowFlags)flags); }
+    __declspec(dllexport) uint8_t igBegin(const char* name, uint8_t* p_open, int flags)
+    {
+        bool open = p_open ? (*p_open != 0) : true;
+        bool visible = ImGui::Begin(name, p_open ? &open : nullptr, (ImGuiWindowFlags)flags);
+        if (p_open) *p_open = open ? 1 : 0;
+        return visible ? 1 : 0;
+    }
+    __declspec(dllexport) uint8_t igBeginNoClose(const char* name, void* /*unused*/, int flags)
+        { return ImGui::Begin(name, nullptr, (ImGuiWindowFlags)flags) ? 1 : 0; }
     __declspec(dllexport) void igEnd() { ImGui::End(); }
 
     // Layout
@@ -31,7 +36,13 @@ extern "C"
 
     // Widgets
     __declspec(dllexport) void igText(const char* fmt) { ImGui::TextUnformatted(fmt); }
-    __declspec(dllexport) bool igCheckbox(const char* label, bool* v) { return ImGui::Checkbox(label, v); }
+    __declspec(dllexport) uint8_t igCheckbox(const char* label, uint8_t* v)
+    {
+        bool b = *v != 0;
+        bool changed = ImGui::Checkbox(label, &b);
+        *v = b ? 1 : 0;
+        return changed ? 1 : 0;
+    }
     __declspec(dllexport) void igProgressBar(float fraction, float size_x, float size_y, const char* overlay)
         { ImGui::ProgressBar(fraction, {size_x,size_y}, overlay); }
 

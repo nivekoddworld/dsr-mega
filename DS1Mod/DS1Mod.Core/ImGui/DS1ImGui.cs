@@ -11,18 +11,23 @@ public static partial class DS1ImGui
     private const string Dll = "dinput8";
 
     [LibraryImport(Dll, StringMarshalling = StringMarshalling.Utf8)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool igBegin(string name, [MarshalAs(UnmanagedType.Bool)] ref bool p_open, ImGuiWindowFlags flags);
+    [return: MarshalAs(UnmanagedType.U1)]
+    private static partial byte igBegin(string name, ref byte p_open, ImGuiWindowFlags flags);
 
     [LibraryImport(Dll, StringMarshalling = StringMarshalling.Utf8)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool igBeginNoClose(string name, nint p_open_null, ImGuiWindowFlags flags);
+    [return: MarshalAs(UnmanagedType.U1)]
+    private static partial byte igBeginNoClose(string name, nint p_open_null, ImGuiWindowFlags flags);
 
     public static bool Begin(string name, ImGuiWindowFlags flags = 0)
-        => igBeginNoClose(name, nint.Zero, flags);
+        => igBeginNoClose(name, nint.Zero, flags) != 0;
 
     public static bool Begin(string name, ref bool p_open, ImGuiWindowFlags flags = 0)
-        => igBegin(name, ref p_open, flags);
+    {
+        byte b = p_open ? (byte)1 : (byte)0;
+        bool visible = igBegin(name, ref b, flags) != 0;
+        p_open = b != 0;
+        return visible;
+    }
 
     [LibraryImport(Dll)] public static partial void igEnd();
     public static void End() => igEnd();
@@ -46,9 +51,15 @@ public static partial class DS1ImGui
     public static void Text(string text) => igText(text);
 
     [LibraryImport(Dll, StringMarshalling = StringMarshalling.Utf8)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static partial bool igCheckbox(string label, [MarshalAs(UnmanagedType.Bool)] ref bool v);
-    public static bool Checkbox(string label, ref bool v) => igCheckbox(label, ref v);
+    [return: MarshalAs(UnmanagedType.U1)]
+    private static partial byte igCheckbox(string label, ref byte v);
+    public static bool Checkbox(string label, ref bool v)
+    {
+        byte b = v ? (byte)1 : (byte)0;
+        bool changed = igCheckbox(label, ref b) != 0;
+        v = b != 0;
+        return changed;
+    }
 
     [LibraryImport(Dll, StringMarshalling = StringMarshalling.Utf8)]
     public static partial void igProgressBar(float fraction, float size_x, float size_y, string? overlay);
@@ -64,7 +75,7 @@ public static partial class DS1ImGui
     [LibraryImport(Dll)] public static partial float igGetFramerate();
     public static float GetFramerate() => igGetFramerate();
 
-    [LibraryImport(Dll, StringMarshalling = StringMarshalling.Utf8)]
-    public static partial string igGetVersion();
-    public static string GetVersion() => igGetVersion();
+    [LibraryImport(Dll)]
+    private static partial nint igGetVersion();
+    public static string GetVersion() => Marshal.PtrToStringUTF8(igGetVersion()) ?? "";
 }
