@@ -1,0 +1,6 @@
+=== m15.emevd | 1 events ===
+
+Event 0  (rest=Default) {
+    Set Area DrawParam Bank Slot Index(Area ID=15, Area DrawParam Bank Slot Index=0)
+}
+
