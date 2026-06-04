@@ -48,19 +48,19 @@ echo ============================================================
 echo.
 
 :: ── 1. Restore packages ───────────────────────────────────────────────────
-echo [1/8] Restoring packages...
+echo [1/9] Restoring packages...
 dotnet restore "%REPO%DS1MegaRando.slnx" --nologo
 if errorlevel 1 ( echo [FAIL] dotnet restore & set /a ERRORS+=1 )
 
 :: ── 2. Build C# solution ──────────────────────────────────────────────────
 echo.
-echo [2/8] Building C# solution (Release)...
+echo [2/9] Building C# solution (Release)...
 dotnet build "%REPO%DS1MegaRando.slnx" -c Release --no-restore --nologo
 if errorlevel 1 ( echo [FAIL] dotnet build & set /a ERRORS+=1 )
 
 :: ── 3. Publish DS1Mod.Host → publish\framework\ ───────────────────────────
 echo.
-echo [3/8] Publishing DS1Mod.Host...
+echo [3/9] Publishing DS1Mod.Host...
 if exist "%PUB_FRAMEWORK%" rd /s /q "%PUB_FRAMEWORK%"
 mkdir "%PUB_FRAMEWORK%"
 dotnet publish "%REPO%DS1Mod\DS1Mod.Host\DS1Mod.Host.csproj" ^
@@ -70,7 +70,7 @@ if errorlevel 1 ( echo [FAIL] dotnet publish DS1Mod.Host & set /a ERRORS+=1 )
 
 :: ── 4. Build C++ injector (dinput8.dll) ───────────────────────────────────
 echo.
-echo [4/8] Building C++ injector (dinput8.dll)...
+echo [4/9] Building C++ injector (dinput8.dll)...
 if not defined MSBUILD (
     echo [FAIL] MSBuild not found.
     echo        Install Visual Studio 2022 with the "Desktop development with C++" workload,
@@ -88,9 +88,28 @@ if errorlevel 1 (
     goto :summary
 )
 
-:: ── 5. Assemble publish folders ───────────────────────────────────────────
+:: ── 5. Build C++ ImGui native layer (cimgui.dll) ──────────────────────────
 echo.
-echo [5/8] Assembling publish folders...
+echo [5/9] Building cimgui.dll (ImGui native layer)...
+if not exist "%REPO%DS1Mod\DS1Mod.ImGuiNative\imgui\cimgui.cpp" (
+    echo        [WARN] imgui sources not vendored — skipping cimgui.dll build.
+    echo               See DS1Mod\DS1Mod.ImGuiNative\imgui\VENDOR.md for instructions.
+    echo               ImGui overlay mods will be disabled until cimgui.dll is present.
+) else (
+    "%MSBUILD%" "%REPO%DS1Mod\DS1Mod.ImGuiNative\DS1Mod.ImGuiNative.vcxproj" ^
+        /p:Configuration=Release /p:Platform=x64 ^
+        /p:OutDir="%PUB_INJECTOR%\\" ^
+        /v:minimal /nologo
+    if errorlevel 1 (
+        echo [FAIL] MSBuild cimgui.dll
+        set /a ERRORS+=1
+        goto :summary
+    )
+)
+
+:: ── 6. Assemble publish folders ───────────────────────────────────────────
+echo.
+echo [6/9] Assembling publish folders...
 
 :: Copy dinput8.dll into the framework folder
 if exist "%PUB_INJECTOR%\dinput8.dll" (
@@ -100,6 +119,15 @@ if exist "%PUB_INJECTOR%\dinput8.dll" (
     echo [FAIL] dinput8.dll not found at %PUB_INJECTOR%\dinput8.dll
     set /a ERRORS+=1
     goto :summary
+)
+
+:: Copy cimgui.dll into the framework folder (optional — only present if
+:: imgui sources were vendored and DS1Mod.ImGuiNative built successfully)
+if exist "%PUB_INJECTOR%\cimgui.dll" (
+    copy /Y "%PUB_INJECTOR%\cimgui.dll" "%PUB_FRAMEWORK%\cimgui.dll" >nul
+    echo        + cimgui.dll
+) else (
+    echo        [WARN] cimgui.dll not built — ImGui overlay mods disabled
 )
 
 :: Collect bundled mods
@@ -147,16 +175,29 @@ if exist "!HP_DLL!" (
     echo        [WARN] DS1Mod.HpLogger.dll not found at expected path — skipping.
 )
 
-:: ── 6. Run tests ──────────────────────────────────────────────────────────
+set "IMGUI_DIR=%REPO%DS1Mod\DS1Mod.ImGuiDemo\bin\Release\net8.0-windows"
+set "IMGUI_DLL=%IMGUI_DIR%\DS1Mod.ImGuiDemo.dll"
+if exist "!IMGUI_DLL!" (
+    copy /Y "!IMGUI_DLL!" "%PUB_BUNDLED%\DS1Mod.ImGuiDemo.dll" >nul
+    echo        + DS1Mod.ImGuiDemo.dll
+    if exist "!IMGUI_DIR!\DS1Mod.ImGuiDemo.deps.json" (
+        copy /Y "!IMGUI_DIR!\DS1Mod.ImGuiDemo.deps.json" "%PUB_BUNDLED%\DS1Mod.ImGuiDemo.deps.json" >nul
+        echo        + DS1Mod.ImGuiDemo.deps.json
+    )
+) else (
+    echo        [WARN] DS1Mod.ImGuiDemo.dll not found at expected path — skipping.
+)
+
+:: ── 7. Run tests ──────────────────────────────────────────────────────────
 echo.
-echo [6/8] Running tests...
+echo [7/9] Running tests...
 dotnet test "%REPO%src\DS1MegaRando.Test\DS1MegaRando.Test.csproj" ^
     -c Release --no-build --nologo --logger "console;verbosity=minimal"
 if errorlevel 1 ( echo [FAIL] tests & set /a ERRORS+=1 )
 
-:: ── 7. Stage UI output (bin\ — for IDE runs / debugging) ──────────────────
+:: ── 8. Stage UI output (bin\ — for IDE runs / debugging) ──────────────────
 echo.
-echo [7/8] Staging framework + bundled-mods next to UI exe...
+echo [8/9] Staging framework + bundled-mods next to UI exe...
 
 :: Copy framework + bundled-mods next to the UI exe.
 :: The UI reads these folders and deploys them — nothing goes to the game dir
@@ -176,9 +217,9 @@ if exist "%UI_OUT%" (
     echo        [WARN] UI output folder not found ^(build step 2 may have failed^).
 )
 
-:: ── 8. Publish complete app → publish\app\ ────────────────────────────────
+:: ── 9. Publish complete app → publish\app\ ────────────────────────────────
 echo.
-echo [8/8] Publishing complete app to publish\app\...
+echo [9/9] Publishing complete app to publish\app\...
 if exist "%PUB_APP%" rd /s /q "%PUB_APP%"
 mkdir "%PUB_APP%"
 dotnet publish "%REPO%src\DS1MegaRando.UI\DS1MegaRando.UI.csproj" ^
@@ -204,8 +245,8 @@ if !ERRORS! EQU 0 (
     echo  BUILD SUCCEEDED
     echo.
     echo  publish\app\          — complete distributable ^(UI + framework + mods^)
-    echo    framework\          — dinput8.dll + DS1Mod.Host/Core/SDK
-    echo    bundled-mods\       — DS1Mod.DemoMod.dll
+    echo    framework\          — dinput8.dll + cimgui.dll + DS1Mod.Host/Core/SDK/Rendering
+    echo    bundled-mods\       — DS1Mod.DemoMod.dll, DS1Mod.ImGuiDemo.dll, ...
     echo    DS1MegaRando.UI.exe — launch this
     echo.
     echo  Use the UI to deploy to the game:
