@@ -17,6 +17,7 @@ set "PUB=%REPO%publish"
 set "PUB_FRAMEWORK=%PUB%\framework"
 set "PUB_BUNDLED=%PUB%\bundled-mods"
 set "PUB_INJECTOR=%PUB%\injector"
+set "PUB_APP=%PUB%\app"
 set "UI_OUT=%REPO%DS1MegaRando.UI\bin\Release\net8.0-windows"
 
 :: ── Locate MSBuild ────────────────────────────────────────────────────────
@@ -104,14 +105,14 @@ if exist "!DEMO_DLL!" (
 
 :: ── 6. Run tests ──────────────────────────────────────────────────────────
 echo.
-echo [6/7] Running tests...
+echo [6/8] Running tests...
 dotnet test "%REPO%DS1MegaRando.Test\DS1MegaRando.Test.csproj" ^
     -c Release --no-build --nologo --logger "console;verbosity=minimal"
 if errorlevel 1 ( echo [FAIL] tests & set /a ERRORS+=1 )
 
-:: ── 7. Stage UI output ────────────────────────────────────────────────────
+:: ── 7. Stage UI output (bin\ — for IDE runs / debugging) ──────────────────
 echo.
-echo [7/7] Staging UI output...
+echo [7/8] Staging framework + bundled-mods next to UI exe...
 
 :: Copy framework + bundled-mods next to the UI exe.
 :: The UI reads these folders and deploys them — nothing goes to the game dir
@@ -131,17 +132,37 @@ if exist "%UI_OUT%" (
     echo        [WARN] UI output folder not found ^(build step 2 may have failed^).
 )
 
+:: ── 8. Publish complete app → publish\app\ ────────────────────────────────
+echo.
+echo [8/8] Publishing complete app to publish\app\...
+if exist "%PUB_APP%" rd /s /q "%PUB_APP%"
+mkdir "%PUB_APP%"
+dotnet publish "%REPO%DS1MegaRando.UI\DS1MegaRando.UI.csproj" ^
+    -c Release --nologo ^
+    -o "%PUB_APP%"
+if errorlevel 1 (
+    echo [FAIL] dotnet publish UI
+    set /a ERRORS+=1
+) else (
+    :: Drop framework\ and bundled-mods\ into the published app folder
+    if exist "%PUB_APP%\framework"     rd /s /q "%PUB_APP%\framework"
+    if exist "%PUB_APP%\bundled-mods"  rd /s /q "%PUB_APP%\bundled-mods"
+    xcopy /E /I /Y /Q "%PUB_FRAMEWORK%" "%PUB_APP%\framework\"    >nul
+    xcopy /E /I /Y /Q "%PUB_BUNDLED%"   "%PUB_APP%\bundled-mods\" >nul
+    echo        → %PUB_APP%\
+)
+
 :: ── Summary ───────────────────────────────────────────────────────────────
 echo.
 echo ============================================================
 if !ERRORS! EQU 0 (
     echo  BUILD SUCCEEDED
     echo.
-    echo  Artifacts in publish\:
-    echo    framework\    — dinput8.dll + DS1Mod.Host/Core/SDK + runtimeconfig.json
-    echo    bundled-mods\ — DS1Mod.DemoMod.dll
+    echo  publish\app\          — complete distributable ^(UI + framework + mods^)
+    echo    framework\          — dinput8.dll + DS1Mod.Host/Core/SDK
+    echo    bundled-mods\       — DS1Mod.DemoMod.dll
+    echo    DS1MegaRando.UI.exe — launch this
     echo.
-    echo  Both folders staged next to the UI exe.
     echo  Use the UI to deploy to the game:
     echo    "Launch with Mod Framework" — copies framework\ to game dir
     echo    Mods tab Install button     — copies a mod to game dir\mods\
