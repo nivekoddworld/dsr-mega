@@ -10,7 +10,6 @@ setlocal EnableDelayedExpansion
 
 set "REPO=%~dp0"
 set "ERRORS=0"
-set "INJECTOR_BUILT=0"
 
 :: Output folders
 set "PUB=%REPO%publish"
@@ -40,19 +39,19 @@ echo ============================================================
 echo.
 
 :: ── 1. Restore packages ───────────────────────────────────────────────────
-echo [1/7] Restoring packages...
+echo [1/8] Restoring packages...
 dotnet restore "%REPO%DS1MegaRando.slnx" --nologo
 if errorlevel 1 ( echo [FAIL] dotnet restore & set /a ERRORS+=1 )
 
 :: ── 2. Build C# solution ──────────────────────────────────────────────────
 echo.
-echo [2/7] Building C# solution (Release)...
+echo [2/8] Building C# solution (Release)...
 dotnet build "%REPO%DS1MegaRando.slnx" -c Release --no-restore --nologo
 if errorlevel 1 ( echo [FAIL] dotnet build & set /a ERRORS+=1 )
 
 :: ── 3. Publish DS1Mod.Host → publish\framework\ ───────────────────────────
 echo.
-echo [3/7] Publishing DS1Mod.Host...
+echo [3/8] Publishing DS1Mod.Host...
 if exist "%PUB_FRAMEWORK%" rd /s /q "%PUB_FRAMEWORK%"
 mkdir "%PUB_FRAMEWORK%"
 dotnet publish "%REPO%DS1Mod\DS1Mod.Host\DS1Mod.Host.csproj" ^
@@ -62,33 +61,36 @@ if errorlevel 1 ( echo [FAIL] dotnet publish DS1Mod.Host & set /a ERRORS+=1 )
 
 :: ── 4. Build C++ injector (dinput8.dll) ───────────────────────────────────
 echo.
-echo [4/7] Building C++ injector (dinput8.dll)...
-if defined MSBUILD (
-    "%MSBUILD%" "%REPO%DS1Mod\DS1Mod.Injector\DS1Mod.Injector.vcxproj" ^
-        /p:Configuration=Release /p:Platform=x64 ^
-        /p:SolutionDir="%REPO%" ^
-        /v:minimal /nologo
-    if errorlevel 1 (
-        echo [FAIL] MSBuild injector
-        set /a ERRORS+=1
-    ) else (
-        set "INJECTOR_BUILT=1"
-    )
-) else (
-    echo [SKIP] Visual Studio / MSBuild not found — dinput8.dll not built.
-    echo        Install VS 2022 with "Desktop development with C++" workload.
+echo [4/8] Building C++ injector (dinput8.dll)...
+if not defined MSBUILD (
+    echo [FAIL] MSBuild not found.
+    echo        Install Visual Studio 2022 with the "Desktop development with C++" workload,
+    echo        then re-run build.bat.
+    set /a ERRORS+=1
+    goto :summary
+)
+"%MSBUILD%" "%REPO%DS1Mod\DS1Mod.Injector\DS1Mod.Injector.vcxproj" ^
+    /p:Configuration=Release /p:Platform=x64 ^
+    /p:SolutionDir="%REPO%" ^
+    /v:minimal /nologo
+if errorlevel 1 (
+    echo [FAIL] MSBuild injector
+    set /a ERRORS+=1
+    goto :summary
 )
 
 :: ── 5. Assemble publish folders ───────────────────────────────────────────
 echo.
-echo [5/7] Assembling publish folders...
+echo [5/8] Assembling publish folders...
 
-:: Add dinput8.dll to the framework folder
-if !INJECTOR_BUILT! EQU 1 (
-    if exist "%PUB_INJECTOR%\dinput8.dll" (
-        copy /Y "%PUB_INJECTOR%\dinput8.dll" "%PUB_FRAMEWORK%\dinput8.dll" >nul
-        echo        + dinput8.dll
-    )
+:: Copy dinput8.dll into the framework folder
+if exist "%PUB_INJECTOR%\dinput8.dll" (
+    copy /Y "%PUB_INJECTOR%\dinput8.dll" "%PUB_FRAMEWORK%\dinput8.dll" >nul
+    echo        + dinput8.dll
+) else (
+    echo [FAIL] dinput8.dll not found at %PUB_INJECTOR%\dinput8.dll
+    set /a ERRORS+=1
+    goto :summary
 )
 
 :: Collect bundled mods
@@ -153,6 +155,7 @@ if errorlevel 1 (
 )
 
 :: ── Summary ───────────────────────────────────────────────────────────────
+:summary
 echo.
 echo ============================================================
 if !ERRORS! EQU 0 (
