@@ -1,49 +1,61 @@
-using System.Reflection;
 using System.Text;
 using DS1Mod.Core;
 using DS1Mod.SDK;
 using SoulsFormats;
+using ArgType = SoulsFormats.EMEVD.Instruction.ArgType;
 
 namespace DS1Mod.GoofyDemon;
 
 /// <summary>
-/// GOOFY DEMON. Replaces the Asylum Demon (entity 223200) AI with one that has
-/// given up on being a boss, and prints its current "mood" live.
+/// GOOFY DEMON — the Asylum Demon (AI entity 223200, boss entity 1810800) has
+/// given up on being a boss. This one mod does everything:
 ///
-///   1. IGamePatcher.Patch() — at launch, swap the compiled 223200_battle.lua
-///      inside script/m18_01_00_00.luabnd.dcx for our embedded bytecode.
-///   2. OnTick() — the AI broadcasts its mood over event flags 11817000..09;
-///      we poll them and report the active mood.
+///   • AI swap   — 10 random "moods" (script/m18_01_00_00.luabnd.dcx).
+///   • Mood HUD  — the AI broadcasts its mood over event flags 11817000..09;
+///                 new EMEVD events (11819000..09) watch them and pop the mood
+///                 name on-screen. Mood text lives in the Event_text FMG.
+///   • Console   — the same mood, also printed to the mod console / log file.
+///   • Fart      — a big "*farts*" message the instant he lands his entrance.
 ///
-/// All output goes to BOTH the console window and a log file
-/// (&lt;ModsDir&gt;/GoofyDemon.log), so it's visible even if the console isn't.
+/// All file edits are surgical, idempotent, and backed up (SoulsFormats).
 /// </summary>
 public sealed class GoofyDemonMod : ModBase, IGamePatcher
 {
     public override string Name    => "Goofy Demon";
-    public override string Version => "1.0.0";
+    public override string Version => "1.1.0";
     public override string Author  => "DS1MegaRando";
 
+    // ── AI swap ──
     private const string LuaBnd      = "m18_01_00_00.luabnd.dcx";
     private const string EntryLeaf   = "223200_battle.lua";
     private const string ResourceLua = "223200_battle.luac";
 
-    // Mood broadcast. Must match GoofyDemon_SetMood() in goofy_demon.lua.
-    // m18_01 (area 181) local flags — chosen so the framework's event-flag
-    // reader (group 1 / area 181) can actually decode them.
-    private const int MoodFlagBase = 11817000;
-    private static readonly string[] MoodNames =
+    // ── mood broadcast (must match goofy_demon.lua) ──
+    private const int MoodFlagBase  = 11817000;   // AI sets one of these per cycle
+    private const int MoodMsgBase   = 6900700;    // FMG ids for the HUD text
+    private const int MoodEventBase = 11819000;   // new EMEVD watcher events
+
+    // ── fart entrance ──
+    private const int FartMsgId   = 6900690;
+    private const int EntranceEvt = 11810310;
+    private const int DemonEntity = 1810800;
+    private const int JumpAnim    = 9060;
+
+    // HUD text (game font — ASCII, no emoji). Indexed by mood.
+    private static readonly string[] MoodHud =
     {
-        "💃 The Shimmy",          // 0
-        "🕺 The Breakdance",      // 1
-        "😱 The Coward (fleeing)",// 2
-        "🤔 Existential Crisis",  // 3
-        "😈 SURPRISE ATTACK!",    // 4
-        "👊 Fine. Fighting.",     // 5
-        "🌀 The Zoomies",         // 6
-        "🦵 Hokey Pokey",         // 7
-        "😶 Stage Fright",        // 8
-        "🏆 Victory Lap",         // 9
+        "the demon shimmies", "the demon breakdances", "the demon flees in terror",
+        "the demon questions its existence", "SURPRISE ATTACK", "the demon remembers it is a boss",
+        "the demon has the zoomies", "the demon does the hokey pokey", "the demon has stage fright",
+        "premature victory lap",
+    };
+
+    // Console/log text (console can show emoji). Indexed by mood.
+    private static readonly string[] MoodConsole =
+    {
+        "💃 The Shimmy", "🕺 The Breakdance", "😱 The Coward (fleeing)", "🤔 Existential Crisis",
+        "😈 SURPRISE ATTACK!", "👊 Fine. Fighting.", "🌀 The Zoomies", "🦵 Hokey Pokey",
+        "😶 Stage Fright", "🏆 Victory Lap",
     };
 
     private IModContext? _ctx;
@@ -52,126 +64,156 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
     private long _tick;
 
     // ── IGamePatcher ──────────────────────────────────────────────────────────
-
     public void Patch(IPatchContext ctx)
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-        SetLogPath(ctx.ModsDir);
+        _logPath = SafeLog(ctx.ModsDir);
 
+        try { PatchLua(ctx); }   catch (Exception e) { Log($"AI swap failed: {e.Message}"); }
+        try { PatchFmgs(ctx); }  catch (Exception e) { Log($"FMG patch failed: {e.Message}"); }
+        try { PatchEmevd(ctx); } catch (Exception e) { Log($"EMEVD patch failed: {e.Message}"); }
+    }
+
+    private void PatchLua(IPatchContext ctx)
+    {
         string path = Path.Combine(ctx.GameDir, "script", LuaBnd);
-        if (!File.Exists(path))
-        {
-            Log($"Patch: {path} not found — is the game UXM-extracted? Skipping.");
-            return;
-        }
-
-        byte[] replacement = ReadEmbedded(ResourceLua);
-        if (replacement.Length == 0) { Log("Patch: embedded bytecode missing — skipping."); return; }
+        if (!File.Exists(path)) { Log($"{LuaBnd} not found — skipping AI swap."); return; }
+        byte[] lua = ReadEmbedded(ResourceLua);
+        if (lua.Length == 0) { Log("embedded AI bytecode missing — skipping AI swap."); return; }
 
         ctx.BackupFile(path);
-
-        byte[] decompressed = DCX.Decompress(path, out DCX.Type dcxType);
-        BND3 bnd = BND3.Read(decompressed);
-
-        int matched = 0;
+        byte[] dec = DCX.Decompress(path, out DCX.Type dcx);
+        BND3 bnd = BND3.Read(dec);
+        int hit = 0;
         foreach (BinderFile f in bnd.Files)
+            if (string.Equals(Path.GetFileName(f.Name.Replace('\\', '/')), EntryLeaf, StringComparison.OrdinalIgnoreCase))
+            { f.Bytes = lua; hit++; }
+        if (hit != 1) { Log($"expected 1 '{EntryLeaf}', found {hit} — aborting AI swap."); return; }
+        File.WriteAllBytes(path, DCX.Compress(bnd.Write(), dcx));
+        Log($"AI: swapped {EntryLeaf} ({lua.Length} bytes).");
+    }
+
+    private void PatchFmgs(IPatchContext ctx)
+    {
+        string msgRoot = Path.Combine(ctx.GameDir, "msg");
+        if (!Directory.Exists(msgRoot)) { Log("msg/ not found — skipping HUD text."); return; }
+        foreach (string path in Directory.GetFiles(msgRoot, "menu.msgbnd.dcx", SearchOption.AllDirectories))
         {
-            string leaf = Path.GetFileName(f.Name.Replace('\\', '/'));
-            if (string.Equals(leaf, EntryLeaf, StringComparison.OrdinalIgnoreCase))
+            ctx.BackupFile(path);
+            byte[] dec = DCX.Decompress(path, out DCX.Type dcx);
+            BND3 bnd = BND3.Read(dec);
+            int edits = 0;
+            foreach (BinderFile f in bnd.Files)
             {
-                f.Bytes = replacement;
-                matched++;
+                if (!Path.GetFileName(f.Name).Contains("Event_text")) continue;
+                FMG fmg = FMG.Read(f.Bytes);
+                void Put(int id, string t) { fmg.Entries.RemoveAll(e => e.ID == id); fmg.Entries.Add(new FMG.Entry(id, t)); }
+                Put(FartMsgId, "*farts*");
+                for (int i = 0; i < MoodHud.Length; i++) Put(MoodMsgBase + i, MoodHud[i]);
+                f.Bytes = fmg.Write();
+                edits++;
+            }
+            File.WriteAllBytes(path, DCX.Compress(bnd.Write(), dcx));
+            Log($"HUD text: wrote fart + {MoodHud.Length} moods into {edits} Event_text copy(ies) of {Path.GetFileName(Path.GetDirectoryName(path))}.");
+        }
+    }
+
+    private void PatchEmevd(IPatchContext ctx)
+    {
+        string path = Path.Combine(ctx.GameDir, "event", "m18_01_00_00.emevd.dcx");
+        if (!File.Exists(path)) { Log("m18_01 emevd not found — skipping events."); return; }
+
+        ctx.BackupFile(path);
+        byte[] dec = DCX.Decompress(path, out DCX.Type dcx);
+        EMEVD evd = EMEVD.Read(dec);
+
+        // (a) fart Display Message after the 9060 landing
+        EMEVD.Event? ent = evd.Events.FirstOrDefault(e => e.ID == EntranceEvt);
+        if (ent != null && !ent.Instructions.Any(i => i.Bank == 2007 && i.ID == 4 && MsgId(i) == FartMsgId))
+        {
+            int at = -1;
+            for (int i = 0; i < ent.Instructions.Count; i++)
+            {
+                EMEVD.Instruction ins = ent.Instructions[i];
+                if (ins.Bank == 2003 && ins.ID == 18)
+                {
+                    var a = ins.UnpackArgs(new[] { ArgType.Int32, ArgType.Int32, ArgType.Byte, ArgType.Byte, ArgType.Byte });
+                    if (Convert.ToInt32(a[0]) == DemonEntity && Convert.ToInt32(a[1]) == JumpAnim) { at = i + 1; break; }
+                }
+            }
+            if (at >= 0)
+            {
+                ent.Instructions.Insert(at, new EMEVD.Instruction(2007, 4, new List<object> { FartMsgId, (byte)0 }));
+                foreach (EMEVD.Parameter p in ent.Parameters) if (p.InstructionIndex >= at) p.InstructionIndex++;
+                Log($"fart: Display Message inserted in event {EntranceEvt}.");
             }
         }
 
-        if (matched != 1)
+        // (b) 10 mood-watcher events + register them in the constructor (event 0)
+        EMEVD.Event? ev0 = evd.Events.FirstOrDefault(e => e.ID == 0);
+        int added = 0, regs = 0;
+        for (int i = 0; i < MoodHud.Length; i++)
         {
-            Log($"Patch: expected exactly 1 '{EntryLeaf}' entry, found {matched} — aborting (archive untouched).");
-            return;
+            long eid = MoodEventBase + i; int flag = MoodFlagBase + i, msg = MoodMsgBase + i;
+            if (!evd.Events.Any(e => e.ID == eid))
+            {
+                var me = new EMEVD.Event(eid, EMEVD.Event.RestBehaviorType.Restart);
+                me.Instructions.Add(new EMEVD.Instruction(3, 0, new List<object> { (sbyte)0, (byte)1, (byte)0, flag })); // IF flag ON
+                me.Instructions.Add(new EMEVD.Instruction(2007, 4, new List<object> { msg, (byte)0 }));                  // Display Message
+                me.Instructions.Add(new EMEVD.Instruction(3, 0, new List<object> { (sbyte)0, (byte)0, (byte)0, flag })); // IF flag OFF
+                evd.Events.Add(me); added++;
+            }
+            if (ev0 != null && !ev0.Instructions.Any(x => x.Bank == 2000 && x.ID == 0 && InitId(x) == eid))
+            {
+                ev0.Instructions.Add(new EMEVD.Instruction(2000, 0, new List<object> { (int)0, (uint)eid, (uint)0 }));
+                regs++;
+            }
         }
-
-        File.WriteAllBytes(path, DCX.Compress(bnd.Write(), dcxType));
-        Log($"Patch: swapped {EntryLeaf} ({replacement.Length} bytes). The demon would rather dance than fight.");
+        File.WriteAllBytes(path, DCX.Compress(evd.Write(), dcx));
+        Log($"mood HUD: {added} new events, {regs} registrations.");
     }
 
-    // ── IGameMod ────────────────────────────────────────────────────────────────
+    private static int MsgId(EMEVD.Instruction i) { try { return Convert.ToInt32(i.UnpackArgs(new[] { ArgType.Int32, ArgType.Byte })[0]); } catch { return -1; } }
+    private static long InitId(EMEVD.Instruction i) { try { return Convert.ToInt64(i.UnpackArgs(new[] { ArgType.Int32, ArgType.UInt32, ArgType.UInt32 })[1]); } catch { return -1; } }
 
+    // ── IGameMod (console readout) ──────────────────────────────────────────────
     public override void OnLoad(IModContext ctx)
     {
         _ctx = ctx;
-        SetLogPath(ctx.ModsDir);
-        Log("Loaded. Watching mood flags " +
-            $"{MoodFlagBase}..{MoodFlagBase + MoodNames.Length - 1}.");
-
-        // Self-test: prove the framework can read/write this flag range. If this
-        // logs MISMATCH, the chosen flag IDs aren't decodable and the readout
-        // won't work (this is exactly what was wrong with the old range).
-        try
-        {
-            bool before = ctx.Reader.GetEventFlag(MoodFlagBase);
-            ctx.Writer.SetEventFlag(MoodFlagBase, true);
-            bool readBack = ctx.Reader.GetEventFlag(MoodFlagBase);
-            ctx.Writer.SetEventFlag(MoodFlagBase, before);
-            Log($"Flag self-test: wrote true to {MoodFlagBase}, read back {readBack} " +
-                $"({(readBack ? "OK — flag range is readable" : "MISMATCH — flag range NOT readable!")}).");
-        }
-        catch (Exception e) { Log($"Flag self-test threw: {e.Message}"); }
+        _logPath = SafeLog(ctx.ModsDir);
+        Log($"Loaded. Watching mood flags {MoodFlagBase}..{MoodFlagBase + MoodConsole.Length - 1}.");
     }
 
     public override void OnTick()
     {
         if (_ctx is null) return;
         _tick++;
-
         int mood = -1;
-        for (int i = 0; i < MoodNames.Length; i++)
-        {
+        for (int i = 0; i < MoodConsole.Length; i++)
             if (_ctx.Reader.GetEventFlag(MoodFlagBase + i)) { mood = i; break; }
-        }
-
-        // Mood changed → report it.
-        if (mood >= 0 && mood != _lastMood)
-        {
-            _lastMood = mood;
-            Log($"mood → {MoodNames[mood]}");
-        }
-
-        // Heartbeat every ~10s so it's obvious OnTick is running. If you see
-        // heartbeats but never a "mood →", the AI isn't setting the flags
-        // (wrong fight? archive not patched?). If you see no heartbeats at all,
-        // OnTick isn't running (mod not loaded, or not in a loaded map).
-        if (_tick % 20 == 0)
-            Log($"(heartbeat #{_tick / 20}; current mood index = {mood})");
+        if (mood >= 0 && mood != _lastMood) { _lastMood = mood; Log($"mood → {MoodConsole[mood]}"); }
+        if (_tick % 20 == 0) Log($"(heartbeat #{_tick / 20}; current mood index = {mood})");
     }
 
     public override void OnUnload()
     {
         if (_ctx is null) return;
-        for (int i = 0; i < MoodNames.Length; i++)
-            _ctx.Writer.SetEventFlag(MoodFlagBase + i, false);
+        for (int i = 0; i < MoodConsole.Length; i++) _ctx.Writer.SetEventFlag(MoodFlagBase + i, false);
         Log("Unloaded; cleared mood flags.");
     }
 
-    // ── helpers ───────────────────────────────────────────────────────────────
-
-    private void SetLogPath(string modsDir)
-    {
-        if (_logPath is not null) return;
-        try { _logPath = Path.Combine(modsDir, "GoofyDemon.log"); } catch { _logPath = null; }
-    }
-
+    // ── helpers ──
+    private static string? SafeLog(string modsDir) { try { return Path.Combine(modsDir, "GoofyDemon.log"); } catch { return null; } }
     private void Log(string msg)
     {
         string line = $"[{DateTime.Now:HH:mm:ss}] [GoofyDemon] {msg}";
         Console.WriteLine(line);
-        try { if (_logPath is not null) File.AppendAllText(_logPath, line + Environment.NewLine); }
-        catch { /* logging must never crash the game */ }
+        try { if (_logPath is not null) File.AppendAllText(_logPath, line + Environment.NewLine); } catch { }
     }
 
     private static byte[] ReadEmbedded(string logicalName)
     {
-        Assembly asm = typeof(GoofyDemonMod).Assembly;
-        using Stream? s = asm.GetManifestResourceStream(logicalName);
+        using Stream? s = typeof(GoofyDemonMod).Assembly.GetManifestResourceStream(logicalName);
         if (s is null) return Array.Empty<byte>();
         using var ms = new MemoryStream();
         s.CopyTo(ms);

@@ -7,7 +7,6 @@
   <Project Path="DS1Mod/DS1Mod.HpLogger/DS1Mod.HpLogger.csproj" />
   <Project Path="DS1Mod/DS1Mod.AsylumSlam/DS1Mod.AsylumSlam.csproj" />
   <Project Path="DS1Mod/DS1Mod.GoofyDemon/DS1Mod.GoofyDemon.csproj" />
-  <Project Path="DS1Mod/DS1Mod.FartEntrance/DS1Mod.FartEntrance.csproj" />
   <Project Path="DS1MegaRando.Settings/DS1MegaRando.Settings.csproj" />
   <Project Path="DS1MegaRando.Annotations/DS1MegaRando.Annotations.csproj" />
   <Project Path="DS1MegaRando.Graph/DS1MegaRando.Graph.csproj" />
