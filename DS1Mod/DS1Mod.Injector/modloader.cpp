@@ -14,6 +14,10 @@ using load_asm_fn         = int (*)(const wchar_t*, const wchar_t*, const wchar_
 
 static constexpr int HDT_LOAD_ASSEMBLY = 4;
 
+// Sentinel: tells load_assembly_and_get_function_pointer that the target
+// method has [UnmanagedCallersOnly] — return a raw fn ptr, not a delegate.
+static constexpr const wchar_t* UNMANAGEDCALLERSONLY_METHOD = (const wchar_t*)-1;
+
 // ── logging (raw Win32 so it works even if CRT is weird) ──────────────────────
 
 static HANDLE g_logFile = INVALID_HANDLE_VALUE;
@@ -145,7 +149,7 @@ static int SafePfnLoad(load_asm_fn pfn,
     wchar_t exBuf[128] = {};
     __try
     {
-        return pfn(dll, type, method, nullptr, nullptr, out);
+        return pfn(dll, type, method, UNMANAGEDCALLERSONLY_METHOD, nullptr, out);
     }
     __except (FilterClr(GetExceptionInformation(), exBuf, 128))
     {
