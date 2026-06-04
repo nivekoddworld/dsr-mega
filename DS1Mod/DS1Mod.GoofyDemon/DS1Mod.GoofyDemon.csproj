@@ -18,5 +18,9 @@
     <EmbeddedResource Include="223200_battle.luac">
       <LogicalName>223200_battle.luac</LogicalName>
     </EmbeddedResource>
+    <!-- DS1 paramdefs, needed to edit params at runtime (game doesn't ship them) -->
+    <EmbeddedResource Include="paramdef.paramdefbnd.dcx">
+      <LogicalName>paramdef.paramdefbnd.dcx</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

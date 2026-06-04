@@ -25,6 +25,14 @@ The Asylum Demon has given up on being a boss. **One mod, everything:**
 Each mood now ends with a 2–3.5 s dwell, so a quick action (a flee, a single
 spin) can't finish instantly and snap to the next mood.
 
+## Demon's Dignity (lost)
+
+When the Asylum Demon dies he drops a new trinket, **"Demon's Dignity (lost)"** — the dignity he gave up by dancing. `Patch()` adds it across three systems:
+
+- **Params** (`param/GameParam/GameParam.parambnd.dcx`): a new `EquipParamGoods` row (8000, cloned from a vanilla valuable) and an `ItemLotParam` row (8500) that gives 1x of it, once-only via `getItemFlagId`. The DS1 paramdefs are embedded in the DLL since the game doesn't ship them.
+- **Text** (`msg/<lang>/item.msgbnd.dcx`): name + description at id 8000.
+- **EMEVD**: a new event awards the lot once flag 16 (demon dead) is set.
+
 ## How the mood HUD works
 
 The AI can't draw text itself, so each cycle it broadcasts its mood over event

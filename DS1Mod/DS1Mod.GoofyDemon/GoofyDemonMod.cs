@@ -22,7 +22,7 @@ namespace DS1Mod.GoofyDemon;
 public sealed class GoofyDemonMod : ModBase, IGamePatcher
 {
     public override string Name    => "Goofy Demon";
-    public override string Version => "1.1.2";
+    public override string Version => "1.2.0";
     public override string Author  => "DS1MegaRando";
 
     // ── AI swap ──
@@ -40,6 +40,18 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
     private const int EntranceEvt = 11810310;
     private const int DemonEntity = 1810800;
     private const int JumpAnim    = 9060;
+
+    // ── "Demon's Dignity (lost)" trinket, dropped when the demon dies ──
+    private const int  DignityGoodsId = 8000;
+    private const int  DignityLotId    = 8500;
+    private const int  DignityGetFlag  = 50009000;   // dedicated "item obtained" range
+    private const int  DemonDeadFlag   = 16;         // Asylum Demon kill flag
+    private const long DignityEvent    = 11819100;
+    private const string DignityName = "Demon's Dignity (lost)";
+    private const string DignityDesc = "All that remains of a demon's self-respect.";
+    private const string DignityLong = "The dignity of the Asylum Demon, irretrievably lost the day he chose "
+                                     + "the hokey pokey over honest violence.\n\nWeighs nothing. Worth nothing. "
+                                     + "He will never get it back. Now, neither will you.";
 
     // HUD text (game font — ASCII, no emoji). Indexed by mood.
     private static readonly string[] MoodHud =
@@ -69,9 +81,93 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         _logPath = SafeLog(ctx.ModsDir);
 
-        try { PatchLua(ctx); }   catch (Exception e) { Log($"AI swap failed: {e.Message}"); }
-        try { PatchFmgs(ctx); }  catch (Exception e) { Log($"FMG patch failed: {e.Message}"); }
-        try { PatchEmevd(ctx); } catch (Exception e) { Log($"EMEVD patch failed: {e.Message}"); }
+        try { PatchLua(ctx); }       catch (Exception e) { Log($"AI swap failed: {e.Message}"); }
+        try { PatchFmgs(ctx); }      catch (Exception e) { Log($"HUD FMG patch failed: {e.Message}"); }
+        try { PatchParams(ctx); }    catch (Exception e) { Log($"PARAM patch failed: {e.Message}"); }
+        try { PatchItemFmg(ctx); }   catch (Exception e) { Log($"item FMG patch failed: {e.Message}"); }
+        try { PatchEmevd(ctx); }     catch (Exception e) { Log($"EMEVD patch failed: {e.Message}"); }
+    }
+
+    // ── "Demon's Dignity" item: PARAMS (goods + item lot) ──────────────────────
+    private void PatchParams(IPatchContext ctx)
+    {
+        string path = Path.Combine(ctx.GameDir, "param", "GameParam", "GameParam.parambnd.dcx");
+        if (!File.Exists(path)) { Log("GameParam.parambnd not found — skipping dignity item."); return; }
+
+        var defs = new Dictionary<string, PARAMDEF>();
+        foreach (BinderFile f in BND3.Read(ReadEmbedded("paramdef.paramdefbnd.dcx")).Files)
+            try { PARAMDEF d = PARAMDEF.Read(f.Bytes); defs[d.ParamType] = d; } catch { }
+        if (defs.Count == 0) { Log("no paramdefs embedded — skipping dignity item."); return; }
+
+        ctx.BackupFile(path);
+        BND3 bnd = BND3.Read(DCX.Decompress(path, out DCX.Type dcx));
+
+        void Edit(string name, Action<PARAM> edit)
+        {
+            foreach (BinderFile f in bnd.Files)
+                if (BaseName(f.Name) == name)
+                {
+                    PARAM p = PARAM.Read(f.Bytes);
+                    if (!defs.TryGetValue(p.ParamType, out PARAMDEF? def)) return;
+                    p.ApplyParamdef(def); edit(p); f.Bytes = p.Write();
+                }
+        }
+
+        Edit("EquipParamGoods", p =>
+        {
+            p.Rows.RemoveAll(r => r.ID == DignityGoodsId);
+            PARAM.Row row = CloneRow(p, 384, DignityGoodsId, DignityName);  // 384 = a vanilla valuable
+            row["maxNum"].Value = (ushort)1;
+            p.Rows.Add(row); p.Rows.Sort((a, b) => a.ID.CompareTo(b.ID));
+        });
+        Edit("ItemLotParam", p =>
+        {
+            p.Rows.RemoveAll(r => r.ID == DignityLotId);
+            PARAM.Row row = CloneRow(p, 1000, DignityLotId, "Demon's Dignity drop");  // 1000 = a vanilla goods gift
+            row["lotItemId01"].Value = DignityGoodsId;
+            row["lotItemNum01"].Value = (byte)1;
+            row["getItemFlagId"].Value = DignityGetFlag;
+            p.Rows.Add(row); p.Rows.Sort((a, b) => a.ID.CompareTo(b.ID));
+        });
+
+        File.WriteAllBytes(path, DCX.Compress(bnd.Write(), dcx));
+        Log($"PARAMS: dignity goods {DignityGoodsId} + lot {DignityLotId} added.");
+    }
+
+    private static PARAM.Row CloneRow(PARAM p, int donorId, int newId, string newName)
+    {
+        PARAM.Row src = p[donorId];
+        var row = new PARAM.Row(newId, newName, p.AppliedParamdef);
+        for (int i = 0; i < src.Cells.Count; i++) row.Cells[i].Value = src.Cells[i].Value;
+        return row;
+    }
+
+    // ── "Demon's Dignity" item: name/description (item.msgbnd) ──────────────────
+    private void PatchItemFmg(IPatchContext ctx)
+    {
+        string msgRoot = Path.Combine(ctx.GameDir, "msg");
+        if (!Directory.Exists(msgRoot)) return;
+        foreach (string path in Directory.GetFiles(msgRoot, "item.msgbnd.dcx", SearchOption.AllDirectories))
+        {
+            ctx.BackupFile(path);
+            BND3 bnd = BND3.Read(DCX.Decompress(path, out DCX.Type dcx));
+            void Put(string fmgName, string text)
+            {
+                foreach (BinderFile f in bnd.Files)
+                    if (Path.GetFileName(f.Name.Replace('\\', '/')).Contains(fmgName))
+                    {
+                        FMG fmg = FMG.Read(f.Bytes);
+                        fmg.Entries.RemoveAll(e => e.ID == DignityGoodsId);
+                        fmg.Entries.Add(new FMG.Entry(DignityGoodsId, text));
+                        f.Bytes = fmg.Write();
+                    }
+            }
+            Put("Item_name", DignityName);
+            Put("Item_description", DignityDesc);
+            Put("Item_long_desc", DignityLong);
+            File.WriteAllBytes(path, DCX.Compress(bnd.Write(), dcx));
+            Log($"item text: dignity @ {DignityGoodsId} into {Path.GetFileName(Path.GetDirectoryName(path))}/item.msgbnd.");
+        }
     }
 
     private void PatchLua(IPatchContext ctx)
@@ -180,8 +276,29 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
             ev0.Instructions.InsertRange(0, inits);
             regs = inits.Count;
         }
+
+        // (c) "Demon's Dignity" drop: a new event that Awards the item lot once
+        //     the demon is dead (flag 16); registered at the top of event 0. The
+        //     lot's getItemFlagId keeps it once-only.
+        evd.Events.RemoveAll(e => e.ID == DignityEvent);
+        var dignity = new EMEVD.Event(DignityEvent, EMEVD.Event.RestBehaviorType.Default);
+        dignity.Instructions.Add(new EMEVD.Instruction(3, 0, new List<object> { (sbyte)0, (byte)1, (byte)0, DemonDeadFlag })); // IF flag 16 ON
+        dignity.Instructions.Add(new EMEVD.Instruction(2003, 4, new List<object> { DignityLotId }));                          // Award Item Lot
+        evd.Events.Add(dignity);
+        if (ev0 != null)
+        {
+            ev0.Instructions.RemoveAll(x => x.Bank == 2000 && x.ID == 0 && InitId(x) == DignityEvent);
+            ev0.Instructions.Insert(0, new EMEVD.Instruction(2000, 0, new List<object> { (int)0, (uint)DignityEvent, (uint)0 }));
+        }
+
         File.WriteAllBytes(path, DCX.Compress(evd.Write(), dcx));
-        Log($"mood HUD: {added} new events, {regs} registrations.");
+        Log($"mood HUD: {added} new events, {regs} registrations. + dignity drop event {DignityEvent}.");
+    }
+
+    private static string BaseName(string nm)
+    {
+        nm = nm.Replace('\\', '/'); nm = nm.Substring(nm.LastIndexOf('/') + 1);
+        int dot = nm.IndexOf('.'); return dot < 0 ? nm : nm.Substring(0, dot);
     }
 
     private static int MsgId(EMEVD.Instruction i) { try { return Convert.ToInt32(i.UnpackArgs(new[] { ArgType.Int32, ArgType.Byte })[0]); } catch { return -1; } }
