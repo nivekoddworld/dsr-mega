@@ -1,0 +1,320 @@
+=== m99_99_98_08.emevd | 30 events ===
+
+Event 0  (rest=Default) {
+    Register Bonfire(Event Flag ID=19900920, Entity ID=9901960, Reaction Distance=2, Reaction Angle=180, Set Standard Kindling Level=10)
+    Set SpEffect(Entity ID=9900010, SpEffect ID=5420)
+    Create Bullet Owner(Entity ID=9900030)
+    Initialize Event(Event Slot ID=0, Event ID=19905000, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905002, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905010, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905020, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905021, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905030, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905040, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905060, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905070, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905080, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905090, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905100, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905120, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905130, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905131, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905132, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905133, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905134, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905135, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905136, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905137, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905138, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905139, Parameters=0)
+}
+
+Event 19905000  (rest=Default) {
+    IF Action Button(Result Condition Group=MAIN(0), Target Entity Type=Area(1), Target Entity ID=9902100, Reaction Angle (deg)=0, Dummypoly ID=-1, Reaction Distance=0, Help Message ID=10010403, Reaction Type=All(255), Pad ID=0)
+    Character Warp Request(Entity ID=10000, Warp Type=Area(1), Warp Destination Entity ID=9902110, Dummypoly ID=-1)
+    IF Action Button(Result Condition Group=MAIN(0), Target Entity Type=Area(1), Target Entity ID=9902110, Reaction Angle (deg)=0, Dummypoly ID=-1, Reaction Distance=0, Help Message ID=10010403, Reaction Type=All(255), Pad ID=0)
+    Character Warp Request(Entity ID=10000, Warp Type=Area(1), Warp Destination Entity ID=9902100, Dummypoly ID=-1)
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905002  (rest=Default) {
+    IF In/Outside Area(Result Condition Group=MAIN(0), Desired State=Inside(1), Target Entity ID=10000, Area Entity ID=9902100)
+    Shoot Bullet(Bullet Team Entity ID=9900030, Bullet Producer Entity ID=9901200, Dummypoly ID=191, Behavior ID=5070, Firing Angle X=0, Firing Angle Y=0, Firing Angle Z=0)
+    WAIT Fixed Time (Seconds)(Time (Seconds)=0.7)
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905010  (rest=Default) {
+    IF Action Button(Result Condition Group=MAIN(0), Target Entity Type=Area(1), Target Entity ID=9902150, Reaction Angle (deg)=0, Dummypoly ID=0, Reaction Distance=0, Help Message ID=10010403, Reaction Type=All(255), Pad ID=0)
+    Request Object Destruction(Entity ID=9901410, Slot Number=1)
+    WAIT Fixed Time (Seconds)(Time (Seconds)=1)
+    Create Damaging Object(Event Flag ID=19905011, Entity ID=9901400, Dummypoly ID=191, Behavior ID=5060, Target=Character & Map(3), Radius=3, Lifespan=1, Repetition Time (s)=0)
+}
+
+Event 19905020  (rest=Default) {
+    IF In/Outside Area(Result Condition Group=MAIN(0), Desired State=Inside(1), Target Entity ID=10000, Area Entity ID=9902150)
+    Set Event State(Event ID=19905021, Event Slot ID=0, Event State=Restart(1))
+}
+
+Event 19905021  (rest=Default) {
+    Set Event Flag(Event Flag ID=19905022, Flag State=ON(1))
+    Set Event Flag(Event Flag ID=19905023, Flag State=ON(1))
+    Set Event Flag(Event Flag ID=19905024, Flag State=ON(1))
+    Set Event Flag(Event Flag ID=19905025, Flag State=ON(1))
+    IF Character Has Event Message(Result Condition Group=MAIN(0), Target Entity ID=10000, Event Message ID=9999, Should Have=TRUE(1))
+    Set Event Flag(Event Flag ID=19905026, Flag State=ON(1))
+    Set Event Flag(Event Flag ID=19905027, Flag State=ON(1))
+    Set Event Flag(Event Flag ID=19905028, Flag State=ON(1))
+}
+
+Event 19905030  (rest=Default) {
+    IF ObjAct Event Flag(Result Condition Group=MAIN(0), ObjAct Event Flag=400)
+    Request Animation Playback(Entity ID=10000, Animation ID=7410, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1))
+    Set ObjAct State(Entity ID=9904000, Object Parameter ID=-1, State=Enabled(1))
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905040  (rest=Default) {
+    IF ObjAct Event Flag(Result Condition Group=MAIN(0), ObjAct Event Flag=400)
+    SKIP IF Event Flag(Number Of Skipped Lines=2, Desired Flag State=ON(1), Target Event Flag Type=Event ID(1), Target Event Flag ID=0)
+    Set Character AI ID(Entity ID=9900050, AI ID=503)
+}
+
+Event 19905050  (rest=Default) {
+    IF Character Damaged By(Result Condition Group=MAIN(0), Target Entity ID=9900100, Attacker Entity ID=10000)
+    Force Animation Playback(Entity ID=9900100, Animation ID=3000, Should Loop=FALSE(0), Should Wait For Completion=FALSE(0), Ignore Wait For Transition=FALSE(0))
+}
+
+Event 19905060  (rest=Default) {
+    SKIP IF Event Flag(Number Of Skipped Lines=3, Desired Flag State=OFF(0), Target Event Flag Type=Event ID(1), Target Event Flag ID=0)
+    Initialize Event(Event Slot ID=-1, Event ID=19905061, Parameters=0)
+    Request Animation Playback(Entity ID=10000, Animation ID=6830, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1))
+    END Unconditionally(Execution End Type=Restart(1))
+    IF Action Button(Result Condition Group=MAIN(0), Target Entity Type=Area(1), Target Entity ID=9904002, Reaction Angle (deg)=0, Dummypoly ID=0, Reaction Distance=0, Help Message ID=10010403, Reaction Type=All(255), Pad ID=0)
+    Initialize Event(Event Slot ID=-1, Event ID=19905061, Parameters=0)
+    Request Animation Playback(Entity ID=10000, Animation ID=6820, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1))
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905061  (rest=Default) {
+    Set SpEffect(Entity ID=10000, SpEffect ID=3004)
+}
+
+Event 19905070  (rest=Default) {
+    IF All Players In/Outside Area(Result Condition Group=MAIN(0), Desired State=Inside(1), Area Entity ID=9904002)
+    Set Event Flag(Event Flag ID=19905070, Flag State=ON(1))
+    WAIT Fixed Time (Seconds)(Time (Seconds)=2)
+    Set Event Flag(Event Flag ID=19905070, Flag State=OFF(0))
+    WAIT Fixed Time (Seconds)(Time (Seconds)=2)
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905080  (rest=Default) {
+    IF In/Outside Area(Result Condition Group=AND_01(1), Desired State=Inside(1), Target Entity ID=10000, Area Entity ID=9902200)
+    IF In/Outside Area(Result Condition Group=AND_02(2), Desired State=Inside(1), Target Entity ID=10000, Area Entity ID=9902201)
+    IF In/Outside Area(Result Condition Group=AND_03(3), Desired State=Inside(1), Target Entity ID=10000, Area Entity ID=9902202)
+    IF Condition Group(Result Condition Group=OR_01(-1), Desired Condition Group State=PASS(1), Target Condition Group=AND_01(1))
+    IF Condition Group(Result Condition Group=OR_01(-1), Desired Condition Group State=PASS(1), Target Condition Group=AND_02(2))
+    IF Condition Group(Result Condition Group=OR_01(-1), Desired Condition Group State=PASS(1), Target Condition Group=AND_03(3))
+    IF Condition Group(Result Condition Group=MAIN(0), Desired Condition Group State=PASS(1), Target Condition Group=OR_01(-1))
+    SKIP IF Condition Group State (Compiled)(Number Of Skipped Lines=1, Desired Condition Group State=FAIL(0), Target Condition Group=AND_01(1))
+    Request Animation Playback(Entity ID=10000, Animation ID=6820, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1))
+    SKIP IF Condition Group State (Compiled)(Number Of Skipped Lines=1, Desired Condition Group State=FAIL(0), Target Condition Group=AND_02(2))
+    Request Animation Playback(Entity ID=10000, Animation ID=6825, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1))
+    SKIP IF Condition Group State (Compiled)(Number Of Skipped Lines=1, Desired Condition Group State=FAIL(0), Target Condition Group=AND_03(3))
+    Request Animation Playback(Entity ID=10000, Animation ID=6830, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1))
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905090  (rest=Default) {
+    IF Object Destroyed(Result Condition Group=MAIN(0), Damage State=Destroyed(1), Target Object Entity ID=9901420)
+    WAIT Fixed Time (Seconds)(Time (Seconds)=3)
+    Request Object Restoration(Entity ID=9901420)
+    Set Event Flag(Event Flag ID=19905090, Flag State=ON(1))
+    END IF Event Flag(Execution End Type=Restart(1), Desired Flag State=ON(1), Target Event Flag Type=Event ID(1), Target Event Flag ID=0)
+}
+
+Event 19905100  (rest=Default) {
+    IF Player Moving On Hit(Result Condition Group=AND_01(1), Hitbox Entity ID=9903000)
+    IF In/Outside Area(Result Condition Group=AND_01(1), Desired State=Inside(1), Target Entity ID=10000, Area Entity ID=9904002)
+    IF Player Attacking On Hit(Result Condition Group=AND_02(2), Hitbox Entity ID=9903000)
+    IF In/Outside Area(Result Condition Group=AND_02(2), Desired State=Inside(1), Target Entity ID=10000, Area Entity ID=9904002)
+    IF Condition Group(Result Condition Group=OR_01(-1), Desired Condition Group State=PASS(1), Target Condition Group=AND_01(1))
+    IF Condition Group(Result Condition Group=OR_01(-1), Desired Condition Group State=PASS(1), Target Condition Group=AND_02(2))
+    IF Condition Group(Result Condition Group=MAIN(0), Desired Condition Group State=PASS(1), Target Condition Group=OR_01(-1))
+    SKIP IF Condition Group State (Compiled)(Number Of Skipped Lines=2, Desired Condition Group State=PASS(1), Target Condition Group=AND_02(2))
+    Request Animation Playback(Entity ID=9903001, Animation ID=1750, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1))
+    END Unconditionally(Execution End Type=Restart(1))
+    Request Animation Playback(Entity ID=9903001, Animation ID=2000, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1))
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905109  (rest=Default) {
+    Set Character Immortality(Entity ID=9901430, Disabled/Enabled=Enabled(1))
+    Set Character AI State(Entity ID=9901431, Disabled/Enabled=Disabled(0))
+}
+
+Event 19905110  (rest=Default) {
+    IF Character Dead/Alive(Result Condition Group=AND_01(1), Target Entity ID=9901431, Desired Life State=Alive(0))
+    IF HP Ratio(Result Condition Group=AND_01(1), Target Entity ID=9901430, Comparison Type=Less(3), Target HP Ratio=0.1)
+    IF Event Flag(Result Condition Group=AND_02(2), Desired Flag State=ON(1), Target Event Flag Type=Event Flag(0), Target Event Flag ID=19905111)
+    IF Condition Group(Result Condition Group=OR_01(-1), Desired Condition Group State=PASS(1), Target Condition Group=AND_01(1))
+    IF Condition Group(Result Condition Group=OR_01(-1), Desired Condition Group State=PASS(1), Target Condition Group=AND_02(2))
+    IF Condition Group(Result Condition Group=MAIN(0), Desired Condition Group State=PASS(1), Target Condition Group=OR_01(-1))
+    END IF Condition Group State (Compiled)(Execution End Type=End(0), Desired Condition Group State=PASS(1), Target Condition Group=AND_02(2))
+    Force Animation Playback(Entity ID=9901430, Animation ID=9001, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1), Ignore Wait For Transition=FALSE(0))
+    Set Special Animation(s)(Entity ID=9901430, Waiting Animation=9001, Damage Animation=-1, Cancel Animation=-1, Death Animation=-1, Return Animation=-1)
+    WAIT Fixed Time (Seconds)(Time (Seconds)=3)
+    Set SpEffect(Entity ID=9901430, SpEffect ID=5450)
+    Set Special Animation(s)(Entity ID=9901430, Waiting Animation=-1, Damage Animation=-1, Cancel Animation=9061, Death Animation=-1, Return Animation=-1)
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905111  (rest=Default) {
+    END IF Event Flag(Execution End Type=End(0), Desired Flag State=ON(1), Target Event Flag Type=Event ID(1), Target Event Flag ID=0)
+    IF Character Dead/Alive(Result Condition Group=MAIN(0), Target Entity ID=9901431, Desired Life State=Dead(1))
+    Clear SpEffect(Entity ID=9901430, SpEffect ID=5451)
+    Set Character Immortality(Entity ID=9901430, Disabled/Enabled=Disabled(0))
+    Force Character Death(Entity ID=9901430, Should Receive Souls=TRUE(1))
+}
+
+Event 19905112  (rest=Default) {
+    IF Character Has SpEffect(Result Condition Group=AND_01(1), Target Entity ID=9901430, SpEffect ID=3200, Should Have=TRUE(1))
+    IF HP Ratio(Result Condition Group=AND_01(1), Target Entity ID=9901430, Comparison Type=Less(3), Target HP Ratio=0.1)
+    IF Condition Group(Result Condition Group=MAIN(0), Desired Condition Group State=PASS(1), Target Condition Group=AND_01(1))
+    Clear SpEffect(Entity ID=9901430, SpEffect ID=5451)
+    Set Character Immortality(Entity ID=9901430, Disabled/Enabled=Disabled(0))
+}
+
+Event 19905120  (rest=Default) {
+    IF Character Damaged By(Result Condition Group=MAIN(0), Target Entity ID=9900100, Attacker Entity ID=10000)
+    Set Event Flag(Event Flag ID=19905121, Flag State=ON(1))
+    WAIT Fixed Time (Seconds)(Time (Seconds)=3)
+    Set Event Flag(Event Flag ID=19905121, Flag State=OFF(0))
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905130  (rest=Default) {
+    IF ObjAct Event Flag(Result Condition Group=MAIN(0), ObjAct Event Flag=19905130)
+    Set ObjAct State(Entity ID=9901500, Object Parameter ID=6101, State=Enabled(1))
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905131  (rest=Default) {
+    IF ObjAct Event Flag(Result Condition Group=MAIN(0), ObjAct Event Flag=19905131)
+    Set ObjAct State(Entity ID=9901510, Object Parameter ID=-1, State=Enabled(1))
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905132  (rest=Default) {
+    SKIP IF Event Flag(Number Of Skipped Lines=1, Desired Flag State=ON(1), Target Event Flag Type=Event Flag(0), Target Event Flag ID=19905134)
+    Set ObjAct State(Entity ID=9901520, Object Parameter ID=3012, State=Disabled(0))
+    IF ObjAct Event Flag(Result Condition Group=MAIN(0), ObjAct Event Flag=19905132)
+    SKIP IF Event Flag(Number Of Skipped Lines=3, Desired Flag State=ON(1), Target Event Flag Type=Event Flag(0), Target Event Flag ID=19905134)
+    Set Event Flag(Event Flag ID=19905134, Flag State=ON(1))
+    Set ObjAct State(Entity ID=9901520, Object Parameter ID=3012, State=Enabled(1))
+    END Unconditionally(Execution End Type=Restart(1))
+    Set Event Flag(Event Flag ID=19905134, Flag State=OFF(0))
+    Set ObjAct State(Entity ID=9901520, Object Parameter ID=3011, State=Enabled(1))
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905133  (rest=Default) {
+    IF Action Button(Result Condition Group=AND_01(1), Target Entity Type=Object(0), Target Entity ID=9901530, Reaction Angle (deg)=60, Dummypoly ID=104, Reaction Distance=1.5, Help Message ID=10010502, Reaction Type=All(255), Pad ID=0)
+    IF Action Button(Result Condition Group=AND_02(2), Target Entity Type=Object(0), Target Entity ID=9901530, Reaction Angle (deg)=60, Dummypoly ID=102, Reaction Distance=1.5, Help Message ID=10010502, Reaction Type=All(255), Pad ID=0)
+    IF Condition Group(Result Condition Group=OR_01(-1), Desired Condition Group State=PASS(1), Target Condition Group=AND_01(1))
+    IF Condition Group(Result Condition Group=OR_01(-1), Desired Condition Group State=PASS(1), Target Condition Group=AND_02(2))
+    IF Condition Group(Result Condition Group=MAIN(0), Desired Condition Group State=PASS(1), Target Condition Group=OR_01(-1))
+    SKIP IF Condition Group State (Compiled)(Number Of Skipped Lines=23, Desired Condition Group State=FAIL(0), Target Condition Group=AND_01(1))
+    Character Warp Request(Entity ID=10000, Warp Type=Object(0), Warp Destination Entity ID=9901530, Dummypoly ID=101)
+    Force Animation Playback(Entity ID=10000, Animation ID=8020, Should Loop=FALSE(0), Should Wait For Completion=FALSE(0), Ignore Wait For Transition=FALSE(0))
+    Spawn Oneshot SFX(Entity Type=Object(0), Entity ID=9901530, Dummypoly ID=-1, SFX ID=150001)
+    SKIP IF Event Flag(Number Of Skipped Lines=4, Desired Flag State=OFF(0), Target Event Flag Type=Event Flag(0), Target Event Flag ID=19905138)
+    Force Animation Playback(Entity ID=9901530, Animation ID=3, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1), Ignore Wait For Transition=FALSE(0))
+    Set Event Flag(Event Flag ID=19905138, Flag State=OFF(0))
+    Set Event Flag(Event Flag ID=19905135, Flag State=OFF(0))
+    END Unconditionally(Execution End Type=Restart(1))
+    SKIP IF Event Flag(Number Of Skipped Lines=4, Desired Flag State=OFF(0), Target Event Flag Type=Event Flag(0), Target Event Flag ID=19905137)
+    Force Animation Playback(Entity ID=9901530, Animation ID=2, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1), Ignore Wait For Transition=FALSE(0))
+    Set Event Flag(Event Flag ID=19905137, Flag State=OFF(0))
+    Set Event Flag(Event Flag ID=19905138, Flag State=ON(1))
+    END Unconditionally(Execution End Type=Restart(1))
+    SKIP IF Event Flag(Number Of Skipped Lines=4, Desired Flag State=OFF(0), Target Event Flag Type=Event Flag(0), Target Event Flag ID=19905136)
+    Force Animation Playback(Entity ID=9901530, Animation ID=1, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1), Ignore Wait For Transition=FALSE(0))
+    Set Event Flag(Event Flag ID=19905136, Flag State=OFF(0))
+    Set Event Flag(Event Flag ID=19905137, Flag State=ON(1))
+    END Unconditionally(Execution End Type=Restart(1))
+    SKIP IF Event Flag(Number Of Skipped Lines=4, Desired Flag State=ON(1), Target Event Flag Type=Event Flag(0), Target Event Flag ID=19905135)
+    Force Animation Playback(Entity ID=9901530, Animation ID=0, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1), Ignore Wait For Transition=FALSE(0))
+    Set Event Flag(Event Flag ID=19905135, Flag State=ON(1))
+    Set Event Flag(Event Flag ID=19905136, Flag State=ON(1))
+    END Unconditionally(Execution End Type=Restart(1))
+    END IF Condition Group State (Compiled)(Execution End Type=Restart(1), Desired Condition Group State=FAIL(0), Target Condition Group=AND_02(2))
+    Character Warp Request(Entity ID=10000, Warp Type=Object(0), Warp Destination Entity ID=9901530, Dummypoly ID=103)
+    Force Animation Playback(Entity ID=10000, Animation ID=8021, Should Loop=FALSE(0), Should Wait For Completion=FALSE(0), Ignore Wait For Transition=FALSE(0))
+    Spawn Oneshot SFX(Entity Type=Object(0), Entity ID=9901530, Dummypoly ID=-1, SFX ID=150001)
+    SKIP IF Event Flag(Number Of Skipped Lines=4, Desired Flag State=OFF(0), Target Event Flag Type=Event Flag(0), Target Event Flag ID=19905138)
+    Force Animation Playback(Entity ID=9901530, Animation ID=5, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1), Ignore Wait For Transition=FALSE(0))
+    Set Event Flag(Event Flag ID=19905138, Flag State=OFF(0))
+    Set Event Flag(Event Flag ID=19905137, Flag State=ON(1))
+    END Unconditionally(Execution End Type=Restart(1))
+    SKIP IF Event Flag(Number Of Skipped Lines=4, Desired Flag State=ON(1), Target Event Flag Type=Event Flag(0), Target Event Flag ID=19905135)
+    Force Animation Playback(Entity ID=9901530, Animation ID=4, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1), Ignore Wait For Transition=FALSE(0))
+    Set Event Flag(Event Flag ID=19905135, Flag State=ON(1))
+    Set Event Flag(Event Flag ID=19905138, Flag State=ON(1))
+    END Unconditionally(Execution End Type=Restart(1))
+    SKIP IF Event Flag(Number Of Skipped Lines=4, Desired Flag State=OFF(0), Target Event Flag Type=Event Flag(0), Target Event Flag ID=19905136)
+    Force Animation Playback(Entity ID=9901530, Animation ID=7, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1), Ignore Wait For Transition=FALSE(0))
+    Set Event Flag(Event Flag ID=19905136, Flag State=OFF(0))
+    Set Event Flag(Event Flag ID=19905135, Flag State=OFF(0))
+    END Unconditionally(Execution End Type=Restart(1))
+    SKIP IF Event Flag(Number Of Skipped Lines=4, Desired Flag State=OFF(0), Target Event Flag Type=Event Flag(0), Target Event Flag ID=19905137)
+    Force Animation Playback(Entity ID=9901530, Animation ID=6, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1), Ignore Wait For Transition=FALSE(0))
+    Set Event Flag(Event Flag ID=19905137, Flag State=OFF(0))
+    Set Event Flag(Event Flag ID=19905136, Flag State=ON(1))
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905134  (rest=Default) {
+    IF ObjAct Event Flag(Result Condition Group=MAIN(0), ObjAct Event Flag=19905134)
+    Set ObjAct State(Entity ID=9901560, Object Parameter ID=-1, State=Enabled(1))
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905135  (rest=Default) {
+    IF Action Button(Result Condition Group=MAIN(0), Target Entity Type=Object(0), Target Entity ID=9901540, Reaction Angle (deg)=60, Dummypoly ID=100, Reaction Distance=3, Help Message ID=10010400, Reaction Type=All(255), Pad ID=0)
+    Rotate Character(Entity ID=10000, Relative Entity ID=9901540)
+    Force Animation Playback(Entity ID=10000, Animation ID=7114, Should Loop=FALSE(0), Should Wait For Completion=FALSE(0), Ignore Wait For Transition=FALSE(0))
+    Force Animation Playback(Entity ID=9901540, Animation ID=1, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1), Ignore Wait For Transition=FALSE(0))
+    Force Animation Playback(Entity ID=9901540, Animation ID=0, Should Loop=FALSE(0), Should Wait For Completion=FALSE(0), Ignore Wait For Transition=FALSE(0))
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905136  (rest=Default) {
+    IF Action Button(Result Condition Group=MAIN(0), Target Entity Type=Object(0), Target Entity ID=9901550, Reaction Angle (deg)=30, Dummypoly ID=100, Reaction Distance=1.5, Help Message ID=10010400, Reaction Type=All(255), Pad ID=0)
+    Character Warp Request(Entity ID=10000, Warp Type=Object(0), Warp Destination Entity ID=9901550, Dummypoly ID=120)
+    Force Animation Playback(Entity ID=10000, Animation ID=7120, Should Loop=FALSE(0), Should Wait For Completion=FALSE(0), Ignore Wait For Transition=FALSE(0))
+    Force Animation Playback(Entity ID=9901550, Animation ID=1, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1), Ignore Wait For Transition=FALSE(0))
+    Force Animation Playback(Entity ID=9901550, Animation ID=0, Should Loop=FALSE(0), Should Wait For Completion=FALSE(0), Ignore Wait For Transition=FALSE(0))
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905137  (rest=Default) {
+    IF Action Button(Result Condition Group=MAIN(0), Target Entity Type=Area(1), Target Entity ID=9902210, Reaction Angle (deg)=0, Dummypoly ID=-1, Reaction Distance=0, Help Message ID=10010403, Reaction Type=All(255), Pad ID=0)
+    Rotate Character(Entity ID=10000, Relative Entity ID=9902211)
+    Force Animation Playback(Entity ID=10000, Animation ID=7410, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1), Ignore Wait For Transition=FALSE(0))
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905138  (rest=Default) {
+    IF In/Outside Area(Result Condition Group=MAIN(0), Desired State=Inside(1), Target Entity ID=10000, Area Entity ID=9904002)
+    Set Character Invincibility(Entity ID=10000, Disabled/Enabled=Enabled(1))
+    IF In/Outside Area(Result Condition Group=MAIN(0), Desired State=Outside(0), Target Entity ID=10000, Area Entity ID=9904002)
+    Set Character Invincibility(Entity ID=10000, Disabled/Enabled=Disabled(0))
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905139  (rest=Default) {
+    Create Referred Damage Pair(Source Entity ID=9900040, Target Entity ID=9900100)
+}
+

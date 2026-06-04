@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>DS1Mod.GoofyDemon</AssemblyName>
+    <RootNamespace>DS1Mod.GoofyDemon</RootNamespace>
+    <Description>Goofy Demon — the Asylum Demon would rather dance than fight.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DS1Mod.SDK\DS1Mod.SDK.csproj" />
+    <ProjectReference Include="..\..\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Precompiled Lua 5.0 bytecode (built on Linux, DSR-compatible) -->
+    <EmbeddedResource Include="223200_battle.luac">
+      <LogicalName>223200_battle.luac</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,22 @@
+=== m99_80_10_00.emevd | 3 events ===
+
+Event 0  (rest=Default) {
+    Initialize Event(Event Slot ID=0, Event ID=19905000, Parameters=0)
+    Initialize Event(Event Slot ID=0, Event ID=19905001, Parameters=0)
+    Set Event Flag(Event Flag ID=19905002, Flag State=ON(1))
+}
+
+Event 19905000  (rest=Default) {
+    Create NPC Part(Entity ID=9900100, NPC Part ID=0, NPC Part Group Index=Part 2(2), NPC Part HP=300, Damage Correction=1, Body Damage Compensation=1, Is Invincible=FALSE(0), Start In Stopped State=FALSE(0))
+    IF NPC Part HP(Result Condition Group=MAIN(0), Target Entity ID=9900100, NPC Part ID=0, HP Threshold=0, Comparison Type=LessOrEqual(5))
+    Request Animation Playback(Entity ID=9900100, Animation ID=3011, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1))
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
+Event 19905001  (rest=Default) {
+    Create NPC Part(Entity ID=9900100, NPC Part ID=1, NPC Part Group Index=Part 1(1), NPC Part HP=300, Damage Correction=1, Body Damage Compensation=1, Is Invincible=FALSE(0), Start In Stopped State=FALSE(0))
+    IF NPC Part HP(Result Condition Group=MAIN(0), Target Entity ID=9900100, NPC Part ID=1, HP Threshold=0, Comparison Type=LessOrEqual(5))
+    Request Animation Playback(Entity ID=9900100, Animation ID=2013, Should Loop=FALSE(0), Should Wait For Completion=TRUE(1))
+    END Unconditionally(Execution End Type=Restart(1))
+}
+

@@ -1,0 +1,18 @@
+=== m99_80_00_00.emevd | 2 events ===
+
+Event 0  (rest=Default) {
+    Initialize Event(Event Slot ID=0, Event ID=19995000, Parameters=0)
+}
+
+Event 19995000  (rest=Default) {
+    IF In/Outside Area(Result Condition Group=OR_01(-1), Desired State=Inside(1), Target Entity ID=10000, Area Entity ID=9902300)
+    IF Object Hit By(Result Condition Group=OR_01(-1), Target Entity ID=9901000, Attacker Entity ID=10000)
+    IF Event Flag(Result Condition Group=OR_01(-1), Desired Flag State=ON(1), Target Event Flag Type=Event Flag(0), Target Event Flag ID=2)
+    IF Condition Group(Result Condition Group=MAIN(0), Desired Condition Group State=PASS(1), Target Condition Group=OR_01(-1))
+    Set Event Flag(Event Flag ID=2, Flag State=OFF(0))
+    Spawn Oneshot SFX(Entity Type=Object(0), Entity ID=9901000, Dummypoly ID=1, SFX ID=20288)
+    Create Damaging Object(Event Flag ID=19995001, Entity ID=9901000, Dummypoly ID=1, Behavior ID=5020, Target=Character(1), Radius=3, Lifespan=0.5, Repetition Time (s)=0)
+    IF In/Outside Area(Result Condition Group=MAIN(0), Desired State=Outside(0), Target Entity ID=10000, Area Entity ID=9902300)
+    END Unconditionally(Execution End Type=Restart(1))
+}
+
