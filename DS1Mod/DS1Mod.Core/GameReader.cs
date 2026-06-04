@@ -31,18 +31,20 @@ public sealed class GameReader : IGameReader
 
         DsrVersion.Ensure();
         int b2 = DsrVersion.ChrData1Boost2;
-        int   hp    = GameMemory.Read<int>  (chr + Offsets.Chr_HpOff         + b2);
-        int   maxHp = GameMemory.Read<int>  (chr + Offsets.Chr_MaxHpOff      + b2);
-        float st    = GameMemory.Read<float>(chr + Offsets.Chr_StaminaOff    + b2);
-        float maxSt = GameMemory.Read<float>(chr + Offsets.Chr_MaxStaminaOff + b2);
+        int hp    = GameMemory.Read<int>(chr + Offsets.Chr_HpOff         + b2);
+        int maxHp = GameMemory.Read<int>(chr + Offsets.Chr_MaxHpOff      + b2);
+        // Stamina is stored as int32 (like HP), not float — reading it as float
+        // yields denormals that print as 0 but keep a correct ratio.
+        int st    = GameMemory.Read<int>(chr + Offsets.Chr_StaminaOff    + b2);
+        int maxSt = GameMemory.Read<int>(chr + Offsets.Chr_MaxStaminaOff + b2);
 
         if (maxHp <= 0 || maxHp > 99_999) return null;
 
         return new PlayerStats(
             Math.Clamp(hp, 0, maxHp),
             maxHp,
-            Math.Clamp(st, 0f, maxSt),
-            Math.Max(maxSt, 0f));
+            Math.Clamp(st, 0, Math.Max(maxSt, 0)),
+            Math.Max(maxSt, 0));
     }
 
     public int GetSoulLevel()
