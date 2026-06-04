@@ -19,17 +19,26 @@ set "PUB_INJECTOR=%PUB%\injector"
 set "PUB_APP=%PUB%\app"
 set "UI_OUT=%REPO%DS1MegaRando.UI\bin\Release\net8.0-windows"
 
-:: ── Locate MSBuild (via vswhere → PATH fallback) ──────────────────────────
+:: ── Locate MSBuild (vswhere → PATH fallback) ──────────────────────────────
 set "MSBUILD="
 set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
 if exist "%VSWHERE%" (
     for /f "usebackq delims=" %%i in (
-        `"%VSWHERE%" -latest -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe" 2^>nul`
-    ) do set "MSBUILD=%%i"
+        `"%VSWHERE%" -latest -property installationPath`
+    ) do (
+        if exist "%%i\MSBuild\Current\Bin\MSBuild.exe" (
+            set "MSBUILD=%%i\MSBuild\Current\Bin\MSBuild.exe"
+        )
+    )
 )
 if not defined MSBUILD (
     where msbuild >nul 2>&1
     if not errorlevel 1 set "MSBUILD=msbuild"
+)
+if defined MSBUILD (
+    echo [INFO] MSBuild: !MSBUILD!
+) else (
+    echo [INFO] MSBuild: not found
 )
 
 echo.
