@@ -126,19 +126,30 @@ static std::wstring GetHostDllPath()
 
 // ── SEH-safe wrappers (no C++ objects → __try allowed) ───────────────────────
 
+// Extract HRESULT from CLR exception record so we know WHICH .NET exception fired.
+// ExceptionInformation[1] holds the HRESULT for code 0xE0434352.
+static LONG FilterClr(EXCEPTION_POINTERS* ep, wchar_t* buf, int bufLen)
+{
+    DWORD code = ep->ExceptionRecord->ExceptionCode;
+    DWORD hr   = (ep->ExceptionRecord->NumberParameters >= 2)
+                 ? (DWORD)ep->ExceptionRecord->ExceptionInformation[1]
+                 : 0;
+    swprintf_s(buf, bufLen, L"EXCEPTION 0x%08X  HRESULT 0x%08X", code, hr);
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
 static int SafePfnLoad(load_asm_fn pfn,
                        const wchar_t* dll, const wchar_t* type,
                        const wchar_t* method, void** out)
 {
+    wchar_t exBuf[128] = {};
     __try
     {
         return pfn(dll, type, method, nullptr, nullptr, out);
     }
-    __except (EXCEPTION_EXECUTE_HANDLER)
+    __except (FilterClr(GetExceptionInformation(), exBuf, 128))
     {
-        wchar_t buf[64];
-        swprintf_s(buf, L"EXCEPTION in pfn_load: 0x%08X", GetExceptionCode());
-        Log(buf);
+        Log(exBuf);
         return -1;
     }
 }
@@ -146,15 +157,14 @@ static int SafePfnLoad(load_asm_fn pfn,
 static int SafeInitialize(int (*fn)(const wchar_t*, int),
                           const wchar_t* gameDir, int bytes)
 {
+    wchar_t exBuf[128] = {};
     __try
     {
         return fn(gameDir, bytes);
     }
-    __except (EXCEPTION_EXECUTE_HANDLER)
+    __except (FilterClr(GetExceptionInformation(), exBuf, 128))
     {
-        wchar_t buf[64];
-        swprintf_s(buf, L"EXCEPTION in Initialize: 0x%08X", GetExceptionCode());
-        Log(buf);
+        Log(exBuf);
         return -1;
     }
 }
