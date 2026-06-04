@@ -1,5 +1,11 @@
 # Editing event scripts (EMEVD / "DarkScript")
 
+> **Shortcut:** if you're writing a patcher mod, `DS1Mod.Modding`'s `EmevdEditor`
+> handles the common patterns (idempotent injection, new-event registration at the
+> constructor top, the flag-section guard) for you. See
+> [writing-a-patcher-mod.md](writing-a-patcher-mod.md#5-editing-emevd-event-scripts).
+> This guide explains the raw mechanics underneath.
+
 Map logic — boss intros, fog gates, triggers, item awards, on-screen text — is
 **EMEVD**, a compiled event bytecode. It is **not** Lua. "DarkScript" is just the
 human-readable *decompiled* form of EMEVD.

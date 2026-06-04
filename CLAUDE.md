@@ -42,7 +42,10 @@ Entry point: `DS1MegaRando.UI` → `MegaRandomizer.cs` orchestrates everything.
 | `DS1Mod/framework/DS1Mod.Core/GameMemory.cs` | Direct in-process pointer reads/writes (no ReadProcessMemory) |
 | `DS1Mod/framework/DS1Mod.Core/GamePointers.cs` | AOB scan to resolve DSR version-specific base pointers |
 | `DS1Mod/framework/DS1Mod.Core/EventPump.cs` | 500 ms poll loop; fires `BossKilled`, `FogGateEntered`, `PlayerDied`, `PlayerLeveledUp` |
+| `DS1Mod/framework/DS1Mod.Core/IGuiMod.cs` | Interface for ImGui overlay mods — `OnGui()` called every frame on the render thread |
 | `DS1Mod/framework/DS1Mod.SDK/ModBase.cs` | Abstract base class for mods — implement `Name/Version/Author` and override hooks |
+| `DS1Mod/framework/DS1Mod.Rendering/ImGuiRenderer.cs` | Bridges C++ Present hook → managed `IGuiMod` mods |
+| `DS1Mod/framework/DS1Mod.Modding/GamePatch.cs` | DCX round-trip + backup wrapper for PARAM/FMG/EMEVD/Lua edits |
 
 ## Bundled Mods
 
@@ -53,7 +56,8 @@ Entry point: `DS1MegaRando.UI` → `MegaRandomizer.cs` orchestrates everything.
 | `DS1Mod/mods/DS1Mod.HpLogger` | Polls player HP each tick; logs changes with delta and session minimum |
 | `DS1Mod/mods/DS1Mod.DiscordRPC` | Discord Rich Presence — shows current activity, deaths, last boss, session time |
 | `DS1Mod/mods/DS1Mod.AsylumSlam` | Asylum Demon slam-only AI (implements `IGamePatcher`, swaps the luabnd at load) |
-| `DS1Mod/mods/DS1Mod.GoofyDemon` | Asylum Demon with 10 random moods + on-screen HUD + fart entrance (v1.1.x) |
+| `DS1Mod/mods/DS1Mod.GoofyDemon` | Asylum Demon with 10 random moods + on-screen HUD + fart entrance + trinket drop (v1.3) |
+| `DS1Mod/mods/DS1Mod.ImGuiDemo` | Minimal ImGui overlay mod — HP stats panel + debug window, template for `IGuiMod` |
 
 ## Ground Truth References
 

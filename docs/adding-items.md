@@ -1,8 +1,13 @@
 # Adding a new item
 
+> **Shortcut:** if you're writing a patcher mod, `DS1Mod.Modding` wraps all of
+> this into ~15 lines. See [writing-a-patcher-mod.md](writing-a-patcher-mod.md)
+> for the high-level path. This guide explains the raw SoulsFormats mechanics
+> underneath.
+
 A new item spans three systems, all editable on Linux with SoulsFormats. The
 worked example is **"Demon's Dignity (lost)"** — a trinket the Asylum Demon drops
-when he dies (see `DS1Mod.GoofyDemon`).
+when he dies (see `DS1Mod/mods/DS1Mod.GoofyDemon`).
 
 | Step | File | Role |
 |---|---|---|

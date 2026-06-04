@@ -2,7 +2,7 @@
 
 Field notes from modding **Dark Souls Remastered** — everything worked out in
 this repo, with a hard rule: **all of it runs on Linux** (no Windows GUI tools),
-using [SoulsFormats](../SoulsFormats) for the file formats.
+using [SoulsFormats](../lib/SoulsFormats) for the file formats.
 
 These docs are practical and grounded in things that actually shipped here (the
 `DS1Mod.GoofyDemon` mod), including the gotchas that cost real debugging time.
@@ -13,11 +13,13 @@ These docs are practical and grounded in things that actually shipped here (the
 |---|---|
 | [lua-ai-scripts.md](lua-ai-scripts.md) | Enemy/boss **AI** — decompile, edit, **compile Lua 5.0 on Linux**, repack the `luabnd` |
 | [emevd-events.md](emevd-events.md) | **Event scripts** (EMEVD / "DarkScript") — decompile, edit, **add brand-new events**, on-screen text |
-| [adding-items.md](adding-items.md) | **New items** — params, item text, drops/awards |
+| [adding-items.md](adding-items.md) | **New items** — params, item text, drops/awards (low-level SoulsFormats approach) |
+| [writing-a-patcher-mod.md](writing-a-patcher-mod.md) | Full `IGamePatcher` walkthrough using **DS1Mod.Modding** — from project setup to shipping a DLL |
+| [imgui-overlay.md](imgui-overlay.md) | **ImGui overlay mods** — `IGuiMod`, `DS1ImGui` wrapper, thread safety, stats panels |
 
 ## The helper library
 
-[`DS1Mod.Modding`](../DS1Mod/DS1Mod.Modding/) wraps all the patterns below (DCX round-trip, idempotent FMG/PARAM/EMEVD edits, the constructor and flag-section gotchas) into a small API, so a new data mod is ~50 lines. The guides here explain *what's going on underneath*; the library is the *how*.
+[`DS1Mod.Modding`](../DS1Mod/framework/DS1Mod.Modding/) wraps all the patterns below (DCX round-trip, idempotent FMG/PARAM/EMEVD edits, the constructor and flag-section gotchas) into a small API, so a new data mod is ~50 lines. The guides here explain *what's going on underneath*; the library is the *how*.
 
 ## The three scripting systems (don't mix them up)
 
@@ -74,7 +76,8 @@ edits the real game files in place at launch. The rules we follow:
 
 ## Where the worked examples live
 
-- `ds1_ai_mods/` — the goofy AI source + the Linux `luac` build scripts
-- `decompiled_lua/` — every AI script, decompiled
-- `decompiled_emevd/` + `event_tools/` — every event script, decompiled, + the decompiler
-- `DS1Mod/DS1Mod.GoofyDemon/` — one mod that does AI + EMEVD + FMG + PARAM edits
+- `../tools/ds1_ai_mods/` — the goofy AI source + the Linux `luac` build scripts
+- `../gamedata/decompiled_lua/` — every AI script, decompiled
+- `../gamedata/decompiled_emevd/` + `../tools/event_tools/` — every event script, decompiled, + the decompiler
+- `../DS1Mod/mods/DS1Mod.GoofyDemon/` — one mod that does AI + EMEVD + FMG + PARAM edits
+- `../DS1Mod/mods/DS1Mod.ImGuiDemo/` — minimal ImGui overlay mod template
