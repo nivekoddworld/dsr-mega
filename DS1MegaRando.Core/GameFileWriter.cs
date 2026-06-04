@@ -6,6 +6,7 @@ using DS1MegaRando.Items;
 using DS1MegaRando.Settings;
 using DS1MegaRando.Data.Enemies;
 using DS1MegaRando.Data.Items;
+using DS1MegaRando.Core;
 using SoulsFormats;
 
 namespace DS1MegaRando.IO;
