@@ -8,9 +8,10 @@
 -- mood-flag block, then set exactly one, so any watcher (the C# mod's console
 -- readout, or an EMEVD event) can tell which mood is active.
 --
--- Flags 15105610..15105619 are an unused range from the Kiln (per FogMod) that
--- vanilla never reads — safe to scribble on. (Don't run alongside FogMod's
--- region-flag remapping, which reuses the same base.)
+-- Flags 11817000..11817009 are m18_01 (Undead Asylum) local event flags in a
+-- high, vanilla-unused range. This range matters: it must be decodable by the
+-- mod framework's event-flag reader (group 1, area 181), which the old Kiln
+-- range (15105610) was NOT — that's why the readout showed nothing.
 --
 -- All sub-goals use call signatures lifted verbatim from the vanilla
 -- Asylum/Stray Demon AI, so every animation exists on this model.
@@ -21,17 +22,17 @@ REGISTER_GOAL_NO_UPDATE(GOAL_MiniGreaterDemon223200_Battle, 1)
 -- Broadcast mood index n (0-based) over the mood-flag block: clear all ten,
 -- then set exactly one. Unrolled (no loop) so it round-trips cleanly.
 function GoofyDemon_SetMood(ai, n)
-    ai:SetEventFlag(15105610, false)
-    ai:SetEventFlag(15105611, false)
-    ai:SetEventFlag(15105612, false)
-    ai:SetEventFlag(15105613, false)
-    ai:SetEventFlag(15105614, false)
-    ai:SetEventFlag(15105615, false)
-    ai:SetEventFlag(15105616, false)
-    ai:SetEventFlag(15105617, false)
-    ai:SetEventFlag(15105618, false)
-    ai:SetEventFlag(15105619, false)
-    ai:SetEventFlag(15105610 + n, true)
+    ai:SetEventFlag(11817000, false)
+    ai:SetEventFlag(11817001, false)
+    ai:SetEventFlag(11817002, false)
+    ai:SetEventFlag(11817003, false)
+    ai:SetEventFlag(11817004, false)
+    ai:SetEventFlag(11817005, false)
+    ai:SetEventFlag(11817006, false)
+    ai:SetEventFlag(11817007, false)
+    ai:SetEventFlag(11817008, false)
+    ai:SetEventFlag(11817009, false)
+    ai:SetEventFlag(11817000 + n, true)
 end
 
 function MiniGreaterDemon223200Battle_Activate(ai, goal)

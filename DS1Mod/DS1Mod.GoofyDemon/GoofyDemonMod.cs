@@ -8,18 +8,15 @@ namespace DS1Mod.GoofyDemon;
 
 /// <summary>
 /// GOOFY DEMON. Replaces the Asylum Demon (entity 223200) AI with one that has
-/// given up on being a boss: it mostly shimmies, breakdance-spins, sprints away
-/// in terror, gets the zoomies, does the hokey pokey, freezes with stage
-/// fright, runs a premature victory lap, has existential crises — and only
-/// rarely actually attacks.
+/// given up on being a boss, and prints its current "mood" live.
 ///
-/// Two jobs:
 ///   1. IGamePatcher.Patch() — at launch, swap the compiled 223200_battle.lua
-///      inside script/m18_01_00_00.luabnd.dcx for our embedded bytecode and
-///      repack (SoulsFormats). The vanilla archive is backed up first.
-///   2. OnTick() — the demon's AI broadcasts its current mood over an unused
-///      event-flag block each cycle; we poll it and print the live mood to the
-///      mod console window.
+///      inside script/m18_01_00_00.luabnd.dcx for our embedded bytecode.
+///   2. OnTick() — the AI broadcasts its mood over event flags 11817000..09;
+///      we poll them and report the active mood.
+///
+/// All output goes to BOTH the console window and a log file
+/// (&lt;ModsDir&gt;/GoofyDemon.log), so it's visible even if the console isn't.
 /// </summary>
 public sealed class GoofyDemonMod : ModBase, IGamePatcher
 {
@@ -31,10 +28,10 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
     private const string EntryLeaf   = "223200_battle.lua";
     private const string ResourceLua = "223200_battle.luac";
 
-    // Mood broadcast: the AI clears all ten flags then sets exactly one each
-    // cycle. Must match GoofyDemon_SetMood() in goofy_demon.lua. Unused Kiln
-    // range per FogMod (vanilla never reads these).
-    private const int MoodFlagBase = 15105610;
+    // Mood broadcast. Must match GoofyDemon_SetMood() in goofy_demon.lua.
+    // m18_01 (area 181) local flags — chosen so the framework's event-flag
+    // reader (group 1 / area 181) can actually decode them.
+    private const int MoodFlagBase = 11817000;
     private static readonly string[] MoodNames =
     {
         "💃 The Shimmy",          // 0
@@ -50,27 +47,26 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
     };
 
     private IModContext? _ctx;
+    private string? _logPath;
     private int _lastMood = -1;
+    private long _tick;
 
     // ── IGamePatcher ──────────────────────────────────────────────────────────
 
     public void Patch(IPatchContext ctx)
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        SetLogPath(ctx.ModsDir);
 
         string path = Path.Combine(ctx.GameDir, "script", LuaBnd);
         if (!File.Exists(path))
         {
-            ctx.Log($"[GoofyDemon] {path} not found — is the game UXM-extracted? Skipping.");
+            Log($"Patch: {path} not found — is the game UXM-extracted? Skipping.");
             return;
         }
 
         byte[] replacement = ReadEmbedded(ResourceLua);
-        if (replacement.Length == 0)
-        {
-            ctx.Log("[GoofyDemon] embedded bytecode missing — skipping.");
-            return;
-        }
+        if (replacement.Length == 0) { Log("Patch: embedded bytecode missing — skipping."); return; }
 
         ctx.BackupFile(path);
 
@@ -90,13 +86,12 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
 
         if (matched != 1)
         {
-            ctx.Log($"[GoofyDemon] expected exactly 1 '{EntryLeaf}' entry, found {matched} — aborting (archive untouched).");
+            Log($"Patch: expected exactly 1 '{EntryLeaf}' entry, found {matched} — aborting (archive untouched).");
             return;
         }
 
         File.WriteAllBytes(path, DCX.Compress(bnd.Write(), dcxType));
-        ctx.Log($"[GoofyDemon] patched {EntryLeaf} ({replacement.Length} bytes). " +
-                "The Asylum Demon would now rather dance than fight.");
+        Log($"Patch: swapped {EntryLeaf} ({replacement.Length} bytes). The demon would rather dance than fight.");
     }
 
     // ── IGameMod ────────────────────────────────────────────────────────────────
@@ -104,38 +99,73 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
     public override void OnLoad(IModContext ctx)
     {
         _ctx = ctx;
-        Console.WriteLine("[GoofyDemon] Loaded. Mood readout will appear here once " +
-                          "you enter the Asylum Demon fight.");
+        SetLogPath(ctx.ModsDir);
+        Log("Loaded. Watching mood flags " +
+            $"{MoodFlagBase}..{MoodFlagBase + MoodNames.Length - 1}.");
+
+        // Self-test: prove the framework can read/write this flag range. If this
+        // logs MISMATCH, the chosen flag IDs aren't decodable and the readout
+        // won't work (this is exactly what was wrong with the old range).
+        try
+        {
+            bool before = ctx.Reader.GetEventFlag(MoodFlagBase);
+            ctx.Writer.SetEventFlag(MoodFlagBase, true);
+            bool readBack = ctx.Reader.GetEventFlag(MoodFlagBase);
+            ctx.Writer.SetEventFlag(MoodFlagBase, before);
+            Log($"Flag self-test: wrote true to {MoodFlagBase}, read back {readBack} " +
+                $"({(readBack ? "OK — flag range is readable" : "MISMATCH — flag range NOT readable!")}).");
+        }
+        catch (Exception e) { Log($"Flag self-test threw: {e.Message}"); }
     }
 
     public override void OnTick()
     {
         if (_ctx is null) return;
+        _tick++;
 
-        // Find which single mood flag is currently set.
         int mood = -1;
         for (int i = 0; i < MoodNames.Length; i++)
         {
-            if (_ctx.Reader.GetEventFlag(MoodFlagBase + i))
-            {
-                mood = i;
-                break;
-            }
+            if (_ctx.Reader.GetEventFlag(MoodFlagBase + i)) { mood = i; break; }
         }
 
+        // Mood changed → report it.
         if (mood >= 0 && mood != _lastMood)
         {
             _lastMood = mood;
-            Console.WriteLine($"[GoofyDemon] mood → {MoodNames[mood]}");
+            Log($"mood → {MoodNames[mood]}");
         }
+
+        // Heartbeat every ~10s so it's obvious OnTick is running. If you see
+        // heartbeats but never a "mood →", the AI isn't setting the flags
+        // (wrong fight? archive not patched?). If you see no heartbeats at all,
+        // OnTick isn't running (mod not loaded, or not in a loaded map).
+        if (_tick % 20 == 0)
+            Log($"(heartbeat #{_tick / 20}; current mood index = {mood})");
     }
 
     public override void OnUnload()
     {
-        // Tidy up: clear the broadcast flags so they don't linger in the save.
         if (_ctx is null) return;
         for (int i = 0; i < MoodNames.Length; i++)
             _ctx.Writer.SetEventFlag(MoodFlagBase + i, false);
+        Log("Unloaded; cleared mood flags.");
+    }
+
+    // ── helpers ───────────────────────────────────────────────────────────────
+
+    private void SetLogPath(string modsDir)
+    {
+        if (_logPath is not null) return;
+        try { _logPath = Path.Combine(modsDir, "GoofyDemon.log"); } catch { _logPath = null; }
+    }
+
+    private void Log(string msg)
+    {
+        string line = $"[{DateTime.Now:HH:mm:ss}] [GoofyDemon] {msg}";
+        Console.WriteLine(line);
+        try { if (_logPath is not null) File.AppendAllText(_logPath, line + Environment.NewLine); }
+        catch { /* logging must never crash the game */ }
     }
 
     private static byte[] ReadEmbedded(string logicalName)
