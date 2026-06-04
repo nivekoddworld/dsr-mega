@@ -149,6 +149,28 @@ public sealed class DemoMod : ModBase, IGamePatcher
         // Verify the kill flag is actually set via IGameReader.
         bool confirmed = _ctx?.Reader.GetEventFlag(kill.FlagId) ?? false;
         Log($"[BOSS] Flag {kill.FlagId} confirmed via Reader: {confirmed}");
+
+        // Celebrate with a silly Windows beep fanfare on a background thread
+        // so we don't hold up the hook dispatcher.
+        Task.Run(PlayVictoryFanfare);
+    }
+
+    private static void PlayVictoryFanfare()
+    {
+        // Ascending major arpeggio — C E G C — classic "ta-daaa"
+        (int freq, int ms)[] notes =
+        [
+            (523,  120),   // C4
+            (659,  120),   // E4
+            (784,  120),   // G4
+            (1047, 350),   // C5
+        ];
+
+        foreach (var (freq, ms) in notes)
+        {
+            try { Console.Beep(freq, ms); }
+            catch { /* Beep can fail in some console configurations */ }
+        }
     }
 
     private void OnFogGateEntered(FogGate gate)
