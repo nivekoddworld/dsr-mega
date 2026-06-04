@@ -15,6 +15,7 @@
 #include <dxgi.h>
 #include <atomic>
 #include "d3d_hook.h"
+#include "modloader.h"   // Log() / LogInit() — writes to ds1mod.log
 
 // ── cimgui function pointer typedefs ────────────────────────────────────────
 // We load cimgui.dll at runtime so that both this module and the managed
@@ -117,34 +118,52 @@ static void InitImGui(IDXGISwapChain* sc)
     wchar_t* sl = wcsrchr(selfPath, L'\\');
     if (sl) wcscpy_s(sl + 1, MAX_PATH - (sl - selfPath + 1), L"cimgui.dll");
 
+    {
+        wchar_t msg[MAX_PATH + 64];
+        swprintf_s(msg, L"[D3DHook] Loading cimgui.dll from: %s", selfPath);
+        Log(msg);
+    }
+
     g_cimgui = LoadLibraryW(selfPath);
     if (!g_cimgui)
     {
-        OutputDebugStringW(L"[D3DHook] cimgui.dll not found — ImGui disabled");
+        wchar_t msg[128];
+        swprintf_s(msg, L"[D3DHook] LoadLibrary(cimgui.dll) FAILED — GetLastError=%u", GetLastError());
+        Log(msg);
         return;
     }
+    Log(L"[D3DHook] cimgui.dll loaded OK");
 
-    // Bind core
+    // Bind core — log each failure individually
+    auto BindLog = [&](auto& dst, const char* name) -> bool {
+        dst = reinterpret_cast<std::remove_reference_t<decltype(dst)>>(GetProc(name));
+        if (!dst) {
+            wchar_t msg[128];
+            swprintf_s(msg, L"[D3DHook] Missing export: %hs", name);
+            Log(msg);
+        }
+        return dst != nullptr;
+    };
+
     bool ok = true;
-    ok &= Bind(g_igCreateContext,  "igCreateContext");
-    ok &= Bind(g_igDestroyContext, "igDestroyContext");
-    ok &= Bind(g_igGetDrawData,    "igGetDrawData");
-    ok &= Bind(g_igNewFrame,       "igNewFrame");
-    ok &= Bind(g_igRender,         "igRender");
+    ok &= BindLog(g_igCreateContext,  "igCreateContext");
+    ok &= BindLog(g_igDestroyContext, "igDestroyContext");
+    ok &= BindLog(g_igGetDrawData,    "igGetDrawData");
+    ok &= BindLog(g_igNewFrame,       "igNewFrame");
+    ok &= BindLog(g_igRender,         "igRender");
 
-    // Bind backends (exported from our custom cimgui.dll via DS1Mod.ImGuiNative)
-    ok &= Bind(g_DX11_Init,            "DS1Mod_ImplDX11_Init");
-    ok &= Bind(g_DX11_Shutdown,        "DS1Mod_ImplDX11_Shutdown");
-    ok &= Bind(g_DX11_NewFrame,        "DS1Mod_ImplDX11_NewFrame");
-    ok &= Bind(g_DX11_RenderDrawData,  "DS1Mod_ImplDX11_RenderDrawData");
-    ok &= Bind(g_Win32_Init,           "DS1Mod_ImplWin32_Init");
-    ok &= Bind(g_Win32_Shutdown,       "DS1Mod_ImplWin32_Shutdown");
-    ok &= Bind(g_Win32_NewFrame,       "DS1Mod_ImplWin32_NewFrame");
-    ok &= Bind(g_Win32_WndProcHandler, "DS1Mod_ImplWin32_WndProcHandler");
+    ok &= BindLog(g_DX11_Init,            "DS1Mod_ImplDX11_Init");
+    ok &= BindLog(g_DX11_Shutdown,        "DS1Mod_ImplDX11_Shutdown");
+    ok &= BindLog(g_DX11_NewFrame,        "DS1Mod_ImplDX11_NewFrame");
+    ok &= BindLog(g_DX11_RenderDrawData,  "DS1Mod_ImplDX11_RenderDrawData");
+    ok &= BindLog(g_Win32_Init,           "DS1Mod_ImplWin32_Init");
+    ok &= BindLog(g_Win32_Shutdown,       "DS1Mod_ImplWin32_Shutdown");
+    ok &= BindLog(g_Win32_NewFrame,       "DS1Mod_ImplWin32_NewFrame");
+    ok &= BindLog(g_Win32_WndProcHandler, "DS1Mod_ImplWin32_WndProcHandler");
 
     if (!ok)
     {
-        OutputDebugStringW(L"[D3DHook] Missing exports from cimgui.dll — ImGui disabled");
+        Log(L"[D3DHook] One or more exports missing from cimgui.dll — ImGui disabled");
         FreeLibrary(g_cimgui);
         g_cimgui = nullptr;
         return;
@@ -153,20 +172,43 @@ static void InitImGui(IDXGISwapChain* sc)
     // Get the D3D11 device + context from the real swap chain
     ID3D11Device*        device  = nullptr;
     ID3D11DeviceContext* context = nullptr;
-    if (FAILED(sc->GetDevice(__uuidof(ID3D11Device), reinterpret_cast<void**>(&device))))
+    HRESULT hr = sc->GetDevice(__uuidof(ID3D11Device), reinterpret_cast<void**>(&device));
+    if (FAILED(hr))
+    {
+        wchar_t msg[128];
+        swprintf_s(msg, L"[D3DHook] GetDevice(ID3D11Device) FAILED hr=0x%08X", (unsigned)hr);
+        Log(msg);
         return;
+    }
     device->GetImmediateContext(&context);
 
     // Get the HWND from swap chain desc
     DXGI_SWAP_CHAIN_DESC desc = {};
     sc->GetDesc(&desc);
     g_gameHwnd = desc.OutputWindow;
+    {
+        wchar_t msg[128];
+        swprintf_s(msg, L"[D3DHook] Got D3D11 device — HWND=0x%p", (void*)g_gameHwnd);
+        Log(msg);
+    }
 
     // Init ImGui
     g_imguiCtx = g_igCreateContext(nullptr);
+    Log(L"[D3DHook] ImGui context created");
 
-    if (!g_Win32_Init(g_gameHwnd) || !g_DX11_Init(device, context))
+    if (!g_Win32_Init(g_gameHwnd))
     {
+        Log(L"[D3DHook] ImGui_ImplWin32_Init FAILED");
+        g_igDestroyContext(g_imguiCtx);
+        g_imguiCtx = nullptr;
+        device->Release();
+        context->Release();
+        return;
+    }
+    if (!g_DX11_Init(device, context))
+    {
+        Log(L"[D3DHook] ImGui_ImplDX11_Init FAILED");
+        g_Win32_Shutdown();
         g_igDestroyContext(g_imguiCtx);
         g_imguiCtx = nullptr;
         device->Release();
@@ -183,7 +225,7 @@ static void InitImGui(IDXGISwapChain* sc)
     context->Release();
 
     g_imguiReady.store(true);
-    OutputDebugStringW(L"[D3DHook] ImGui initialised on render thread");
+    Log(L"[D3DHook] ImGui initialised on render thread");
 }
 
 // ── Present hook ─────────────────────────────────────────────────────────────
@@ -261,7 +303,7 @@ bool D3DHook::Initialize()
     DestroyWindow(hwnd);
     UnregisterClassW(wc.lpszClassName, wc.hInstance);
 
-    OutputDebugStringW(L"[D3DHook] Present vtable patched");
+    Log(L"[D3DHook] Present vtable patched");
     return true;
 }
 

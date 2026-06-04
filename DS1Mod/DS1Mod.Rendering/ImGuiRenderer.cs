@@ -25,6 +25,7 @@ public sealed class ImGuiRenderer : IDisposable
     private readonly OnGuiDelegate          _delegate;
     private          bool                   _contextSynced;
     private          bool                   _disposed;
+    private volatile int                    _frameCount;
 
     public ImGuiRenderer(IReadOnlyList<IGuiMod> mods)
     {
@@ -35,6 +36,32 @@ public sealed class ImGuiRenderer : IDisposable
         NativeD3DHook.DS1Mod_SetOnGuiCallback(fnPtr);
 
         Console.WriteLine($"[DS1Mod.Rendering] Registered OnGui callback for {_mods.Count} mod(s).");
+
+        // Background watchdog: logs whether the Present hook is actually firing
+        // and whether ImGui initialised successfully.  Output goes to the console
+        // (ds1mod log window) so you can diagnose without a debugger attached.
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(5000);
+            if (_disposed) return;
+
+            int frames = _frameCount;
+            if (frames == 0)
+            {
+                Console.WriteLine("[DS1Mod.Rendering] WARNING: Present hook has not fired after 5 s — " +
+                                  "overlay will not appear. Check ds1mod.log for [D3DHook] lines.");
+            }
+            else if (!_contextSynced)
+            {
+                Console.WriteLine($"[DS1Mod.Rendering] WARNING: Present hook fired {frames}x but ImGui " +
+                                  "context not ready — cimgui.dll may have failed to load. " +
+                                  "Check ds1mod.log for [D3DHook] lines.");
+            }
+            else
+            {
+                Console.WriteLine($"[DS1Mod.Rendering] ImGui OK — {frames} frames rendered.");
+            }
+        });
     }
 
     /// <summary>
@@ -43,6 +70,8 @@ public sealed class ImGuiRenderer : IDisposable
     private void OnImGuiFrame()
     {
         if (_disposed) return;
+
+        _frameCount++;
 
         // On the very first call the C++ side has just finished initialising
         // ImGui and the D3D11 backend.  Sync the managed ImGui context so
@@ -56,6 +85,7 @@ public sealed class ImGuiRenderer : IDisposable
 
             ImGui.SetCurrentContext(ctx);
             _contextSynced = true;
+            Console.WriteLine("[DS1Mod.Rendering] ImGui context synced — overlay active.");
         }
 
         foreach (var mod in _mods)
