@@ -154,7 +154,7 @@ the animation moves him (displacement is baked into the clip).
 |---|---|---|
 | Initialize Event | 2000:0 | slot, eventId, params… |
 | IF Event Flag | 3:0 | condGroup(s8), state(u8 ON/OFF), flagType(u8), flagId(s32) |
-| Set Event Flag | 2003:66 | flagId, state |
+| Set Event Flag | 2003:2 | flagId, state |
 | Force Animation Playback | 2003:18 | entity, animId, loop, wait, ignoreTransition |
 | Display Message | 2007:4 | msgId(s32), screenLoc(u8) |
 | Display Banner | 2007:2 | bannerType(u8, preset enum) |

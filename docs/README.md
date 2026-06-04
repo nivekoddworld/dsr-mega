@@ -15,6 +15,10 @@ These docs are practical and grounded in things that actually shipped here (the
 | [emevd-events.md](emevd-events.md) | **Event scripts** (EMEVD / "DarkScript") — decompile, edit, **add brand-new events**, on-screen text |
 | [adding-items.md](adding-items.md) | **New items** — params, item text, drops/awards |
 
+## The helper library
+
+[`DS1Mod.Modding`](../DS1Mod/DS1Mod.Modding/) wraps all the patterns below (DCX round-trip, idempotent FMG/PARAM/EMEVD edits, the constructor and flag-section gotchas) into a small API, so a new data mod is ~50 lines. The guides here explain *what's going on underneath*; the library is the *how*.
+
 ## The three scripting systems (don't mix them up)
 
 DSR has several independent systems. We touched three:

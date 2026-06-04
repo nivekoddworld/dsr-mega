@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DS1Mod.SDK\DS1Mod.SDK.csproj" />
+    <ProjectReference Include="..\DS1Mod.Modding\DS1Mod.Modding.csproj" />
     <ProjectReference Include="..\..\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
   </ItemGroup>
 

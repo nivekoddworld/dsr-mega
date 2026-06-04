@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="DS1Mod/DS1Mod.Core/DS1Mod.Core.csproj" />
   <Project Path="DS1Mod/DS1Mod.SDK/DS1Mod.SDK.csproj" />
+  <Project Path="DS1Mod/DS1Mod.Modding/DS1Mod.Modding.csproj" />
   <Project Path="DS1Mod/DS1Mod.Host/DS1Mod.Host.csproj" />
   <Project Path="DS1Mod/DS1Mod.DemoMod/DS1Mod.DemoMod.csproj" />
   <Project Path="DS1Mod/DS1Mod.AsylumSlam/DS1Mod.AsylumSlam.csproj" />
