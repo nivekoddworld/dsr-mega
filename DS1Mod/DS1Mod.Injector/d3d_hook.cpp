@@ -9,6 +9,7 @@
 #include <d3d11.h>
 #include <dxgi.h>
 #include <atomic>
+#include <stdio.h>
 #include "d3d_hook.h"
 #include "modloader.h"   // Log() / LogInit()
 
