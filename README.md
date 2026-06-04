@@ -50,15 +50,16 @@ See [`DS1Mod/README.md`](DS1Mod/README.md) for architecture details and the mod-
 
 | Folder | Contents |
 |---|---|
-| **DSR_Event_Folder/event/** | Extracted EMEVD bytecode (`.emevd.dcx`) — one per map; not modified by the randomizer |
-| **DSR_Lua_Scripts_Folder/script/** | Extracted Lua AI bytecode (`.luabnd.dcx`) — one per map; source for custom AI mods |
-| **decompiled_emevd/** | Human-readable decompilations of every EMEVD file; ground truth for event IDs and instruction args |
-| **decompiled_lua/** | Decompiled Lua AI sources (via DSLuaDecompiler); basis for hand-written AI mods |
-| **ds1_ai_mods/** | Hand-written AI scripts + fully Linux toolchain to compile and repack them |
-| **event_tools/** | EMEVD decompiler (`emevd_decompile`) + DS1 EMEDF definition (`ds1emedf.json`) |
-| **FogMod-master/** | Original C# fog gate randomizer; `dist/fog.txt` is ground truth for EntityIDs; `dist/DS1R/event/` EMEVD patches are used at runtime |
-| **Dark-Souls-Enemy-Randomizer-master/** | Original Python enemy randomizer; `method_names.py` maps EMEVD instruction names to Bank/ID |
-| **DarkSoulsItemRandomizer-master/** | Original Python item randomizer; historical reference only |
+| **gamedata/DSR_Event_Folder/event/** | Extracted EMEVD bytecode (`.emevd.dcx`) — one per map; not modified by the randomizer |
+| **gamedata/DSR_Lua_Scripts_Folder/script/** | Extracted Lua AI bytecode (`.luabnd.dcx`) — one per map; source for custom AI mods |
+| **gamedata/decompiled_emevd/** | Human-readable decompilations of every EMEVD file; ground truth for event IDs and instruction args |
+| **gamedata/decompiled_lua/** | Decompiled Lua AI sources (via DSLuaDecompiler); basis for hand-written AI mods |
+| **tools/ds1_ai_mods/** | Hand-written AI scripts + fully Linux toolchain to compile and repack them |
+| **tools/event_tools/** | EMEVD decompiler (`emevd_decompile`) + DS1 EMEDF definition (`ds1emedf.json`) |
+| **reference/FogMod-master/** | Original C# fog gate randomizer; `dist/fog.txt` is ground truth for EntityIDs; `dist/DS1R/event/` EMEVD patches are used at runtime by `FogGateWriter` |
+| **reference/Dark-Souls-Enemy-Randomizer-master/** | Original Python enemy randomizer; `method_names.py` maps EMEVD instruction names to Bank/ID |
+| **reference/DarkSoulsItemRandomizer-master/** | Original Python item randomizer; historical reference only |
+| **reference/DS1Randomizer/** | Archived Avalonia UI prototype; not part of the active solution |
 
 ---
 
@@ -175,7 +176,7 @@ Every DSR boss is defined in `DS1MegaRando.Data/Enemies/BossIds.cs` as a `BossDe
 | `CanReplace` | `false` → slot is frozen (never randomized); model also excluded from replacement pool |
 | `EmevdPatches` | EMEVD instructions to strip from the boss intro event so the replacement model isn't locked in a model-specific state |
 
-**EntityIDs are ground truth** — they must exactly match the value at `@ENTITYID` in `FogMod-master/dist/fog.txt`. Wrong EntityIDs are the root cause of bosses not being randomized at all.
+**EntityIDs are ground truth** — they must exactly match the value at `@ENTITYID` in `reference/FogMod-master/dist/fog.txt`. Wrong EntityIDs are the root cause of bosses not being randomized at all.
 
 ### Replacement pool rules
 
@@ -271,6 +272,6 @@ The CommonEffects bundle uses BND3 ID ranges: `< 100000` = FFX effects, `100000�
 
 Three standalone Python randomizers live in the repo as historical reference. They are **not** called by the C# application and do not need to be run:
 
-- `DarkSoulsItemRandomizer-master/` — original Python item randomizer
-- `Dark-Souls-Enemy-Randomizer-master/` — original Python enemy randomizer  
-- `FogMod-master/` — original C# fog gate randomizer (WinForms UI); its compiled `dist/DS1R/event/` EMEVD files are still required at runtime by `FogGateWriter`
+- `reference/DarkSoulsItemRandomizer-master/` — original Python item randomizer
+- `reference/Dark-Souls-Enemy-Randomizer-master/` — original Python enemy randomizer  
+- `reference/FogMod-master/` — original C# fog gate randomizer (WinForms UI); its compiled `dist/DS1R/event/` EMEVD files are still required at runtime by `FogGateWriter`

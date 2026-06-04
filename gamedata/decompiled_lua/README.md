@@ -16,7 +16,7 @@ These are **read-only reference**. DSLuaDecompiler only goes one direction
 (bytecode → source). To modify an AI:
 
 1. Edit the decompiled source here as a starting point.
-2. Compile to Lua 5.0 bytecode — see [`../ds1_ai_mods/`](../ds1_ai_mods/) for
+2. Compile to Lua 5.0 bytecode — see [`../../tools/ds1_ai_mods/`](../../tools/ds1_ai_mods/) for
    the Linux toolchain or use MeowScript on Windows.
 3. Repack into the appropriate `*.luabnd.dcx` archive and drop it in the
    game's `script/` folder.

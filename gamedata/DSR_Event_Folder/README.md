@@ -8,4 +8,4 @@ SoulsFormats and writes modified copies directly to the game directory; it does
 not modify anything here.
 
 Human-readable decompilations live in [`../decompiled_emevd/`](../decompiled_emevd/).
-To regenerate those files, see [`../event_tools/README.md`](../event_tools/README.md).
+To regenerate those files, see [`../../tools/event_tools/README.md`](../../tools/event_tools/README.md).

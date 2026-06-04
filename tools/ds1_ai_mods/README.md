@@ -1,7 +1,7 @@
 # DS1 AI Mods
 
 Hand-written AI scripts for Dark Souls Remastered, built from the decompiled
-sources in [`../decompiled_lua/`](../decompiled_lua/), plus a **fully Linux**
+sources in [`../../gamedata/decompiled_lua/`](../../gamedata/decompiled_lua/), plus a **fully Linux**
 toolchain to compile and repack them into the game — no MeowScript, no Windows.
 
 ## Scripts

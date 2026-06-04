@@ -9,4 +9,4 @@ These files are **read-only reference** — the mod patchers (`DS1Mod.AsylumSlam
 
 Human-readable decompilations live in [`../decompiled_lua/`](../decompiled_lua/).
 The custom hand-written AI scripts and Linux build toolchain live in
-[`../ds1_ai_mods/`](../ds1_ai_mods/).
+[`../../tools/ds1_ai_mods/`](../../tools/ds1_ai_mods/).

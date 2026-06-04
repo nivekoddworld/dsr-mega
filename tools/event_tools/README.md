@@ -7,18 +7,18 @@ Tools and definitions for working with DSR EMEVD event scripts.
 | Path | Purpose |
 |---|---|
 | `ds1emedf.json` | DS1 EMEDF — maps every EMEVD instruction to its Bank/ID, argument names, types, and enum labels. Used by the decompiler and useful for cross-referencing Bank/ID pairs when writing EMEVD patches. |
-| `emevd_decompile/` | .NET tool that reads binary `.emevd.dcx` files and renders them as human-readable text using the EMEDF. Output goes to `../decompiled_emevd/`. |
+| `emevd_decompile/` | .NET tool that reads binary `.emevd.dcx` files and renders them as human-readable text using the EMEDF. Output goes to `../../gamedata/decompiled_emevd/`. |
 
 ## Running the decompiler
 
 ```sh
-dotnet run --project event_tools/emevd_decompile -- \
-    event_tools/ds1emedf.json \
-    DSR_Event_Folder/event \
-    decompiled_emevd
+dotnet run --project tools/event_tools/emevd_decompile -- \
+    tools/event_tools/ds1emedf.json \
+    gamedata/DSR_Event_Folder/event \
+    gamedata/decompiled_emevd
 ```
 
-This regenerates all `.evd.txt` files in `decompiled_emevd/`. The output is
+This regenerates all `.evd.txt` files in `gamedata/decompiled_emevd/`. The output is
 read-only reference — edits to events go through SoulsFormats on the binary
 (see `DS1MegaRando.Enemies/BossEmevdPatcher.cs` and the mod patchers).
 

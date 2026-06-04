@@ -30,7 +30,7 @@ public class FogGateWriter
     public static string DefaultDistEventDir =>
         Path.Combine(
             AppContext.BaseDirectory,
-            @"..\..\..\..\FogMod-master\dist\DS1R\event");
+            @"..\..\..\..\reference\FogMod-master\dist\DS1R\event");
 
     private record WarpPoint(int ID, int Action, int Player, string Map);
 

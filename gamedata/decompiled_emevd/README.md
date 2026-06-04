@@ -18,19 +18,19 @@ Event <id>  (rest=<RestBehavior>) {
 ```
 
 Instruction names, argument names/types, and enum labels come from the **EMEDF**
-(`../event_tools/ds1emedf.json`, the DS1 definition shipped with DarkScript3 /
+(`../../tools/event_tools/ds1emedf.json`, the DS1 definition shipped with DarkScript3 /
 soulsmods). Parameterized arguments — values injected by the event that
 *initializes* this one — are shown as `X<sourceByte>_<byteCount>`.
 
 ## How they were produced
 
-`../event_tools/emevd_decompile/` parses each archive with **SoulsFormats**
+`../../tools/event_tools/emevd_decompile/` parses each archive with **SoulsFormats**
 (`EMEVD.Read` + `Instruction.UnpackArgs`) and renders it using the EMEDF. To
 regenerate:
 
 ```sh
-dotnet run --project event_tools/emevd_decompile -- \
-    event_tools/ds1emedf.json  DSR_Event_Folder/event  decompiled_emevd
+dotnet run --project tools/event_tools/emevd_decompile -- \
+    tools/event_tools/ds1emedf.json  gamedata/DSR_Event_Folder/event  gamedata/decompiled_emevd
 ```
 
 ## Pointers

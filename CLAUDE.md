@@ -57,13 +57,13 @@ Entry point: `DS1MegaRando.UI` → `MegaRandomizer.cs` orchestrates everything.
 
 ## Ground Truth References
 
-- **Entity IDs**: `FogMod-master/dist/fog.txt` — format: `- cXXXX_YYYY (Name). NPC NNNNNN @ENTITYID`
+- **Entity IDs**: `reference/FogMod-master/dist/fog.txt` — format: `- cXXXX_YYYY (Name). NPC NNNNNN @ENTITYID`
   Every EntityID in BossIds.cs must match the `@ENTITYID` value here. Wrong EntityIDs = boss slot not randomized.
-- **EMEVD events**: `Dark-Souls-Enemy-Randomizer-master/eventscripts/Remastered/`
-- **EMEVD instruction names → Bank/ID**: `Dark-Souls-Enemy-Randomizer-master/method_names.py`
-- **EMEVD instruction definitions**: `event_tools/ds1emedf.json` (DS1 EMEDF, used by the decompile tool and for cross-referencing Bank/ID pairs)
-- **Human-readable event scripts**: `decompiled_emevd/` — one `.evd.txt` per map, produced by `event_tools/emevd_decompile`
-- **Human-readable AI Lua**: `decompiled_lua/` — decompiled via DSLuaDecompiler from `DSR_Lua_Scripts_Folder/`
+- **EMEVD events**: `reference/Dark-Souls-Enemy-Randomizer-master/eventscripts/Remastered/`
+- **EMEVD instruction names → Bank/ID**: `reference/Dark-Souls-Enemy-Randomizer-master/method_names.py`
+- **EMEVD instruction definitions**: `tools/event_tools/ds1emedf.json` (DS1 EMEDF, used by the decompile tool and for cross-referencing Bank/ID pairs)
+- **Human-readable event scripts**: `gamedata/decompiled_emevd/` — one `.evd.txt` per map, produced by `tools/event_tools/emevd_decompile`
+- **Human-readable AI Lua**: `gamedata/decompiled_lua/` — decompiled via DSLuaDecompiler from `gamedata/DSR_Lua_Scripts_Folder/`
 
 ## Critical Design Decisions
 
