@@ -1,5 +1,6 @@
 using System.Numerics;
 using DS1Mod.Core;
+using DS1Mod.Core.ImGui;
 using DS1Mod.Modding;
 using DS1Mod.SDK;
 using SoulsFormats;
@@ -51,7 +52,7 @@ namespace DS1Mod.ItemsDemo;
 ///
 /// All patches target the Undead Asylum (m18_01_00_00).
 /// </summary>
-public sealed class ItemsDemoMod : ModBase, IGamePatcher
+public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
 {
     public override string Name    => "Items + EMEVD + AI Demo";
     public override string Version => "2.0.0";
@@ -105,6 +106,32 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher
     private static readonly Vector3 TrinketPos = new(52f, -2f, 103f);
 
     private IModContext? _ctx;
+
+    // ── ImGui checklist state ─────────────────────────────────────────────────
+    // Patch-time items are set once in OnLoad (they either worked or the mod
+    // wouldn't have loaded). Runtime items are polled each OnTick via flags.
+    // Written on the game-thread (OnTick/OnLoad), read on the render thread
+    // (OnGui) — using volatile for safe cross-thread visibility on primitives.
+
+    // patch-time: ticked immediately
+    private volatile bool _patchConflictDetection;
+    private volatile bool _patchSpEffect;
+    private volatile bool _patchGoods;
+    private volatile bool _patchLots;
+    private volatile bool _patchMsb;
+    private volatile bool _patchItemTrigger;
+    private volatile bool _patchEmevd;
+    private volatile bool _patchAi;
+
+    // runtime: ticked as they happen in-game
+    private volatile bool _rtDraughtUsed;        // hooks.ItemUsed fired
+    private volatile bool _rtTrinketCollected;   // once-only lot obtained (flag set)
+    private volatile bool _rtMidFightReward;     // WhenAllOf fired (demon hp < 50% + alive)
+    private volatile bool _rtBossDead;           // boss death flag
+    private volatile bool _rtAiMood0;            // AI chose act 0 (SetActiveFlagInRange)
+    private volatile bool _rtAiMood1;            // AI chose act 1
+
+    private bool _windowOpen = true;
 
     // ═════════════════════════════════════════════════════════════════════════
     // IGamePatcher
@@ -473,6 +500,16 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher
         ctx.Hooks.RegisterItemUsed(DraughtGoodsId, DraughtUseFlag);
         ctx.Hooks.ItemUsed += OnItemUsed;
 
+        // Tick all patch-time checklist items — if we got here, they all ran.
+        _patchConflictDetection = true;
+        _patchSpEffect          = true;
+        _patchGoods             = true;
+        _patchLots              = true;
+        _patchMsb               = true;
+        _patchItemTrigger       = true;
+        _patchEmevd             = true;
+        _patchAi                = true;
+
         Console.WriteLine("[ItemsDemo] Loaded — APIs demonstrated:");
         Console.WriteLine("[ItemsDemo]   Conflict detection  (GamePatch(ctx) constructor)");
         Console.WriteLine("[ItemsDemo]   EventBuilder        WhenAllOf / WhenAnyOf / all condition+action methods");
@@ -485,6 +522,89 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher
         Console.WriteLine($"[ItemsDemo]   Stone Trinket   id={TrinketGoodsId}  lot={TrinketLotId}  pos={TrinketPos}");
     }
 
+    public override void OnTick()
+    {
+        if (_ctx is null) return;
+        var r = _ctx.Reader;
+
+        // Poll runtime checklist items via event flags each tick.
+        if (!_rtTrinketCollected) _rtTrinketCollected = r.GetEventFlag(TrinketGetFlag);
+        if (!_rtMidFightReward)   _rtMidFightReward   = r.GetEventFlag(11819410);
+        if (!_rtBossDead)         _rtBossDead         = r.GetEventFlag(DemonDeadFlag);
+        if (!_rtAiMood0)          _rtAiMood0          = r.GetEventFlag(FlagAiMood0);
+        if (!_rtAiMood1)          _rtAiMood1          = r.GetEventFlag(FlagAiMood1);
+    }
+
+    // ── IGuiMod ───────────────────────────────────────────────────────────────
+
+    public void OnGui()
+    {
+        if (!_windowOpen) return;
+
+        DS1ImGui.SetNextWindowPos(10, 10, ImGuiCond.FirstUseEver);
+        DS1ImGui.SetNextWindowSize(340, 0, ImGuiCond.FirstUseEver);
+        DS1ImGui.SetNextWindowBgAlpha(0.82f);
+
+        if (!DS1ImGui.Begin("DS1Mod API Test Checklist", ref _windowOpen))
+        {
+            DS1ImGui.End();
+            return;
+        }
+
+        int ticked = CountTicked();
+        int total  = TotalChecks();
+        DS1ImGui.Text($"Progress: {ticked} / {total}");
+        DS1ImGui.Separator();
+
+        DS1ImGui.Text("  Patch-time");
+        DrawCheck("Conflict detection (GamePatch from IPatchContext)", _patchConflictDetection);
+        DrawCheck("DefineSpEffect — SpEffectParam 9100",               _patchSpEffect);
+        DrawCheck("DefineGoods — Goofy Draught + Stone Trinket",       _patchGoods);
+        DrawCheck("DefineLot — infinite + once-only",                  _patchLots);
+        DrawCheck("EditMsb / PlaceTreasure — Stone Trinket pickup",    _patchMsb);
+        DrawCheck("DefineItemTrigger — SpEffect→flag bridge",          _patchItemTrigger);
+        DrawCheck("EditEmevd / EventBuilder — 5 events",               _patchEmevd);
+        DrawCheck("EditAi / AiBuilder — 223200_battle.lua compiled",   _patchAi);
+
+        DS1ImGui.Spacing();
+        DS1ImGui.Text("  Runtime — do these in-game:");
+        DrawCheck("hooks.ItemUsed — use the Goofy Draught",            _rtDraughtUsed);
+        DrawCheck("DefineLot once-only — collect Stone Trinket",       _rtTrinketCollected);
+        DrawCheck("WhenAllOf — demon HP < 50 %% while alive",          _rtMidFightReward);
+        DrawCheck("WhenDead — Asylum Demon killed",                     _rtBossDead);
+        DrawCheck("SetActiveFlagInRange — AI mood 0 (stomp)",          _rtAiMood0);
+        DrawCheck("SetActiveFlagInRange — AI mood 1 (spin+leave)",     _rtAiMood1);
+
+        DS1ImGui.End();
+    }
+
+    private static void DrawCheck(string label, bool ticked)
+    {
+        if (ticked)
+        {
+            DS1ImGui.PushStyleColor(ImGuiCol.Text, 0.2f, 0.9f, 0.2f, 1f); // green
+            DS1ImGui.Text($"  [x] {label}");
+            DS1ImGui.PopStyleColor();
+        }
+        else
+        {
+            DS1ImGui.PushStyleColor(ImGuiCol.Text, 0.55f, 0.55f, 0.55f, 1f); // grey
+            DS1ImGui.Text($"  [ ] {label}");
+            DS1ImGui.PopStyleColor();
+        }
+    }
+
+    private int CountTicked() =>
+        (_patchConflictDetection ? 1 : 0) + (_patchSpEffect   ? 1 : 0) +
+        (_patchGoods             ? 1 : 0) + (_patchLots        ? 1 : 0) +
+        (_patchMsb               ? 1 : 0) + (_patchItemTrigger ? 1 : 0) +
+        (_patchEmevd             ? 1 : 0) + (_patchAi          ? 1 : 0) +
+        (_rtDraughtUsed          ? 1 : 0) + (_rtTrinketCollected ? 1 : 0) +
+        (_rtMidFightReward       ? 1 : 0) + (_rtBossDead        ? 1 : 0) +
+        (_rtAiMood0              ? 1 : 0) + (_rtAiMood1         ? 1 : 0);
+
+    private static int TotalChecks() => 14;
+
     public override void OnUnload()
     {
         Console.WriteLine("[ItemsDemo] Unloaded");
@@ -496,6 +616,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher
     {
         if (goodsId != DraughtGoodsId) return;
 
+        _rtDraughtUsed = true;  // tick the checklist item
         Console.WriteLine("[ItemsDemo] hooks.ItemUsed fired — player used the Goofy Draught");
 
         var stats = _ctx?.Reader.GetPlayerStats();
