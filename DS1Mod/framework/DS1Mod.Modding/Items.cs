@@ -102,44 +102,49 @@ public sealed class MsbEditor
     public MsbEditor PlaceTreasure(int lotId, Vector3 position,
         string? collisionName = null, bool inChest = false, int entityId = -1)
     {
-        // 1. Ensure o0500 model is registered
+        // 1. Ensure o0500 model is registered. When the map has no o0500 yet
+        //    we register a bare entry; vanilla maps already have one with the
+        //    correct SibPath, which we leave untouched.
         const string PickupModel = "o0500";
         if (!_msb.Models.Objects.Any(m => m.Name == PickupModel))
+            _msb.Models.Objects.Add(new MSB1.Model.Object { Name = PickupModel });
+
+        // 2. Pick a donor o0500 pickup to clone — this gives us the correct
+        //    DrawGroups/DispGroups, BreakTerm, NetSyncType, and all the other
+        //    ObjectBase fields the engine cares about for free. A fresh
+        //    MSB1.Part.Object() also leaves InitAnimID at 0, which leaves the
+        //    prop invisible (vanilla pickups use 10/20/50; 50 = glow-bubble
+        //    pose). When no o0500 exists we synthesise one with InitAnimID=50.
+        MSB1.Part.Object obj;
+        MSB1.Part.Object? donor = _msb.Parts.Objects
+            .Where(o => o.ModelName == PickupModel)
+            .OrderBy(o => Vector3.DistanceSquared(o.Position, position))
+            .FirstOrDefault();
+
+        if (donor is not null)
         {
-            var model = new MSB1.Model.Object { Name = PickupModel };
-            _msb.Models.Objects.Add(model);
+            obj = (MSB1.Part.Object)donor.DeepCopy();
+            obj.InitAnimID = 50;
+        }
+        else
+        {
+            obj = new MSB1.Part.Object
+            {
+                ModelName  = PickupModel,
+                Scale      = Vector3.One,
+                InitAnimID = 50,
+            };
         }
 
-        // 2. Resolve collision — nearest existing o0500 object if not specified
-        string col = collisionName ?? FindNearestCollision(position);
-
-        // 3. Auto-generate unique object name: o0500_XXXX
-        int nextSuffix = _msb.Parts.Objects
-            .Select(o => {
-                var p = o.Name.Split('_');
-                return p.Length > 1 && int.TryParse(p[1], out int n) ? n : 0;
-            })
-            .DefaultIfEmpty(0).Max() + 1;
-
-        string objName = $"{PickupModel}_{nextSuffix:D4}";
-
-        // 4. Create the object part
-        var obj = new MSB1.Part.Object
-        {
-            Name          = objName,
-            ModelName     = PickupModel,
-            Position      = position,
-            Rotation      = Vector3.Zero,
-            Scale         = Vector3.One,
-            CollisionName = col,
-            EntityID      = entityId,
-        };
-        // DrawGroups / DispGroups default to all-visible (0xFFFFFFFF)
-        for (int i = 0; i < obj.DrawGroups.Length; i++)  obj.DrawGroups[i]  = 0xFFFFFFFF;
-        for (int i = 0; i < obj.DispGroups.Length; i++) obj.DispGroups[i] = 0xFFFFFFFF;
+        // 3. Override placement-specific fields.
+        obj.Name          = NextObjectName(PickupModel);
+        obj.Position      = position;
+        obj.Rotation      = Vector3.Zero;
+        obj.CollisionName = collisionName ?? FindNearestCollision(position);
+        obj.EntityID      = entityId;
         _msb.Parts.Objects.Add(obj);
 
-        // 5. Create the Treasure event
+        // 4. Create the Treasure event pointing at the new part.
         int nextEventId = _msb.Events.Treasures.Count > 0
             ? _msb.Events.Treasures.Max(t => t.EventID) + 1
             : 0;
@@ -147,7 +152,7 @@ public sealed class MsbEditor
         var treasure = new MSB1.Event.Treasure
         {
             Name             = $"takara_{lotId}",
-            TreasurePartName = objName,
+            TreasurePartName = obj.Name,
             InChest          = inChest,
             StartDisabled    = false,
             EventID          = nextEventId,
@@ -156,6 +161,18 @@ public sealed class MsbEditor
         _msb.Events.Treasures.Add(treasure);
 
         return this;
+    }
+
+    private string NextObjectName(string model)
+    {
+        int next = _msb.Parts.Objects
+            .Select(o =>
+            {
+                string[] p = o.Name.Split('_');
+                return p.Length > 1 && int.TryParse(p[1], out int n) ? n : 0;
+            })
+            .DefaultIfEmpty(0).Max() + 1;
+        return $"{model}_{next:D4}";
     }
 
     private string FindNearestCollision(Vector3 pos)

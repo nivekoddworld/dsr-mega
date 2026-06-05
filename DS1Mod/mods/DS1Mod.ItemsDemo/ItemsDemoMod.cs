@@ -417,15 +417,6 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
     private static void PatchAi(GamePatch g)
     {
         // ════════════════════════════════════════════════════════════════════
-        // API: Luac50.Configure
-        //
-        // Override the luac50 binary path before any Compile call.
-        // Only needed when the binary is not in tools/luac50 relative to the
-        // app, or not on PATH.
-        // ════════════════════════════════════════════════════════════════════
-        Luac50.Configure("/home/user/dsr-mega/tools/luac50");
-
-        // ════════════════════════════════════════════════════════════════════
         // API: EditAi / AiBuilder — Goal, Act (weighted), OnInterrupt, Helper
         //      SubGoalQueue: ApproachTarget, Attack, SpinStep, Wait,
         //                    SidewayMove, LeaveTarget, WaitRandom,
