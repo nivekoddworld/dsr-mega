@@ -1,3 +1,4 @@
+using System.Numerics;
 using DS1Mod.Core;
 using SoulsFormats;
 
@@ -134,6 +135,107 @@ public sealed class GamePatch
         Log($"[AI] {npcFileId}: compiled {bytecode.Length} bytes");
         return EditBnd3($"script/{mapId}.luabnd.dcx",
             bnd => bnd.SetFileContaining($"{npcFileId}_battle.lua", bytecode));
+    }
+
+    /// <summary>
+    /// Edit a map's MSB (map studio binary): <c>map/MapStudio/&lt;mapId&gt;.msb</c>.
+    /// <code>
+    /// g.EditMsb("m18_01_00_00", msb => msb
+    ///     .PlaceTreasure(lotId: 8500, position: new(52f, -2f, 103f)));
+    /// </code>
+    /// </summary>
+    public bool EditMsb(string mapId, Action<MsbEditor> edit)
+    {
+        string path = Resolve($"map/MapStudio/{mapId}.msb");
+        if (!File.Exists(path)) { Log($"msb not found: {mapId}"); return false; }
+        _backup(path);
+        Record(path, $"MSB:{mapId}");
+        MSB1 msb = MSB1.Read(path);
+        edit(new MsbEditor(msb, mapId));
+        msb.Write(path);
+        return true;
+    }
+
+    /// <summary>
+    /// Add a new goods item: writes a row in <c>EquipParamGoods</c> and three FMG
+    /// strings (name, description, long description).
+    /// </summary>
+    /// <param name="paramdefBnd">DS1 paramdefbnd bytes — embed in your mod and pass here.</param>
+    /// <param name="def">Item definition.</param>
+    public void DefineGoods(byte[] paramdefBnd, ItemDef def)
+    {
+        // ── PARAM ──────────────────────────────────────────────────────────────
+        EditParams(paramdefBnd, repo =>
+        {
+            repo.Edit("EquipParamGoods", p =>
+            {
+                if (p[def.Id] != null) return; // idempotent
+                ParamRepository.AddClone(p, def.DonorId, def.Id, def.Name, row =>
+                {
+                    row["maxNum"].Value        = def.MaxCount;
+                    row["refId_default"].Value = def.Id;
+                    def.Configure?.Invoke(row);
+                });
+            });
+        });
+
+        // ── FMG ────────────────────────────────────────────────────────────────
+        EditBnd3Glob("msg", "item.msgbnd.dcx", bnd =>
+        {
+            SetFmgEntry(bnd, "GoodsName",    def.Id, def.Name);
+            SetFmgEntry(bnd, "GoodsInfo",    def.Id, def.Description);
+            SetFmgEntry(bnd, "GoodsCaption", def.Id, def.LongDesc);
+        });
+    }
+
+    /// <summary>
+    /// Add an ItemLotParam row so the item can be awarded via <c>AwardItemLot</c>
+    /// or linked from a Treasure event.
+    /// </summary>
+    /// <param name="paramdefBnd">DS1 paramdefbnd bytes.</param>
+    /// <param name="def">Lot definition.</param>
+    public void DefineLot(byte[] paramdefBnd, LotDef def)
+    {
+        EditParams(paramdefBnd, repo =>
+        {
+            repo.Edit("ItemLotParam", p =>
+            {
+                if (p[def.LotId] != null) return; // idempotent
+
+                // Use any existing lot row as donor (first row in table)
+                int donorId = p.Rows[0].ID;
+                ParamRepository.AddClone(p, donorId, def.LotId, $"lot_{def.LotId}", row =>
+                {
+                    // Clear all slots first, then set slot 0
+                    foreach (var cell in row.Cells)
+                        if (cell.Def.InternalName.StartsWith("lotItem"))
+                            cell.Value = cell.Def.Default;
+
+                    row["lotItemId01"].Value        = def.ItemId;
+                    row["lotItemCategory01"].Value  = def.Category;
+                    row["lotItemBasePoint01"].Value = (ushort)100;
+                    row["lotItemNum01"].Value       = (byte)def.Count;
+
+                    if (def.OnceOnlyFlag >= 0)
+                        row["getItemFlagId"].Value = def.OnceOnlyFlag;
+                });
+            });
+        });
+    }
+
+    // ── helpers ───────────────────────────────────────────────────────────────
+
+    private static void SetFmgEntry(BND3 bnd, string fmgName, int id, string text)
+    {
+        var file = bnd.Files.FirstOrDefault(
+            f => Path.GetFileNameWithoutExtension(f.Name)
+                      .Equals(fmgName, StringComparison.OrdinalIgnoreCase));
+        if (file == null) return;
+        var fmg = FMG.Read(file.Bytes);
+        var entry = fmg.Entries.FirstOrDefault(e => e.ID == id);
+        if (entry != null) entry.Text = text;
+        else               fmg.Entries.Add(new FMG.Entry(id, text));
+        file.Bytes = fmg.Write();
     }
 
     /// <summary>

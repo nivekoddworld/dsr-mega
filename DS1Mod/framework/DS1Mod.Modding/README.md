@@ -385,6 +385,86 @@ g.EditEmevd("m18_01_00_00", e => {
 
 ---
 
+## Items — DefineGoods, DefineLot, EditMsb
+
+Three methods cover the full lifecycle of adding a new item and placing it in the world.
+
+### 1 — Define the item in EquipParamGoods + FMG
+
+```csharp
+g.DefineGoods(embeddedParamdefBytes, new ItemDef
+{
+    Id          = 8000,
+    DonorId     = 384,          // clone fields from this existing goods row
+    Name        = "Goofy Token",
+    Description = "Smells faintly of farts.",
+    LongDesc    = "A memento from the Asylum Demon's existential crisis.",
+    MaxCount    = 1,            // key-item style (default)
+});
+```
+
+`DefineGoods` writes a row in `EquipParamGoods` (cloning the donor so all fields are valid)
+and sets the name/description strings in every locale's `item.msgbnd.dcx`. Idempotent —
+safe to call on every launch.
+
+### 2 — Create a lot row so it can be awarded
+
+```csharp
+g.DefineLot(embeddedParamdefBytes, new LotDef
+{
+    LotId         = 8500,
+    ItemId        = 8000,          // EquipParamGoods ID from step 1
+    Category      = LotCategory.Goods,
+    Count         = 1,
+    OnceOnlyFlag  = 11819100,      // event flag → won't drop twice
+});
+```
+
+After this, `AwardItemLot(8500)` in any event script will give the player the item once.
+
+### 3 — Place a ground-pickup in the world
+
+```csharp
+g.EditMsb("m18_01_00_00", msb => msb
+    .PlaceTreasure(lotId: 8500, position: new Vector3(52f, -2f, 103f)));
+```
+
+`PlaceTreasure` registers the `o0500` pickup model if needed, creates an object part at
+the given world position, and wires up a `Treasure` event pointing to the lot. The
+collision mesh is automatically borrowed from the nearest existing `o0500` object — pass
+`collisionName: "hXX_YYYY"` to override it.
+
+| Parameter | Type | Default | Notes |
+|---|---|---|---|
+| `lotId` | `int` | required | `ItemLotParam` row to link |
+| `position` | `Vector3` | required | World XYZ |
+| `collisionName` | `string?` | nearest existing | Override collision mesh |
+| `inChest` | `bool` | `false` | Chest vs floor pickup |
+| `entityId` | `int` | `-1` | Entity ID for the object part |
+
+### Full example — adding a trinket that drops on boss death
+
+```csharp
+byte[] paramdefs = GetEmbeddedResource("GameParam.paramdefbnd.dcx");
+
+// Item + lot
+g.DefineGoods(paramdefs, new ItemDef { Id=8000, Name="Goofy Token", /* ... */ });
+g.DefineLot(paramdefs, new LotDef { LotId=8500, ItemId=8000, OnceOnlyFlag=11819100 });
+
+// Place it in the world too (optional — or just award it via EMEVD)
+g.EditMsb("m18_01_00_00", msb => msb
+    .PlaceTreasure(8500, new Vector3(52f, -2f, 103f)));
+
+// Award on boss death via event
+g.EditEmevd("m18_01_00_00", e =>
+    e.DefineEvent(11819100, EMEVD.Event.RestBehaviorType.Default, ev => ev
+        .WhenFlag(16, FlagState.On)
+        .AwardItemLot(8500)
+        .End()));
+```
+
+---
+
 ## What the library replaces
 
 Before `DS1Mod.Modding`, the GoofyDemon patch logic was ~150 lines of hand-rolled
