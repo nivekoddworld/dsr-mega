@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using DS1MegaRando.Core;
@@ -122,8 +123,10 @@ public partial class MainWindow : Window
 
         try
         {
-            foreach (string src in Directory.EnumerateFiles(frameworkSrc))
-                File.Copy(src, Path.Combine(gameDir, Path.GetFileName(src)), overwrite: true);
+            // Mirror framework/ → gameDir, preserving subdirectories. The
+            // tools/ subfolder ships luac50.exe alongside dinput8.dll so the
+            // AiBuilder's runtime Lua compile step has a compiler on disk.
+            CopyDirectory(frameworkSrc, gameDir);
         }
         catch (Exception ex)
         {
@@ -134,6 +137,15 @@ public partial class MainWindow : Window
         }
 
         LaunchViaSteam();
+    }
+
+    private static void CopyDirectory(string src, string dst)
+    {
+        Directory.CreateDirectory(dst);
+        foreach (string file in Directory.EnumerateFiles(src))
+            File.Copy(file, Path.Combine(dst, Path.GetFileName(file)), overwrite: true);
+        foreach (string sub in Directory.EnumerateDirectories(src))
+            CopyDirectory(sub, Path.Combine(dst, Path.GetFileName(sub)));
     }
 
     private void RemoveModFramework_Click(object sender, RoutedEventArgs e)
@@ -162,6 +174,17 @@ public partial class MainWindow : Window
         try
         {
             File.Delete(dllPath);
+
+            // Best-effort cleanup of the staged Lua compiler. Leave the
+            // game's own tools/ contents (if any) alone — only remove our
+            // file and the dir if it's empty afterwards.
+            string luacPath = Path.Combine(gameDir, "tools", "luac50.exe");
+            if (File.Exists(luacPath)) File.Delete(luacPath);
+            string toolsDir = Path.Combine(gameDir, "tools");
+            if (Directory.Exists(toolsDir)
+                && !Directory.EnumerateFileSystemEntries(toolsDir).Any())
+                Directory.Delete(toolsDir);
+
             MessageBox.Show("Mod Framework removed successfully.",
                 "Removed", MessageBoxButton.OK, MessageBoxImage.Information);
         }
