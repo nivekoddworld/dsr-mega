@@ -39,6 +39,10 @@ internal sealed class IdAllocator
     private readonly Dictionary<string, AllocationSpace> _spaces = new();
     private string? _currentMod;
 
+    // Tracks how many times AllocateIds has been called for each (mod, space) pair
+    // this session, so we can replay existing claims in order instead of appending.
+    private readonly Dictionary<(string Mod, string Space), int> _callIndex = new();
+
     // Default starting points for each space
     private static readonly Dictionary<string, int> DefaultBases = new()
     {
@@ -157,18 +161,28 @@ internal sealed class IdAllocator
 
             var modClaims = allocationSpace.Claimed[_currentMod];
 
-            // Find the next available slot (after all allocations in this space)
-            int nextStart = allocationSpace.Base;
-            foreach (var claim in modClaims)
+            // Replay existing claim if this is a repeat run (same call order = same IDs).
+            var key = (_currentMod, space);
+            _callIndex.TryGetValue(key, out int idx);
+            _callIndex[key] = idx + 1;
+
+            if (idx < modClaims.Count)
             {
-                if (claim.End >= nextStart)
-                    nextStart = claim.End + 1;
+                var existing = modClaims[idx];
+                int existingSize = existing.End - existing.Start + 1;
+                if (existingSize != count)
+                    Console.Error.WriteLine(
+                        $"[IdAllocator] WARNING: mod '{_currentMod}' re-requested {space} claim #{idx + 1} " +
+                        $"with count={count} but original was count={existingSize}. Using original.");
+                Console.WriteLine(
+                    $"[IdAllocator] Mod '{_currentMod}' reusing {space} [{existing.Start}–{existing.End}] (claim #{idx + 1})");
+                return existing.Start;
             }
 
-            // Also check claims from other mods
+            // New claim — find the next available slot after all existing claims.
+            int nextStart = allocationSpace.Base;
             foreach (var (_, otherModClaims) in allocationSpace.Claimed)
             {
-                if (otherModClaims == modClaims) continue;  // Skip self
                 foreach (var claim in otherModClaims)
                 {
                     if (claim.End >= nextStart)
