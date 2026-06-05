@@ -171,19 +171,17 @@ public sealed class GamePatch
         {
             repo.Edit("EquipParamGoods", p =>
             {
-                if (p[def.Id] != null)
-                    return; // idempotent
-
-                ParamRepository.AddClone(p, def.DonorId, def.Id, def.Name, row =>
+                // Helper: apply all ItemDef fields to an existing or newly cloned row.
+                // refCategory=2 is the correct value for SpEffectParam lookup — refCategory=1
+                // references a weapon-buff/behavior table (used by Dragon Stones, Pine Resin).
+                static void ApplyDef(PARAM.Row row, ItemDef def)
                 {
-                    // ── CORE IDENTITY ───────────────────────────────────
                     row["maxNum"].Value = def.MaxCount;
 
-                    // SpEffect / behavior binding
                     if (def.SpEffectId >= 0)
                     {
                         row["refId"].Value = def.SpEffectId;
-                        row["refCategory"].Value = (byte)1; // SpEffect
+                        row["refCategory"].Value = (byte)2; // SpEffectParam lookup
                     }
                     else
                     {
@@ -191,46 +189,44 @@ public sealed class GamePatch
                         row["refCategory"].Value = (byte)0;
                     }
 
-                    // ── QUICK-USE FIX (CRITICAL DS1 RULE SET) ────────────
-                    // DS1 does NOT respect isEquip alone — enforce full pipeline
                     if (def.AllowQuickUse)
                     {
                         row["isEquip"].Value = (byte)1;
-
-                        // Force consumable classification unless explicitly overridden
                         if (def.GoodsType.HasValue)
                             row["goodsType"].Value = def.GoodsType.Value;
                         else if (def.SpEffectId >= 0)
-                            row["goodsType"].Value = (byte)0; // Consumable default
+                            row["goodsType"].Value = (byte)0;
                     }
                     else
                     {
                         row["isEquip"].Value = (byte)0;
                     }
 
-                    // ── CONSUMPTION BEHAVIOR ─────────────────────────────
                     row["isConsume"].Value = def.IsConsume ? (byte)1 : (byte)0;
-
-                    // ── STORAGE / WORLD RULES ────────────────────────────
                     row["isDeposit"].Value = def.IsDeposit ? (byte)1 : (byte)0;
                     row["isDrop"].Value = def.IsDrop ? (byte)1 : (byte)0;
 
-                    // ── UI / INPUT BEHAVIOR ──────────────────────────────
                     if (def.UseAnim.HasValue)
                         row["goodsUseAnim"].Value = def.UseAnim.Value;
-
                     if (def.OpenMenuType.HasValue)
                         row["opmeMenuType"].Value = def.OpenMenuType.Value;
-
                     if (def.BehaviorId != 0)
                         row["behaviorId"].Value = def.BehaviorId;
 
-                    // ── SORT / INVENTORY ────────────────────────────────
                     row["sortId"].Value = def.SortId;
-
-                    // ── CUSTOM OVERRIDES ────────────────────────────────
                     def.Configure?.Invoke(row);
-                });
+                }
+
+                if (p[def.Id] != null)
+                {
+                    // Update existing row in-place so parameter changes take effect
+                    // on redeploy without requiring a vanilla restore.
+                    Console.WriteLine($"[DEBUG] EquipParamGoods row {def.Id} exists — updating fields.");
+                    ApplyDef(p[def.Id]!, def);
+                    return;
+                }
+
+                ParamRepository.AddClone(p, def.DonorId, def.Id, def.Name, row => ApplyDef(row, def));
             });
         });
 
