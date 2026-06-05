@@ -63,11 +63,11 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
     // Map
     private const string Map           = IdSpaces.Asylum;
     private const int    Player        = 10000;
-    private const int    DemonEntity   = 1810800;
-    private const int    DemonDeadFlag = 16;
+    private const int    DemonEntity   = 1810800;       // Asylum Demon boss slot entity ID
+    private const int    DemonDeadFlag = 16;            // Vanilla flag: Asylum Demon killed
 
     // AI
-    private const string NpcFileId = "223200";   // Asylum Demon AI file
+    private const string NpcFileId = WellKnownEntities.AsylumDemonAiFileId;  // Asylum Demon AI file
     private const string LuaId     = "MiniGreaterDemon223200"; // must match vanilla goal name prefix
 
     // ── Allocated IDs (assigned at patch time from IPatchContext) ────────────

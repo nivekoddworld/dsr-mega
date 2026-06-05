@@ -30,8 +30,8 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
     // ── Map & AI swap ──
     private const string Map         = IdSpaces.Asylum;
     private const string LuaBnd      = "m18_01_00_00.luabnd.dcx";
-    private const string EntryLeaf   = "223200_battle.lua";
-    private const string ResourceLua = "223200_battle.luac";
+    private const string EntryLeaf   = WellKnownEntities.AsylumDemonAiFileId + "_battle.lua";
+    private const string ResourceLua = WellKnownEntities.AsylumDemonAiFileId + "_battle.luac";
 
     // ── Allocated IDs (assigned at patch time from IPatchContext) ────────────
 
@@ -51,9 +51,9 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
 
     // Constants (no allocation needed)
     private const int EntranceEvt = 11810310;
-    private const int DemonEntity = 1810800;
+    private const int DemonEntity = 1810800;  // Asylum Demon boss slot entity ID
     private const int JumpAnim    = 9060;
-    private const int DemonDeadFlag = 16;
+    private const int DemonDeadFlag = 16;     // Vanilla flag: Asylum Demon killed
     private const string DignityName = "Demon's Dignity (lost)";
     private const string DignityDesc = "All that remains of a demon's self-respect.";
     private const string DignityLong = "The dignity of the Asylum Demon, irretrievably lost the day he chose "

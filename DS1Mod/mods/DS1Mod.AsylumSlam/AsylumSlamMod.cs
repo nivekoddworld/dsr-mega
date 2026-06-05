@@ -27,8 +27,8 @@ public sealed class AsylumSlamMod : ModBase, IGamePatcher
     public override string Author  => "DS1MegaRando";
 
     private const string LuaBnd      = "m18_01_00_00.luabnd.dcx";
-    private const string EntryLeaf   = "223200_battle.lua";
-    private const string ResourceLua = "223200_battle.luac";
+    private const string EntryLeaf   = WellKnownEntities.AsylumDemonAiFileId + "_battle.lua";
+    private const string ResourceLua = WellKnownEntities.AsylumDemonAiFileId + "_battle.luac";
 
     public void Patch(IPatchContext ctx)
     {
