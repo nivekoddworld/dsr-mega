@@ -25,6 +25,15 @@ public sealed class ItemDef
     public ushort MaxCount { get; set; } = 1;
 
     /// <summary>
+    /// SpEffectParam row ID to trigger when the item is used.
+    /// When set, <see cref="GamePatch.DefineGoods"/> automatically sets
+    /// <c>goodsType = 0</c> (consumable) and <c>refId_default</c> to this ID.
+    /// Define the SpEffect row first via <see cref="GamePatch.DefineSpEffect"/>.
+    /// Use -1 (default) for key items with no on-use effect.
+    /// </summary>
+    public int SpEffectId { get; set; } = -1;
+
+    /// <summary>
     /// Called after cloning donor row — use to set additional PARAM fields.
     /// </summary>
     public Action<PARAM.Row>? Configure { get; set; }

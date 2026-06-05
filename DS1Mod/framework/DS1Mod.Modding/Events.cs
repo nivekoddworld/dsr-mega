@@ -53,6 +53,10 @@ public static class Instr
     public static EMEVD.Instruction IfPlayerHasItem(int itemType, int itemId, byte desired = 1, sbyte condGroup = 0) =>
         new(3, 4, new List<object> { condGroup, itemType, itemId, desired });
 
+    /// <summary>4:5 — block until a character has (shouldHave=true) or no longer has (shouldHave=false) a SpEffect active.</summary>
+    public static EMEVD.Instruction IfCharacterHasSpEffect(int entityId, int spEffectId, bool shouldHave = true, sbyte condGroup = 0) =>
+        new(4, 5, new List<object> { condGroup, entityId, spEffectId, (byte)(shouldHave ? 1 : 0) });
+
     // ── event flags ───────────────────────────────────────────────────────────
 
     /// <summary>2003:2 — set an event flag on/off.</summary>
@@ -306,6 +310,20 @@ public sealed class EventBuilder
     public EventBuilder WhenOutsideArea(int entityId, int areaEntityId)
     {
         _instrs.Add(Instr.IfInsideArea(entityId, areaEntityId, desired: 0));
+        return this;
+    }
+
+    /// <summary>Block until <paramref name="entityId"/> has SpEffect <paramref name="spEffectId"/> active.</summary>
+    public EventBuilder WhenCharacterHasSpEffect(int entityId, int spEffectId)
+    {
+        _instrs.Add(Instr.IfCharacterHasSpEffect(entityId, spEffectId, shouldHave: true));
+        return this;
+    }
+
+    /// <summary>Block until <paramref name="entityId"/> no longer has SpEffect <paramref name="spEffectId"/> active.</summary>
+    public EventBuilder WhenCharacterLosesSpEffect(int entityId, int spEffectId)
+    {
+        _instrs.Add(Instr.IfCharacterHasSpEffect(entityId, spEffectId, shouldHave: false));
         return this;
     }
 

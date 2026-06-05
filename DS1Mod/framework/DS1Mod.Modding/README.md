@@ -442,6 +442,103 @@ collision mesh is automatically borrowed from the nearest existing `o0500` objec
 | `inChest` | `bool` | `false` | Chest vs floor pickup |
 | `entityId` | `int` | `-1` | Entity ID for the object part |
 
+### Defining what happens on use — SpEffectDef
+
+Item use behavior is driven by a `SpEffectParam` row. Create one with `DefineSpEffect`
+and link it to the item via `ItemDef.SpEffectId`:
+
+```csharp
+// A 400-HP restore potion
+g.DefineSpEffect(paramdefs, new SpEffectDef
+{
+    Id              = 9000,
+    Duration        = 0f,          // instant (fires once and disappears)
+    HpRecoverPoint  = 400,         // restore 400 HP flat
+});
+
+g.DefineGoods(paramdefs, new ItemDef
+{
+    Id          = 8000,
+    SpEffectId  = 9000,            // wires goodsType=consumable + refId_default automatically
+    Name        = "Goofy Draught",
+    MaxCount    = 5,
+});
+```
+
+For buffs, use the rate fields instead:
+
+```csharp
+g.DefineSpEffect(paramdefs, new SpEffectDef
+{
+    Id               = 9001,
+    Duration         = 60f,        // lasts 60 seconds
+    PhysAtkPowerRate = 1.25f,      // +25% physical attack
+    PhysDefRate      = 1.10f,      // +10% physical defense
+});
+```
+
+For anything not covered by the named fields, use `Configure`:
+
+```csharp
+new SpEffectDef
+{
+    Id        = 9002,
+    Configure = row => {
+        row["registPoison"].Value     = (short)500;   // poison on use
+        row["effectEndurance"].Value  = 30f;
+    }
+}
+```
+
+| `SpEffectDef` property | SpEffectParam field | Notes |
+|---|---|---|
+| `Duration` | `effectEndurance` | 0 = instant |
+| `HpRecoverPoint` | `hpRecoverPoint` | Flat HP restore |
+| `HpRecoverRate` | `hpRecoverRate` | HP/second over duration |
+| `StaminaRecoverPoint` | `staminaRecoverPoint` | Flat stamina restore |
+| `MaxHpRate` | `maxHpRate` | 1.0 = unchanged |
+| `PhysAtkPowerRate` | `physAtkPowerRate` | 1.0 = unchanged |
+| `MagicAtkPowerRate` | `magicAtkPowerRate` | |
+| `FireAtkPowerRate` | `fireAtkPowerRate` | |
+| `ThunderAtkPowerRate` | `thunderAtkPowerRate` | |
+| `PhysDefRate` | `physDefRate` | 1.0 = unchanged |
+| `MagicDefRate` | `magicDefRate` | |
+| `FireDefRate` | `fireDefRate` | |
+| `ThunderDefRate` | `thunderDefRate` | |
+
+### Running C# code when an item is used
+
+`DefineItemTrigger` writes an EMEVD event that watches for the SpEffect to become active
+on the player and pulses an event flag — which your in-process mod code can subscribe to:
+
+```csharp
+// ── In IGamePatcher.Patch() ─────────────────────────────────────────────────
+const int SpEffectId   = 9000;
+const int TriggerFlag  = 11819200;
+const int GoodsId      = 8000;
+
+g.DefineSpEffect(paramdefs, new SpEffectDef { Id = SpEffectId, HpRecoverPoint = 400 });
+g.DefineGoods(paramdefs,    new ItemDef     { Id = GoodsId, SpEffectId = SpEffectId, Name = "…" });
+g.DefineItemTrigger("m18_01_00_00", spEffectId: SpEffectId, triggerFlagId: TriggerFlag);
+
+// ── In ModBase.OnStart() or constructor ─────────────────────────────────────
+Hooks.RegisterItemUsed(GoodsId, TriggerFlag);
+Hooks.ItemUsed += id =>
+{
+    if (id == GoodsId)
+        Console.WriteLine("player used the item!");
+};
+```
+
+`DefineItemTrigger` emits a Restart event that:
+1. Waits for SpEffect `SpEffectId` to activate on entity 10000 (the player)
+2. Sets `TriggerFlag` ON
+3. Waits for the SpEffect to expire
+4. Sets `TriggerFlag` OFF → restarts → waits for the next use
+
+`hooks.RegisterItemUsed(goodsId, triggerFlagId)` + `hooks.ItemUsed` fire the C# event
+the moment the flag goes ON. You can register as many items as you need.
+
 ### Full example — adding a trinket that drops on boss death
 
 ```csharp

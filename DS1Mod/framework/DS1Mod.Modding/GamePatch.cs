@@ -173,7 +173,9 @@ public sealed class GamePatch
                 ParamRepository.AddClone(p, def.DonorId, def.Id, def.Name, row =>
                 {
                     row["maxNum"].Value        = def.MaxCount;
-                    row["refId_default"].Value = def.Id;
+                    row["refId_default"].Value = def.SpEffectId >= 0 ? def.SpEffectId : def.Id;
+                    if (def.SpEffectId >= 0)
+                        row["goodsType"].Value = (byte)0; // consumable
                     def.Configure?.Invoke(row);
                 });
             });
@@ -221,6 +223,74 @@ public sealed class GamePatch
                 });
             });
         });
+    }
+
+    /// <summary>
+    /// Add a SpEffectParam row so it can be referenced by <see cref="ItemDef.SpEffectId"/>
+    /// or applied via EMEVD's <c>Set SpEffect</c> instruction.
+    /// </summary>
+    /// <param name="paramdefBnd">DS1 paramdefbnd bytes.</param>
+    /// <param name="def">SpEffect definition.</param>
+    public void DefineSpEffect(byte[] paramdefBnd, SpEffectDef def)
+    {
+        EditParams(paramdefBnd, repo =>
+        {
+            repo.Edit("SpEffectParam", p =>
+            {
+                if (p[def.Id] != null) return; // idempotent
+                ParamRepository.AddClone(p, def.DonorId, def.Id, $"sp_{def.Id}", row =>
+                {
+                    row["effectEndurance"].Value = def.Duration;
+
+                    if (def.HpRecoverPoint   != 0) row["hpRecoverPoint"].Value   = def.HpRecoverPoint;
+                    if (def.HpRecoverRate    != 0) row["hpRecoverRate"].Value    = def.HpRecoverRate;
+                    if (def.StaminaRecoverPoint != 0) row["staminaRecoverPoint"].Value = def.StaminaRecoverPoint;
+
+                    if (def.MaxHpRate         != 1f) row["maxHpRate"].Value         = def.MaxHpRate;
+                    if (def.PhysAtkPowerRate  != 1f) row["physAtkPowerRate"].Value  = def.PhysAtkPowerRate;
+                    if (def.MagicAtkPowerRate != 1f) row["magicAtkPowerRate"].Value = def.MagicAtkPowerRate;
+                    if (def.FireAtkPowerRate  != 1f) row["fireAtkPowerRate"].Value  = def.FireAtkPowerRate;
+                    if (def.ThunderAtkPowerRate != 1f) row["thunderAtkPowerRate"].Value = def.ThunderAtkPowerRate;
+                    if (def.PhysDefRate       != 1f) row["physDefRate"].Value       = def.PhysDefRate;
+                    if (def.MagicDefRate      != 1f) row["magicDefRate"].Value      = def.MagicDefRate;
+                    if (def.FireDefRate       != 1f) row["fireDefRate"].Value       = def.FireDefRate;
+                    if (def.ThunderDefRate    != 1f) row["thunderDefRate"].Value    = def.ThunderDefRate;
+
+                    def.Configure?.Invoke(row);
+                });
+            });
+        });
+    }
+
+    /// <summary>
+    /// Write an EMEVD event that bridges item use (SpEffect activation) to an event flag,
+    /// enabling in-process C# code to react via <c>hooks.RegisterItemUsed</c> or
+    /// <c>reader.GetEventFlag(triggerFlagId)</c>.
+    ///
+    /// <para>The emitted event:</para>
+    /// <list type="number">
+    ///   <item>Waits until the player (entity 10000) has <paramref name="spEffectId"/> active</item>
+    ///   <item>Sets <paramref name="triggerFlagId"/> ON</item>
+    ///   <item>Waits until the SpEffect expires</item>
+    ///   <item>Sets <paramref name="triggerFlagId"/> OFF and restarts — ready for the next use</item>
+    /// </list>
+    /// </summary>
+    /// <param name="mapId">Map that owns the EMEVD, e.g. <c>"m18_01_00_00"</c>.</param>
+    /// <param name="spEffectId">The SpEffect applied when the item is used.</param>
+    /// <param name="triggerFlagId">Event flag to pulse ON for one SpEffect cycle.</param>
+    /// <param name="eventId">EMEVD event ID. Defaults to <paramref name="triggerFlagId"/>.</param>
+    public bool DefineItemTrigger(string mapId, int spEffectId, int triggerFlagId, int eventId = -1)
+    {
+        const int Player = 10000;
+        if (eventId < 0) eventId = triggerFlagId;
+
+        return EditEmevd(mapId, emevd =>
+            emevd.DefineEvent(eventId, EMEVD.Event.RestBehaviorType.Restart, ev => ev
+                .WhenCharacterHasSpEffect(Player, spEffectId)
+                .SetFlag(triggerFlagId, FlagState.On)
+                .WhenCharacterLosesSpEffect(Player, spEffectId)
+                .SetFlag(triggerFlagId, FlagState.Off)
+                .Restart()));
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────
