@@ -35,6 +35,11 @@ public static class BossIds
     private static readonly (int, int) WarpChar       = (2004, 41);
     private static readonly (int, int) SetImmortal    = (2004, 12);
     private static readonly (int, int) CreateMultipart= (2004, 22);
+    private static readonly (int, int) ForceAnimDsrA  = (2003, 44);
+    private static readonly (int, int) ForceAnimDsrB  = (2003, 46);
+    private static readonly (int, int) WarpAndFloor   = (2004, 40);
+    private static readonly (int, int) WarpCopyFloor  = (2004, 42);
+    private static readonly (int, int) SetNpcPart     = (2004, 22);
 
     public static readonly IReadOnlyList<BossDef> All = new BossDef[]
     {
@@ -70,21 +75,26 @@ public static class BossIds
         new("m10_01_00_00", 1010750, "c2240", "Capra Demon"),
 
         // ── Blighttown ────────────────────────────────────────────────────────
-        new("m14_00_00_00", 1400800, "c5280", "Chaos Witch Quelaag"),
+        new("m14_00_00_00", 1400800, "c5280", "Chaos Witch Quelaag",
+            EmevdPatches: new[] { new EmevdPatch(11405396, ForceAnim, CreateMultipart), new EmevdPatch(11405397, ForceAnim, CreateMultipart) }),
 
         // ── Painted World ────────────────────────────────────────────────────
-        new("m11_00_00_00", 1100160, "c2730", "Crossbreed Priscilla"),
+        new("m11_00_00_00", 1100160, "c2730", "Crossbreed Priscilla",
+            EmevdPatches: new[] { new EmevdPatch(11105396, ForceAnim, CreateMultipart), new EmevdPatch(11105397, WarpChar) }),
 
         // ── Darkroot Garden ──────────────────────────────────────────────────
-        new("m12_00_00_01", 1200800, "c5210", "Sif the Great Wolf"),
+        new("m12_00_00_01", 1200800, "c5210", "Sif the Great Wolf",
+            EmevdPatches: new[] { new EmevdPatch(11200000, WarpChar) }),
         // Moonlight Butterfly: IsIgnored in EnemyIds so it won't appear as a replacement
         // in other arenas, but its own slot is randomizable.
         new("m12_00_00_01", 1200801, "c3230", "Moonlight Butterfly"),
 
         // ── Demon Ruins / Lost Izalith ────────────────────────────────────────
-        new("m14_01_00_00", 1410600, "c5250", "Ceaseless Discharge"),
+        new("m14_01_00_00", 1410600, "c5250", "Ceaseless Discharge",
+            EmevdPatches: new[] { new EmevdPatch(11415376, ForceAnim, WarpChar) }),
         new("m14_01_00_00", 1410400, "c2231", "Demon Firesage"),
-        new("m14_01_00_00", 1410700, "c5200", "Centipede Demon"),
+        new("m14_01_00_00", 1410700, "c5200", "Centipede Demon",
+            EmevdPatches: new[] { new EmevdPatch(11415350, CreateMultipart), new EmevdPatch(11415360, CreateMultipart) }),
         // Bed of Chaos is multi-part/scripted; never replace
         new("m14_01_00_00", 1410980, "c3230", "Bed of Chaos", CanReplace: false),
 
@@ -101,8 +111,10 @@ public static class BossIds
             EmevdPatches: new[] { new EmevdPatch(11505382, ForceAnim, WarpChar) }),
 
         // ── Anor Londo ────────────────────────────────────────────────────────
-        new("m15_01_00_00", 1510800, "c5270", "Ornstein"),
-        new("m15_01_00_00", 1510810, "c2360", "Smough"),
+        new("m15_01_00_00", 1510800, "c5270", "Ornstein",
+            EmevdPatches: new[] { new EmevdPatch(11515397, SetImmortal) }),
+        new("m15_01_00_00", 1510810, "c2360", "Smough",
+            EmevdPatches: new[] { new EmevdPatch(11515397, SetImmortal), new EmevdPatch(11515398, CreateMultipart), new EmevdPatch(11515399, CreateMultipart) }),
         // Gwyndolin: IsIgnored in EnemyIds so it won't appear as a replacement elsewhere,
         // but its own slot is randomizable.
         new("m15_01_00_00", 1510650, "c5320", "Dark Sun Gwyndolin"),
