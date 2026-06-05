@@ -356,7 +356,6 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
             // the AND group to never satisfy in practice.
             // ════════════════════════════════════════════════════════════════
             emevd.DefineEvent(EvtAwardTrinket, EMEVD.Event.RestBehaviorType.Default, ev => ev
-                .WhenDead(DemonEntity)
                 .WhenHpBelow(DemonEntity, 0.5f)   // block until demon HP < 50%
                 .AwardItemLot(DraughtLotId)        // award 3x Goofy Draught
                 .DisplayMessage(MsgTrinketFound)
@@ -499,18 +498,16 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         g.EditAi(Map, NpcFileId, ai => ai
             .Goal("Battle", goal => goal
                 .Act(70, q => q
-                    // mood 0 = stomp
+                    // mood 0 = overhead slam (anim 3007, approach to 8m first)
                     .SetActiveFlagInRange(FlagAiMood0, 2, 0)
-                    .ApproachTarget(Target.Enemy0, Dist.Middle, cancelTime: 12)
-                    .Attack(animId: 3008, cancelTime: 8)
-                    .Wait(cancelTime: 2))
+                    .ApproachTarget(Target.Enemy0, distMeters: 8f, cancelTime: 10)
+                    .Attack(animId: 3007, cancelTime: 10))
                 .Act(30, q => q
-                    // mood 1 = spin+leave
+                    // mood 1 = spin-step evasion then back off
                     .SetActiveFlagInRange(FlagAiMood0, 2, 1)
                     .SpinStep(cancelTime: 5)
-                    .SidewayMove(Target.Enemy0, direction: 0, cancelTime: 3)
-                    .LeaveTarget(Target.Enemy0, Dist.Far, cancelTime: 8)
-                    .WaitRandom(minTime: 1.0f, maxTime: 3.0f))
+                    .LeaveTarget(Target.Enemy0, distMeters: 10f, cancelTime: 5)
+                    .WaitRandom(minTime: 1.0f, maxTime: 2.0f))
 
                 // ── OnInterrupt: always allow pre-emption ─────────────────
                 .OnInterrupt(_ => true)),
