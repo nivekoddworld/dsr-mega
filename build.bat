@@ -48,19 +48,26 @@ echo ============================================================
 echo.
 
 :: ── 1. Restore packages ───────────────────────────────────────────────────
-echo [1/9] Restoring packages...
+echo [1/10] Restoring packages...
 dotnet restore "%REPO%DS1MegaRando.slnx" --nologo
 if errorlevel 1 ( echo [FAIL] dotnet restore & set /a ERRORS+=1 )
 
 :: ── 2. Build C# solution ──────────────────────────────────────────────────
 echo.
-echo [2/9] Building C# solution (Release)...
+echo [2/10] Building C# solution (Release)...
 dotnet build "%REPO%DS1MegaRando.slnx" -c Release --no-restore --nologo
 if errorlevel 1 ( echo [FAIL] dotnet build & set /a ERRORS+=1 )
 
-:: ── 3. Publish DS1Mod.Host → publish\framework\ ───────────────────────────
+:: ── 3. Build DS1Mod.Modding (framework support library) ────────────────────
 echo.
-echo [3/9] Publishing DS1Mod.Host...
+echo [3/10] Building DS1Mod.Modding...
+dotnet build "%REPO%DS1Mod\framework\DS1Mod.Modding\DS1Mod.Modding.csproj" ^
+    -c Release --nologo
+if errorlevel 1 ( echo [FAIL] dotnet build DS1Mod.Modding & set /a ERRORS+=1 )
+
+:: ── 4. Publish DS1Mod.Host → publish\framework\ ───────────────────────────
+echo.
+echo [4/10] Publishing DS1Mod.Host...
 dotnet restore "%REPO%DS1Mod\framework\DS1Mod.Host\DS1Mod.Host.csproj" --nologo
 if errorlevel 1 ( echo [FAIL] dotnet restore DS1Mod.Host & set /a ERRORS+=1 )
 if exist "%PUB_FRAMEWORK%" rd /s /q "%PUB_FRAMEWORK%"
@@ -70,9 +77,9 @@ dotnet publish "%REPO%DS1Mod\framework\DS1Mod.Host\DS1Mod.Host.csproj" ^
     -o "%PUB_FRAMEWORK%"
 if errorlevel 1 ( echo [FAIL] dotnet publish DS1Mod.Host & set /a ERRORS+=1 )
 
-:: ── 4. Build C++ injector (dinput8.dll) ───────────────────────────────────
+:: ── 5. Build C++ injector (dinput8.dll) ───────────────────────────────────
 echo.
-echo [4/9] Building C++ injector (dinput8.dll)...
+echo [5/10] Building C++ injector (dinput8.dll)...
 if not defined MSBUILD (
     echo [FAIL] MSBuild not found.
     echo        Install Visual Studio 2022 with the "Desktop development with C++" workload,
@@ -90,9 +97,9 @@ if errorlevel 1 (
     goto :summary
 )
 
-:: ── 5. Check imgui vendor status (imgui is compiled into dinput8.dll) ────────
+:: ── 6. Check imgui vendor status (imgui is compiled into dinput8.dll) ────────
 echo.
-echo [5/9] Checking imgui vendor status (imgui is compiled into dinput8.dll)...
+echo [6/10] Checking imgui vendor status (imgui is compiled into dinput8.dll)...
 if not exist "%REPO%DS1Mod\DS1Mod.Injector\imgui\imgui.cpp" (
     echo        [WARN] imgui sources not vendored into DS1Mod\DS1Mod.Injector\imgui\.
     echo               See DS1Mod\DS1Mod.Injector\imgui\VENDOR.md for instructions.
@@ -101,9 +108,9 @@ if not exist "%REPO%DS1Mod\DS1Mod.Injector\imgui\imgui.cpp" (
     echo        imgui sources present — will be compiled into dinput8.dll.
 )
 
-:: ── 6. Assemble publish folders ───────────────────────────────────────────
+:: ── 7. Assemble publish folders ───────────────────────────────────────────
 echo.
-echo [6/9] Assembling publish folders...
+echo [7/10] Assembling publish folders...
 
 :: Copy dinput8.dll into the framework folder
 if exist "%PUB_INJECTOR%\dinput8.dll" (
@@ -199,16 +206,16 @@ if exist "!ITEMS_DLL!" (
     echo        [WARN] DS1Mod.ItemsDemo.dll not found at expected path — skipping.
 )
 
-:: ── 7. Run tests ──────────────────────────────────────────────────────────
+:: ── 8. Run tests ──────────────────────────────────────────────────────────
 echo.
-echo [7/9] Running tests...
+echo [8/10] Running tests...
 dotnet test "%REPO%src\DS1MegaRando.Test\DS1MegaRando.Test.csproj" ^
     -c Release --no-build --nologo --logger "console;verbosity=minimal"
 if errorlevel 1 ( echo [FAIL] tests & set /a ERRORS+=1 )
 
-:: ── 8. Stage UI output (bin\ — for IDE runs / debugging) ──────────────────
+:: ── 9. Stage UI output (bin\ — for IDE runs / debugging) ──────────────────
 echo.
-echo [8/9] Staging framework + bundled-mods next to UI exe...
+echo [9/10] Staging framework + bundled-mods next to UI exe...
 
 :: Copy framework + bundled-mods next to the UI exe.
 :: The UI reads these folders and deploys them — nothing goes to the game dir
@@ -228,9 +235,9 @@ if exist "%UI_OUT%" (
     echo        [WARN] UI output folder not found ^(build step 2 may have failed^).
 )
 
-:: ── 9. Publish complete app → publish\app\ ────────────────────────────────
+:: ── 10. Publish complete app → publish\app\ ───────────────────────────────
 echo.
-echo [9/9] Publishing complete app to publish\app\...
+echo [10/10] Publishing complete app to publish\app\...
 if exist "%PUB_APP%" rd /s /q "%PUB_APP%"
 mkdir "%PUB_APP%"
 dotnet publish "%REPO%src\DS1MegaRando.UI\DS1MegaRando.UI.csproj" ^
