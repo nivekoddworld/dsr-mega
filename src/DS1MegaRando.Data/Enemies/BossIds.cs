@@ -26,6 +26,66 @@ public record BossDef(
 
 public static class BossIds
 {
+    // ── Boss Model IDs (type-safe constants for replacement selection) ──────
+    // Use these instead of hardcoded model strings throughout the codebase.
+
+    // Undead Asylum
+    public const string AsylumDemon = "c2232";
+    public const string StrayDemon = "c2230";
+
+    // Undead Parish
+    public const string BellGargoyle = "c5350";
+
+    // The Depths
+    public const string GapingDragon = "c5260";
+
+    // Undead Burg / Lower Undead Burg
+    public const string TaurusDemon = "c2250";
+    public const string CapraDemon = "c2240";
+
+    // Blighttown
+    public const string ChaosWitchQuelaag = "c5280";
+
+    // Painted World
+    public const string CrossbreedPriscilla = "c2730";
+
+    // Darkroot Garden
+    public const string SifTheGreatWolf = "c5210";
+    public const string MoonlightButterfly = "c3230";
+
+    // Demon Ruins / Lost Izalith
+    public const string CeaselessDischarge = "c5250";
+    public const string DemonFiresage = "c2231";
+    public const string CentipedeDemon = "c5200";
+    public const string BedOfChaos = "c3230";  // Note: same model as Moonlight Butterfly, scripted multi-part
+
+    // Tomb of the Giants
+    public const string Pinwheel = "c3320";
+    public const string GravelordNito = "c5220";
+
+    // New Londo Ruins
+    public const string FourKings = "c5390";
+
+    // Sen's Fortress
+    public const string IronGolem = "c2320";
+
+    // Anor Londo
+    public const string Ornstein = "c5270";
+    public const string Smough = "c2360";
+    public const string DarkSunGwyndolin = "c5320";
+
+    // Duke's Archives
+    public const string SeathTheScaleless = "c5290";
+
+    // Kiln of the First Flame
+    public const string GwynLordOfCinder = "c5370";
+
+    // DLC: Oolacile
+    public const string SanctuaryGuardian = "c3471";
+    public const string KnightArtorias = "c4100";
+    public const string ManusFatherOfTheAbyss = "c4500";
+    public const string BlackDragonKalameet = "c4510";
+
     // Common instruction pairs stripped from boss intros:
     //   2003[18] = ForceAnimationPlayback  — plays model-specific entrance anim
     //   2004[41] = WarpCharacter           — teleports boss to scripted position

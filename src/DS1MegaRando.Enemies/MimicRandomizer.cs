@@ -1,3 +1,4 @@
+using DS1MegaRando.Data.Enemies;
 using DS1MegaRando.IO;
 using SoulsFormats;
 
@@ -12,7 +13,7 @@ namespace DS1MegaRando.Enemies;
 /// </summary>
 public static class MimicRandomizer
 {
-    private const string MimicModelId = "c2780";
+    private const string MimicModelId = EnemyIds.Mimic;
 
     public static void Randomize(GameData gameData, Random rng)
     {

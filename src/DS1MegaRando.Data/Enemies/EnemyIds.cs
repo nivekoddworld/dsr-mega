@@ -28,6 +28,144 @@ public record EnemyDef(
 
 public static class EnemyIds
 {
+    // ── Enemy Model IDs (type-safe constants for replacement selection) ──────
+    // Use these instead of hardcoded model strings throughout the codebase.
+
+    // Rats
+    public const string Rat = "c1200";
+    public const string SmallRat = "c1201";
+    public const string LargeRat = "c1202";
+    public const string SnowRat = "c1203";
+
+    // Hollows / Undead
+    public const string Hollow = "c2500";
+    public const string UndeadAssassin = "c2520";
+    public const string BlowdartSniper = "c2530";
+    public const string ArmoredHollow = "c2540";
+    public const string UndeadSoldier = "c2550";
+    public const string BalderKnight = "c2560";
+    public const string BerenekeKnight = "c2570";
+    public const string Necromancer = "c2650";
+    public const string Butcher = "c2660";
+    public const string UndeadCrystalSoldier = "c2800";
+    public const string EngorgedZombie = "c2840";
+
+    // Knights / Elites
+    public const string Darkwraith = "c2390";
+    public const string PaintingGuardian = "c2400";
+    public const string SilverKnight = "c2410";
+    public const string SerpentSoldier = "c2690";
+    public const string SerpentMage = "c2700";
+    public const string BlackKnight = "c2790";
+
+    // Skeletons
+    public const string Skeleton = "c2900";
+    public const string GiantSkeleton = "c2910";
+    public const string BonewheelSkeleton = "c2930";
+    public const string SkeletonBeast = "c2950";
+    public const string BoneTower = "c2960";
+
+    // Beasts / Creatures
+    public const string InfestedGhoul = "c2060";
+    public const string BatwingDemon = "c2260";
+    public const string CrowDemon = "c2310";
+    public const string DemonicFoliage = "c2330";
+    public const string Channeler = "c2370";
+    public const string GiantStoneKnight = "c2380";
+    public const string DemonicStatue = "c2430";
+    public const string CrystalGolem = "c2710";
+    public const string GoldenCrystalGolem = "c2711";
+    public const string InfestedBarbarian = "c2810";
+    public const string InfestedBarbarianBoulder = "c2811";
+    public const string Phalanx = "c2830";
+    public const string Giant = "c2860";
+    public const string Sentinel = "c2870";
+    public const string GiantMosquito = "c3090";
+    public const string Slime = "c3200";
+    public const string EggCarrier = "c3210";
+    public const string VileMaggot = "c3220";
+    public const string ChaosEater = "c3240";
+    public const string ManEaterShell = "c3250";
+    public const string Basilisk = "c3270";
+    public const string UndeadAttackDog = "c3340";
+    public const string FlamingAttackDog = "c3341";
+    public const string PossessedTree = "c3350";
+    public const string TreeLizard = "c3370";
+    public const string GiantLeech = "c3380";
+    public const string CragSpider = "c3400";
+    public const string FrogRay = "c3410";
+    public const string ArmoredTusk = "c3460";
+    public const string ArmoredTuskDukes = "c3461";
+    public const string EvilVagrant = "c3491";
+    public const string MassOfSouls = "c3500";
+    public const string Drake = "c3520";
+    public const string StoneGuardian = "c4120";
+    public const string Scarecrow = "c4130";
+    public const string Bloathead = "c4150";
+    public const string BloatheadSorcerer = "c4160";
+    public const string HumanityPhantom = "c4170";
+    public const string HumanityPhantomM = "c4171";
+    public const string HumanityPhantomL = "c4172";
+    public const string ChainedPrisoner = "c4180";
+    public const string DlcDog = "c4190";
+    public const string GreatFeline = "c5360";
+    public const string LightningGargoyle = "c5351";
+
+    // Mushrooms
+    public const string MushroomParent = "c2270";
+    public const string MushroomChild = "c2280";
+
+    // Boss-Capable enemies
+    public const string StrayDemon = "c2230";
+    public const string DemonFiresage = "c2231";
+    public const string CapraDemon = "c2240";
+    public const string TaurusDemon = "c2250";
+    public const string IronGolem = "c2320";
+    public const string Smough = "c2360";
+    public const string CrossbreedPriscilla = "c2730";
+    public const string Pinwheel = "c3320";
+    public const string SanctuaryGuardian = "c3471";
+    public const string KnightArtorias = "c4100";
+    public const string Manus = "c4500";
+    public const string BlackDragonKalameet = "c4510";
+    public const string CentipedeDemon = "c5200";
+    public const string Sif = "c5210";
+    public const string GravelordNito = "c5220";
+    public const string GapingDragon = "c5260";
+    public const string Ornstein = "c5270";
+    public const string SuperOrnstein = "c5271";
+    public const string ChaosWitchQuelaag = "c5280";
+    public const string SeathTheScaleless = "c5290";
+    public const string BellGargoyle = "c5350";
+    public const string Gwyn = "c5370";
+    public const string FourKings = "c5390";
+
+    // Ignored (scripted/broken AI)
+    public const string AsylumDemon = "c2232";
+    public const string TitaniteDemon = "c2300";
+    public const string Ghost = "c2670";
+    public const string LightningGhost = "c2680";
+    public const string Mimic = "c2780";
+    public const string BlackKnightVar1 = "c2791";
+    public const string BlackKnightVar2 = "c2792";
+    public const string BlackKnightVar3 = "c2793";
+    public const string SkeletonBaby = "c2940";
+    public const string MoonlightButterfly = "c3230";
+    public const string CrystalLizard = "c3300";
+    public const string Pisaca = "c3330";
+    public const string BurrowingRockworm = "c3390";
+    public const string UndeadDragon = "c3420";
+    public const string BoundingDemon = "c3421";
+    public const string HellkiteDrake = "c3430";
+    public const string ChaosBug = "c3480";
+    public const string GoodVagrant = "c3490";
+    public const string Hydra = "c3530";
+    public const string CentipedeArm = "c5201";
+    public const string CentipedeTail = "c5202";
+    public const string ParasiticWallHugger = "c5240";
+    public const string CeaselessDischarge = "c5250";
+    public const string Gwyndolin = "c5320";
+
     /// <summary>
     /// All known combat enemies.  Model IDs are taken from the reference enemy
     /// randomizer (valid_new.txt) and match DSR's chrbnd naming scheme.
