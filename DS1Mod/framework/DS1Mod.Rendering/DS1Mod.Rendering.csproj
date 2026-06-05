@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>DS1Mod.Rendering</AssemblyName>
+    <RootNamespace>DS1Mod.Rendering</RootNamespace>
+    <Description>ImGui overlay bridge for the DS1Mod framework.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DS1Mod.Core\DS1Mod.Core.csproj" />
+  </ItemGroup>
+
+</Project>

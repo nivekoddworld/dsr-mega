@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>DS1Mod.HpLogger</AssemblyName>
+    <RootNamespace>DS1Mod.HpLogger</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- SDK gives us ModBase + pulls in Core transitively -->
+    <ProjectReference Include="..\..\framework\DS1Mod.SDK\DS1Mod.SDK.csproj" />
+  </ItemGroup>
+</Project>

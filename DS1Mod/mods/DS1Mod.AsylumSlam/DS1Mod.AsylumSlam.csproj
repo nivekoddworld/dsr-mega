@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>DS1Mod.AsylumSlam</AssemblyName>
+    <RootNamespace>DS1Mod.AsylumSlam</RootNamespace>
+    <Description>Asylum Demon slam-only AI — patches the AI luabnd at launch.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- SDK gives us ModBase + pulls in Core transitively -->
+    <ProjectReference Include="..\..\framework\DS1Mod.SDK\DS1Mod.SDK.csproj" />
+    <!-- SoulsFormats for reading/repacking the luabnd.dcx archive -->
+    <ProjectReference Include="..\..\..\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Precompiled Lua 5.0 bytecode (built on Linux, DSR-compatible) -->
+    <EmbeddedResource Include="223200_battle.luac">
+      <LogicalName>223200_battle.luac</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>
