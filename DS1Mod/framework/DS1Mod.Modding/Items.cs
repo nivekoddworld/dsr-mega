@@ -146,7 +146,7 @@ public sealed class MsbEditor
 
         var treasure = new MSB1.Event.Treasure
         {
-            Name             = "takara",
+            Name             = $"takara_{lotId}",
             TreasurePartName = objName,
             InChest          = inChest,
             StartDisabled    = false,
@@ -160,12 +160,17 @@ public sealed class MsbEditor
 
     private string FindNearestCollision(Vector3 pos)
     {
-        // Walk existing o0500 objects and return the collision of the nearest one
-        var nearest = _msb.Parts.Objects
+        // Prefer the collision name from the nearest existing o0500 pickup object
+        var nearestObj = _msb.Parts.Objects
             .Where(o => o.ModelName == "o0500" && !string.IsNullOrEmpty(o.CollisionName))
             .OrderBy(o => Vector3.DistanceSquared(o.Position, pos))
             .FirstOrDefault();
+        if (nearestObj is not null) return nearestObj.CollisionName!;
 
-        return nearest?.CollisionName ?? string.Empty;
+        // Fall back to the nearest collision mesh part by world position
+        var nearestCol = _msb.Parts.Collisions
+            .OrderBy(c => Vector3.DistanceSquared(c.Position, pos))
+            .FirstOrDefault();
+        return nearestCol?.Name ?? string.Empty;
     }
 }
