@@ -1,153 +1,244 @@
-# Items API — How To
+# Items & SpEffect API — What Was Added Today
 
-Everything needed to add a new item to DSR: define it, give it a use effect,
-place it in the world, and react to the player using it — in C#, no raw param
-or Lua editing required.
+Everything in this document was added on 2026-06-05. It covers all new
+patch-time and runtime APIs for creating items, placing them in the world,
+defining what happens on use, and reacting to item use in C# and in-game.
 
 ---
 
-## 1 — Define the use effect (SpEffectDef)
+## New patch-time APIs (DS1Mod.Modding)
+
+### DefineSpEffect
+
+Creates a `SpEffectParam` row — the engine mechanism behind all triggered
+effects (HP restore, buffs, status infliction).
 
 ```csharp
 g.DefineSpEffect(paramdefs, new SpEffectDef
 {
-    Id             = 9000,       // unique SpEffectParam row id (use 9000+ range)
-    Duration       = 0f,         // 0 = instant; >0 = lingering buff in seconds
-    HpRecoverPoint = 400,        // restore 400 HP flat on use
+    Id             = 9100,   // unique SpEffectParam row id
+    DonorId        = 7000,   // clone from this existing row
+    Duration       = 0f,     // 0 = instant; seconds otherwise
+    HpRecoverPoint = 400,    // flat HP restored on application
 });
 ```
 
-Common fields:
+**`SpEffectDef` fields:**
 
 | Field | Effect |
 |---|---|
+| `Duration` | How long the effect lasts. `0` = instant (fires once). |
 | `HpRecoverPoint` | Flat HP restored instantly |
 | `HpRecoverRate` | HP/second over `Duration` |
 | `StaminaRecoverPoint` | Flat stamina restored |
-| `MaxHpRate` | Max HP multiplier (1.2 = +20%) |
+| `MaxHpRate` | Max HP multiplier (`1.2` = +20%) |
 | `PhysAtkPowerRate` | Physical attack multiplier |
+| `MagicAtkPowerRate` | Magic attack multiplier |
+| `FireAtkPowerRate` | Fire attack multiplier |
+| `ThunderAtkPowerRate` | Lightning attack multiplier |
 | `PhysDefRate` | Physical defense multiplier |
-| `Duration` | How long the effect lasts (0 = instant) |
-| `Configure` | Raw callback for any param field not listed above |
+| `MagicDefRate` | Magic defense multiplier |
+| `FireDefRate` | Fire defense multiplier |
+| `ThunderDefRate` | Lightning defense multiplier |
+| `Configure` | Raw `Action<PARAM.Row>` callback for any field not listed above |
 
 ---
 
-## 2 — Create the item (ItemDef + DefineGoods)
+### DefineGoods
+
+Creates a row in `EquipParamGoods` and writes name/description strings to every
+locale's `item.msgbnd.dcx`. Idempotent — safe to call every launch.
 
 ```csharp
 g.DefineGoods(paramdefs, new ItemDef
 {
-    Id          = 8000,       // unique EquipParamGoods row id (use 8000+ range)
-    DonorId     = 384,        // clone from this existing goods row
-    SpEffectId  = 9000,       // links the SpEffect; also sets goodsType = consumable
-    Name        = "My Potion",
-    Description = "Restores HP.",
-    LongDesc    = "A long description shown in the inventory.",
+    Id          = 8100,
+    DonorId     = 384,          // clone from this existing goods row
+    SpEffectId  = 9100,         // links SpEffect; sets goodsType=consumable automatically
+    Name        = "Goofy Draught",
+    Description = "Restores 400 HP.",
+    LongDesc    = "A longer description shown in the inventory.",
     MaxCount    = 5,
 });
 ```
 
-- If `SpEffectId` is set, `goodsType` and `refId_default` are wired automatically.
-- Leave `SpEffectId` at `-1` (default) for key items that have no use effect — set
-  `goodsType = 4` via `Configure` instead.
+**`ItemDef` fields:**
 
----
+| Field | Default | Notes |
+|---|---|---|
+| `Id` | required | Unique `EquipParamGoods` row id |
+| `DonorId` | `384` | Row to clone (copies all param fields as a base) |
+| `SpEffectId` | `-1` | When set: wires `goodsType=0` (consumable) + `refId_default` automatically |
+| `Name` | `"Unnamed Item"` | Shown in inventory |
+| `Description` | `""` | Short description |
+| `LongDesc` | `""` | Long description |
+| `MaxCount` | `1` | Stack size |
+| `Configure` | `null` | Raw `Action<PARAM.Row>` for anything not listed above |
 
-## 3 — Create a lot (LotDef + DefineLot)
-
-A lot is what the game actually awards. An EMEVD event calls `AwardItemLot(lotId)`;
-a Treasure event in the MSB also points to a lot.
+**Key item (no use effect)** — set `goodsType=4` via `Configure`:
 
 ```csharp
-g.DefineLot(paramdefs, new LotDef
+g.DefineGoods(paramdefs, new ItemDef
 {
-    LotId        = 8500,      // unique ItemLotParam row id
-    ItemId       = 8000,      // EquipParamGoods id from step 2
-    Category     = LotCategory.Goods,
-    Count        = 1,
-    OnceOnlyFlag = 50009000,  // event flag — item won't drop twice. -1 = infinite.
+    Id        = 8101,
+    Name      = "Stone Trinket",
+    MaxCount  = 1,
+    Configure = row => row["goodsType"].Value = (byte)4,
 });
 ```
 
 ---
 
-## 4 — Place it in the world (EditMsb / PlaceTreasure)
+### DefineLot
 
-Adds a glowing `o0500` ground-pickup object and a Treasure event to the map.
+Creates an `ItemLotParam` row. Used by `AwardItemLot` in EMEVD events and by
+`PlaceTreasure` in MSB Treasure events.
+
+```csharp
+// Once-only lot (won't drop again after flag is set)
+g.DefineLot(paramdefs, new LotDef
+{
+    LotId        = 8601,
+    ItemId       = 8101,               // EquipParamGoods id
+    Category     = LotCategory.Goods,  // Goods / Weapon / Protector / Accessory
+    Count        = 1,
+    OnceOnlyFlag = 11819402,           // event flag id — set when obtained
+});
+
+// Infinite lot
+g.DefineLot(paramdefs, new LotDef
+{
+    LotId        = 8600,
+    ItemId       = 8100,
+    Count        = 3,
+    OnceOnlyFlag = -1,                 // -1 = no restriction, infinite
+});
+```
+
+---
+
+### EditMsb / PlaceTreasure
+
+Edits a map's `.msb` file in place. `PlaceTreasure` adds a glowing `o0500`
+ground-pickup object and a `Treasure` event pointing to a lot.
 
 ```csharp
 g.EditMsb("m18_01_00_00", msb => msb
-    .PlaceTreasure(lotId: 8500, position: new Vector3(52f, -2f, 103f)));
+    .PlaceTreasure(lotId: 8601, position: new Vector3(52f, -2f, 103f)));
 ```
 
-Optional parameters:
+**`PlaceTreasure` parameters:**
 
 | Parameter | Default | Notes |
 |---|---|---|
-| `collisionName` | nearest existing pickup's collision | Override if placing far from other pickups |
-| `inChest` | `false` | `true` for chest-style container |
-| `entityId` | `-1` | Assign an entity ID to reference from EMEVD |
+| `lotId` | required | `ItemLotParam` row to link |
+| `position` | required | World XYZ position |
+| `collisionName` | nearest existing pickup | Override the collision mesh |
+| `inChest` | `false` | `true` for a chest container |
+| `entityId` | `-1` | Assign an entity id for EMEVD reference |
 
 ---
 
-## 5 — Award via EMEVD (no world placement)
+### DefineItemTrigger
 
-If you'd rather give the item through a script trigger than place it on the floor:
+Writes a `Restart` EMEVD event that bridges item use (SpEffect activation) to
+an event flag pulse. This is what connects an item use to both in-game EMEVD
+responses and the C# `ItemUsed` hook.
 
 ```csharp
-g.EditEmevd("m18_01_00_00", emevd =>
-    emevd.DefineEvent(11819100, EMEVD.Event.RestBehaviorType.Default, ev => ev
-        .WhenFlag(16, FlagState.On)   // Asylum Demon dead
-        .AwardItemLot(8500)
-        .End()));
+g.DefineItemTrigger("m18_01_00_00", spEffectId: 9100, triggerFlagId: 11819401);
+```
+
+The emitted event:
+1. Waits until entity `10000` (the player) has SpEffect `9100` active
+2. Sets flag `11819401` **ON**
+3. Waits until the SpEffect expires
+4. Sets flag `11819401` **OFF** → restarts — ready for next use
+
+`eventId` defaults to `triggerFlagId`. Pass it explicitly to override:
+
+```csharp
+g.DefineItemTrigger(Map, spEffectId: 9100, triggerFlagId: 11819401, eventId: 11819450);
 ```
 
 ---
 
-## 6 — React when the item is used
+### WhenCharacterHasSpEffect / WhenCharacterLosesSpEffect
 
-Two layers — pick one or both.
-
-### Layer A: In-game engine response (EMEVD)
-
-`DefineItemTrigger` writes an EMEVD event that pulses an event flag every time
-the item's SpEffect activates. A second event watches that flag and does something.
+Two new `EventBuilder` methods for writing the SpEffect condition manually,
+if you need it in your own events rather than via `DefineItemTrigger`.
 
 ```csharp
-// In Patch():
-g.DefineItemTrigger("m18_01_00_00", spEffectId: 9000, triggerFlagId: 11819200);
-
-g.EditEmevd("m18_01_00_00", emevd =>
-    emevd.DefineEvent(11819201, EMEVD.Event.RestBehaviorType.Restart, ev => ev
-        .WhenFlag(11819200, FlagState.On)
-        .DisplayMessage(6900750)            // show text
-        .SetFlag(11819202, FlagState.On)    // set a permanent flag
-        .WhenFlag(11819200, FlagState.Off)
-        .Restart()));
+emevd.DefineEvent(11819450, EMEVD.Event.RestBehaviorType.Restart, ev => ev
+    .WhenCharacterHasSpEffect(10000, 9100)  // wait until player has SpEffect active
+    .SetFlag(11819401, FlagState.On)
+    .WhenCharacterLosesSpEffect(10000, 9100) // wait until it expires
+    .SetFlag(11819401, FlagState.Off)
+    .Restart());
 ```
 
-Everything above runs inside the game engine at runtime — no .NET involved.
+These map to EMEVD instruction `4:5 IF Character Has SpEffect`.
 
-### Layer B: C# callback (in-process)
+---
+
+## New runtime APIs (DS1Mod.Core)
+
+### hooks.RegisterItemUsed + hooks.ItemUsed
+
+Register an item to watch and subscribe to the C# event. Fires in the 500ms
+poll loop when the trigger flag pulses ON.
 
 ```csharp
-// In Patch() — same DefineItemTrigger call as above
-g.DefineItemTrigger("m18_01_00_00", spEffectId: 9000, triggerFlagId: 11819200);
-
 // In OnLoad():
-ctx.Hooks.RegisterItemUsed(goodsId: 8000, triggerFlagId: 11819200);
-ctx.Hooks.ItemUsed += id => {
-    if (id == 8000)
-        Console.WriteLine("player used the item!");
-};
+ctx.Hooks.RegisterItemUsed(goodsId: 8100, triggerFlagId: 11819401);
+ctx.Hooks.ItemUsed += OnItemUsed;
+
+private void OnItemUsed(int goodsId)
+{
+    if (goodsId != 8100) return;
+    Console.WriteLine("player used the draught!");
+
+    var stats = ctx.Reader.GetPlayerStats();
+    Console.WriteLine($"HP after use: {stats?.CurrentHp}/{stats?.MaxHp}");
+}
 ```
 
-Fires in the 500ms poll loop inside the DSR process. Use it for logging, counters,
-or anything that doesn't need frame-accurate timing.
+`triggerFlagId` must match the flag written by `DefineItemTrigger` (or your
+own manual EMEVD event).
 
 ---
 
-## Full example
+## In-game engine response vs. C# response
+
+Both reactions can coexist. Pick the right tool:
+
+| | In-game EMEVD event | C# `hooks.ItemUsed` |
+|---|---|---|
+| Runs inside | Game engine | .NET / DS1Mod poll loop |
+| Can trigger | Animations, messages, flags, item awards | Anything in C# |
+| Timing | Next game frame after SpEffect activates | Within ~500ms |
+| Setup | `DefineItemTrigger` + `DefineEvent` | `RegisterItemUsed` |
+
+```csharp
+// Patch(): both together
+g.DefineItemTrigger(Map, spEffectId: 9100, triggerFlagId: 11819401);
+
+g.EditEmevd(Map, emevd =>
+    emevd.DefineEvent(11819404, EMEVD.Event.RestBehaviorType.Restart, ev => ev
+        .WhenFlag(11819401, FlagState.On)
+        .DisplayMessage(6900750)           // in-game text popup
+        .SetFlag(11819405, FlagState.On)   // permanent "used" flag
+        .WhenFlag(11819401, FlagState.Off)
+        .Restart()));
+
+// OnLoad(): C# side
+ctx.Hooks.RegisterItemUsed(8100, 11819401);
+ctx.Hooks.ItemUsed += id => Console.WriteLine($"used goods id {id}");
+```
+
+---
+
+## Full example — item from scratch to use
 
 ```csharp
 public void Patch(IPatchContext ctx)
@@ -155,57 +246,57 @@ public void Patch(IPatchContext ctx)
     byte[] paramdefs = GetEmbeddedResource("paramdef.paramdefbnd.dcx");
     var g = new GamePatch(ctx);
 
-    g.DefineSpEffect(paramdefs, new SpEffectDef { Id=9000, HpRecoverPoint=400 });
+    // 1. Define what happens on use
+    g.DefineSpEffect(paramdefs, new SpEffectDef { Id=9100, HpRecoverPoint=400 });
 
+    // 2. Create the item (consumable, linked to the SpEffect)
     g.DefineGoods(paramdefs, new ItemDef
     {
-        Id=8000, SpEffectId=9000,
-        Name="Goofy Draught", Description="Restores 400 HP.", MaxCount=5,
+        Id=8100, SpEffectId=9100, Name="Goofy Draught", MaxCount=5,
     });
 
-    g.DefineLot(paramdefs, new LotDef
-    {
-        LotId=8500, ItemId=8000, OnceOnlyFlag=11819400,
-    });
+    // 3. Create the lot
+    g.DefineLot(paramdefs, new LotDef { LotId=8600, ItemId=8100, Count=3 });
 
-    // Place on the floor
+    // 4. Place it on the floor
     g.EditMsb("m18_01_00_00", msb => msb
-        .PlaceTreasure(8500, new Vector3(52f, -2f, 103f)));
+        .PlaceTreasure(8600, new Vector3(52f, -2f, 103f)));
 
-    // Also award on boss death
+    // 5. Also award it via EMEVD on boss death
     g.EditEmevd("m18_01_00_00", emevd => {
         emevd.DefineEvent(11819400, EMEVD.Event.RestBehaviorType.Default, ev => ev
             .WhenFlag(16, FlagState.On)
-            .AwardItemLot(8500)
+            .AwardItemLot(8600)
             .End());
 
-        // Bridge: SpEffect active → flag pulse (used by both EMEVD response and C# hook)
-        g.DefineItemTrigger("m18_01_00_00", spEffectId:9000, triggerFlagId:11819401);
-
-        // In-game response
-        emevd.DefineEvent(11819402, EMEVD.Event.RestBehaviorType.Restart, ev => ev
+        // 6a. EMEVD bridge (SpEffect → flag) — required for both response layers
+        // 6b. In-game response: show message when item is used
+        emevd.DefineEvent(11819404, EMEVD.Event.RestBehaviorType.Restart, ev => ev
             .WhenFlag(11819401, FlagState.On)
             .DisplayMessage(6900750)
             .WhenFlag(11819401, FlagState.Off)
             .Restart());
     });
+
+    g.DefineItemTrigger("m18_01_00_00", spEffectId:9100, triggerFlagId:11819401);
 }
 
 public override void OnLoad(IModContext ctx)
 {
-    ctx.Hooks.RegisterItemUsed(8000, 11819401);
-    ctx.Hooks.ItemUsed += id => Console.WriteLine($"Used item {id}");
+    // 6c. C# runtime response
+    ctx.Hooks.RegisterItemUsed(8100, 11819401);
+    ctx.Hooks.ItemUsed += id => Console.WriteLine($"used {id}");
 }
 ```
 
 ---
 
-## ID ranges used by this demo
+## ID ranges used by the demo mod
 
 | Range | Purpose |
 |---|---|
-| `8100–8101` | EquipParamGoods (new goods rows) |
-| `9100` | SpEffectParam |
-| `8600–8601` | ItemLotParam |
-| `11819400–11819404` | Event flags (m18_01 section 9, allocated) |
-| `6900750` | Event_text FMG (on-use message) |
+| `8100–8102` | `EquipParamGoods` new rows |
+| `9100` | `SpEffectParam` new row |
+| `8600–8602` | `ItemLotParam` new rows |
+| `11819401–11819405` | Event flags (m18_01, section 9) |
+| `6900750` | `Event_text` FMG entry (on-use message) |
