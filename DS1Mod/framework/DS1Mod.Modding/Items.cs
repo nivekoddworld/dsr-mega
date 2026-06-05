@@ -158,6 +158,11 @@ public sealed class MsbEditor
             EventID          = nextEventId,
         };
         treasure.ItemLots[0] = lotId;
+        // SoulsFormats initialises unused slots to -1, which the engine
+        // treats as a valid lot ID and tries to award — giving 4 phantom
+        // "invalid item" pickups alongside the real one. Zero means no lot.
+        for (int i = 1; i < treasure.ItemLots.Length; i++)
+            treasure.ItemLots[i] = 0;
         _msb.Events.Treasures.Add(treasure);
 
         return this;
