@@ -1,0 +1,24 @@
+═══════════════════════════════════════════════════════
+           DS1 MEGA RANDOMIZER — SPOILER LOG          
+═══════════════════════════════════════════════════════
+Seed:    00003039
+Date:    2026-06-02 06:42:58
+Version: 1.0.0
+Settings Hash: Seed:00003039 Fog:False Items:True Enemies:False
+
+───────────────────────────────────────────────────────
+  KEY ITEM PLACEMENTS
+───────────────────────────────────────────────────────
+  archive_prison_extra_key            : asylum (Lot 1810260)
+  archive_tower_giant_cell_key        : asylum (Lot 1810250)
+  archive_tower_giant_door_key        : asylum (Lot 1810220)
+  basement_key                        : asylum (Lot 1810330)
+  blighttown_key                      : asylum (Lot 1810100)
+  crest_key                           : asylum (Lot 1810130)
+  key_to_depths                       : asylum (Lot 1810140)
+  key_to_new_londo_ruins              : asylum (Lot 1810300)
+  key_to_the_seal                     : asylum (Lot 1810200)
+  residence_key                       : asylum (Lot 1810120)
+  undead_asylum_f2_west_key           : asylum (Lot 1810150)
+  watchtower_basement_key             : asylum (Lot 1810180)
+

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DS1MegaRando.Annotations\DS1MegaRando.Annotations.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Data\DS1MegaRando.Data.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.FogGate\DS1MegaRando.FogGate.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Graph\DS1MegaRando.Graph.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Items\DS1MegaRando.Items.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Settings\DS1MegaRando.Settings.csproj" />
+  </ItemGroup>
+
+</Project>

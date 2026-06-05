@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DS1MegaRando.Annotations\DS1MegaRando.Annotations.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.FogGate\DS1MegaRando.FogGate.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.IO\DS1MegaRando.IO.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Settings\DS1MegaRando.Settings.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Data\DS1MegaRando.Data.csproj" />
+    <ProjectReference Include="..\..\lib\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
+  </ItemGroup>
+
+</Project>

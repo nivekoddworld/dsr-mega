@@ -1,0 +1,279 @@
+{
+  // Boss placement overrides for DS1 Mega Randomizer.
+  //
+  // ── "pinned" ─────────────────────────────────────────────────────────────────
+  //   slot name : replacement name
+  //   Force a specific boss slot to always receive a specific replacement,
+  //   regardless of the seed.  Leave empty to let the randomizer decide.
+  //
+  // ── "blocked" ────────────────────────────────────────────────────────────────
+  //   slot name : [ list of boss names ]
+  //   Prevent listed bosses from ever appearing in that slot.
+  //   Defaults cover known arena-size mismatches and crash combos.
+  //
+  // ── "positions" ──────────────────────────────────────────────────────────────
+  //   slot name : { x, y, z, rotX, rotY, rotZ }
+  //   Override the world-space spawn position and/or Euler rotation (degrees)
+  //   of whatever boss is placed in that slot.
+  //   Any component you omit keeps the vanilla MSB value.
+  //   Example:
+  //     "Gwyn, Lord of Cinder": { "x": 28.5, "y": 0.3, "z": -18.0, "rotY": 180.0 }
+  //
+  // All names are case-insensitive and must match one of:
+  //   Bell Gargoyles, Gaping Dragon, Taurus Demon, Capra Demon,
+  //   Chaos Witch Quelaag, Crossbreed Priscilla, Sif the Great Wolf,
+  //   Demon Firesage, Centipede Demon, Pinwheel, Gravelord Nito, Four Kings,
+  //   Iron Golem, Ornstein, Smough, Seath the Scaleless, Gwyn Lord of Cinder,
+  //   Knight Artorias, Black Dragon Kalameet, Manus Father of the Abyss,
+  //   Sanctuary Guardian
+
+  "pinned": {
+  },
+
+  "blocked": {
+
+    // ── Undead Asylum courtyard — medium open courtyard, low ceiling indoors ──
+    // Seath is too large to fit; Four Kings requires open void geometry.
+    "Asylum Demon": [
+      "Seath the Scaleless",
+      "Four Kings",
+      "Black Dragon Kalameet"
+    ],
+
+    // ── Undead Parish rooftop — tiny bell-tower ledge ────────────────────────
+    // Very confined space; large or environment-dependent bosses will clip or
+    // crash on load.
+    "Bell Gargoyles": [
+      "Gaping Dragon",
+      "Iron Golem",
+      "Centipede Demon",
+      "Seath the Scaleless",
+      "Four Kings",
+      "Black Dragon Kalameet",
+      "Smough",
+      "Taurus Demon",
+      "Demon Firesage"
+    ],
+
+    // ── The Depths sewer — large but enclosed rectangular room ───────────────
+    // Four Kings requires the open Abyss void; Kalameet needs the Royal Wood
+    // canyon geometry for aerial attacks; Seath needs his crystal room.
+    "Gaping Dragon": [
+      "Four Kings",
+      "Seath the Scaleless",
+      "Black Dragon Kalameet"
+    ],
+
+    // ── Undead Burg rampart — narrow castle wall walkway ─────────────────────
+    // Tight space with low ceilings; bosses with large hitboxes or that require
+    // open terrain will instantly clip through the floor or walls.
+    "Taurus Demon": [
+      "Gaping Dragon",
+      "Iron Golem",
+      "Centipede Demon",
+      "Seath the Scaleless",
+      "Four Kings",
+      "Black Dragon Kalameet",
+      "Smough"
+    ],
+
+    // ── Lower Undead Burg courtyard — extremely tight enclosed courtyard ─────
+    "Capra Demon": [
+      "Asylum Demon",
+      "Iron Golem",
+      "Gaping Dragon",
+      "Centipede Demon",
+      "Seath the Scaleless",
+      "Four Kings",
+      "Gravelord Nito",
+      "Black Dragon Kalameet",
+      "Smough",
+      "Taurus Demon",
+      "Demon Firesage"
+    ],
+
+    // ── Blighttown cave — large open cave floor ──────────────────────────────
+    // Iron Golem needs Sen's specific elevated platform; Seath needs his crystal
+    // room; Four Kings needs the Abyss void; Kalameet needs the outdoor canyon.
+    "Chaos Witch Quelaag": [
+      "Iron Golem",
+      "Seath the Scaleless",
+      "Four Kings",
+      "Black Dragon Kalameet"
+    ],
+
+    // ── Painted World clearing — small snowy courtyard ───────────────────────
+    "Crossbreed Priscilla": [
+      "Iron Golem",
+      "Gaping Dragon",
+      "Centipede Demon",
+      "Seath the Scaleless",
+      "Four Kings",
+      "Black Dragon Kalameet",
+      "Smough",
+      "Taurus Demon",
+      "Demon Firesage"
+    ],
+
+    // ── Darkroot Garden — large circular arena ───────────────────────────────
+    // Iron Golem requires Sen's Fortress platform geometry for his fall-off
+    // kill condition; Seath / Four Kings / Kalameet need specific environments.
+    "Sif the Great Wolf": [
+      "Iron Golem",
+      "Seath the Scaleless",
+      "Four Kings",
+      "Black Dragon Kalameet"
+    ],
+
+    // ── Demon Ruins — medium lava-floor room ─────────────────────────────────
+    "Demon Firesage": [
+      "Seath the Scaleless",
+      "Four Kings",
+      "Black Dragon Kalameet"
+    ],
+
+    // ── Demon Ruins lava chamber — very large open lava room ─────────────────
+    "Centipede Demon": [
+      "Seath the Scaleless",
+      "Four Kings",
+      "Black Dragon Kalameet"
+    ],
+
+    // ── Tomb of the Giants crypt — medium dark tomb room ─────────────────────
+    // Oversized bosses will clip through the low ceiling or irregular walls.
+    "Pinwheel": [
+      "Gaping Dragon",
+      "Iron Golem",
+      "Centipede Demon",
+      "Seath the Scaleless",
+      "Four Kings",
+      "Black Dragon Kalameet",
+      "Smough",
+      "Taurus Demon",
+      "Demon Firesage"
+    ],
+
+    // ── Tomb of the Giants coffin cavern — irregular bone-and-coffin cave ────
+    "Gravelord Nito": [
+      "Asylum Demon",
+      "Gaping Dragon",
+      "Iron Golem",
+      "Centipede Demon",
+      "Seath the Scaleless",
+      "Four Kings",
+      "Black Dragon Kalameet",
+      "Smough",
+      "Taurus Demon",
+      "Demon Firesage"
+    ],
+
+    // ── New Londo Ruins / Abyss void — open black void ───────────────────────
+    // Only bosses that can tolerate featureless infinite-fall terrain are safe.
+    // Gaping Dragon / Centipede Demon / Iron Golem / Kalameet all rely on
+    // terrain geometry for their movesets or kill conditions.
+    "Four Kings": [
+      "Gaping Dragon",
+      "Centipede Demon",
+      "Seath the Scaleless",
+      "Iron Golem",
+      "Black Dragon Kalameet",
+      "Taurus Demon"
+    ],
+
+    // ── Sen's Fortress rooftop — narrow elevated stone platform ─────────────
+    // Iron Golem's "pushed off the edge" kill condition only works on this
+    // specific platform; other large bosses will instantly fall or clip out.
+    "Iron Golem": [
+      "Gaping Dragon",
+      "Centipede Demon",
+      "Seath the Scaleless",
+      "Four Kings",
+      "Black Dragon Kalameet",
+      "Smough"
+    ],
+
+    // ── Anor Londo cathedral hall — Ornstein side ────────────────────────────
+    // Large hall; only environment-specific bosses are blocked.
+    "Ornstein": [
+      "Seath the Scaleless",
+      "Four Kings",
+      "Black Dragon Kalameet",
+      "Centipede Demon"
+    ],
+
+    // ── Anor Londo cathedral hall — Smough side ──────────────────────────────
+    "Smough": [
+      "Seath the Scaleless",
+      "Four Kings",
+      "Black Dragon Kalameet",
+      "Centipede Demon"
+    ],
+
+    // ── Duke's Archives crystal room ─────────────────────────────────────────
+    "Seath the Scaleless": [
+      "Four Kings",
+      "Black Dragon Kalameet"
+    ],
+
+    // ── Kiln of the First Flame — large stone arena ──────────────────────────
+    "Gwyn, Lord of Cinder": [
+      "Seath the Scaleless",
+      "Four Kings",
+      "Black Dragon Kalameet",
+      "Centipede Demon"
+    ],
+
+    // ── Oolacile Township arena — large circular stone arena ─────────────────
+    "Knight Artorias": [
+      "Seath the Scaleless",
+      "Four Kings",
+      "Centipede Demon"
+    ],
+
+    // ── Royal Wood narrow canyon — Kalameet's choke point ────────────────────
+    // Extremely narrow canyon designed around Kalameet's aerial/ground attacks.
+    // Most large bosses will clip through walls or be unable to pathfind.
+    "Black Dragon Kalameet": [
+      "Gaping Dragon",
+      "Iron Golem",
+      "Centipede Demon",
+      "Seath the Scaleless",
+      "Four Kings",
+      "Smough",
+      "Taurus Demon",
+      "Demon Firesage"
+    ],
+
+    // ── Chasm of the Abyss stone platform ────────────────────────────────────
+    "Manus, Father of the Abyss": [
+      "Seath the Scaleless",
+      "Black Dragon Kalameet",
+      "Centipede Demon"
+    ],
+
+    // ── Sanctuary Garden — outdoor circular garden ───────────────────────────
+    "Sanctuary Guardian": [
+      "Seath the Scaleless",
+      "Four Kings",
+      "Centipede Demon"
+    ]
+
+  },
+
+  "positions": {
+    // Override where a boss spawns in its arena.  Any component you leave out
+    // keeps the vanilla MSB value.
+
+    // Moonlight Butterfly bridge — the vanilla spawn is on the floating-platform path
+    // that only the butterfly model uses; this places the replacement on solid ground.
+    "Moonlight Butterfly": { "x": 180.717, "y": 8.066, "z": 29.612 },
+
+    // Taurus Demon rampart — vanilla gargoyle-wall spawn point is inside the wall
+    // geometry for many replacements; this drops the boss onto the open walkway.
+    "Taurus Demon": { "x": 3.372, "y": 15.814, "z": -115.055, "rotY": -73.54 },
+
+    // Ceaseless Discharge arena centre — vanilla spawn is inside a pillar; this
+    // places the replacement on the open lava floor where it can pathfind.
+    "Ceaseless Discharge": { "x": 246.494, "y": -283.147, "z": 68.164 }
+  }
+}

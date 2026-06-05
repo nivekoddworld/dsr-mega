@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DS1MegaRando.Core\DS1MegaRando.Core.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Settings\DS1MegaRando.Settings.csproj" />
+    <ProjectReference Include="..\DS1MegaRando.Data\DS1MegaRando.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Embedded fonts: set Build Action to Resource -->
+    <Resource Include="Assets\Fonts\OptimusPrinceps.ttf" Condition="Exists('Assets\Fonts\OptimusPrinceps.ttf')" />
+    <Resource Include="Assets\Fonts\OptimusPrincepsSemiBold.ttf" Condition="Exists('Assets\Fonts\OptimusPrincepsSemiBold.ttf')" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- User-editable boss override config -->
+    <Content Include="..\..\boss_overrides.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>boss_overrides.json</Link>
+    </Content>
+    <!-- Bundled mod — copied to bundled-mods\ next to the UI exe.
+         build.bat also copies this, but this ensures IDE builds work too. -->
+    <Content Include="..\DS1Mod\DS1Mod.DemoMod\bin\Release\net8.0-windows\DS1Mod.DemoMod.dll"
+             Condition="Exists('..\DS1Mod\DS1Mod.DemoMod\bin\Release\net8.0-windows\DS1Mod.DemoMod.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>bundled-mods\DS1Mod.DemoMod.dll</Link>
+    </Content>
+  </ItemGroup>
+
+</Project>

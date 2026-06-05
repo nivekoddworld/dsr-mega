@@ -1,0 +1,448 @@
+using System.Numerics;
+using DS1MegaRando.Annotations;
+using DS1MegaRando.Graph;
+using DS1MegaRando.IO;
+using DS1MegaRando.Settings;
+using DS1MegaRando.Data.Areas;
+using SoulsFormats;
+
+namespace DS1MegaRando.FogGate;
+
+/// <summary>
+/// Writes fog gate randomization results to DS1R game files.
+/// Ports the MSB and EMEVD writing logic from FogMod GameDataWriter.cs.
+/// Requires FogMod's pre-compiled dist EMEVD files (in dist\DS1R\event\)
+/// which contain events 5700 (area warp), 8900 (boss trigger), 8901, 8950.
+/// </summary>
+public class FogGateWriter
+{
+    private readonly string _distEventDir;
+
+    public FogGateWriter(string distEventDir)
+    {
+        _distEventDir = distEventDir;
+    }
+
+    /// <summary>
+    /// Returns the expected path to FogMod's dist event directory relative to the game dir.
+    /// We ship FogMod alongside DSR_Mega so this path should be stable.
+    /// </summary>
+    public static string DefaultDistEventDir =>
+        Path.Combine(
+            AppContext.BaseDirectory,
+            @"..\..\..\..\..\reference\FogMod-master\dist\DS1R\event");
+
+    private record WarpPoint(int ID, int Action, int Player, string Map);
+
+    public void Write(
+        string outDir,
+        GameData gameData,
+        FogGateResult fogResult,
+        AnnotationData ann,
+        FogGateSettings? fogSettings = null)
+    {
+        var graph = fogResult.ConnectedGraph;
+
+        // Build lookup: internal area name → MSB map ID (e.g. "depths" → "m10_00_00_00")
+        var areaToMapId = MapSpecs.All.ToDictionary(m => m.InternalName, m => m.MapId);
+
+        // Track player spawn index per MSB area (c0000_0050, c0000_0051, ...)
+        var playerCounters = MapSpecs.All.ToDictionary(m => m.InternalName, _ => 50);
+
+        // Entity ID counter for new regions / players
+        int mk = 5900100;
+
+        // Warp events to add to common.emevd event 0
+        var warpEvents = new List<List<object>>();
+        int slot = 0;
+
+        // ── Phase 0: Clean up any previous fog gate edits ──────────────────
+
+        foreach (var (_, msb) in gameData.Maps)
+        {
+            msb.Regions.Regions.RemoveAll(r =>
+                r.Name.StartsWith("Boss start for ", StringComparison.Ordinal) ||
+                r.Name.StartsWith("FR: ", StringComparison.Ordinal) ||
+                r.Name.StartsWith("BR: ", StringComparison.Ordinal) ||
+                r.Name.StartsWith("Region for ", StringComparison.Ordinal));
+
+            msb.Parts.Players.RemoveAll(p =>
+                p.Name.StartsWith("c0000_", StringComparison.Ordinal) &&
+                int.TryParse(p.Name.AsSpan(6), out int n) && n >= 50);
+        }
+
+        // ── Phase 1: Create trigger regions and player spawns per entrance side ──
+
+        // (entranceFullName, sideArea) → WarpPoint
+        var warpPoints = new Dictionary<(string, string), WarpPoint>();
+
+        foreach (var entrance in ann.Entrances)
+        {
+            if (entrance.HasTag("unused") || entrance.HasTag("door")) continue;
+            if (!areaToMapId.TryGetValue(entrance.Area, out string? entrMapId)) continue;
+            if (!gameData.Maps.TryGetValue(entrMapId, out MSB1? entrMsb)) continue;
+
+            // Fog gate object (the MSB object with the fog gate mesh)
+            var fog = entrMsb.Parts.Objects.FirstOrDefault(o => o.Name == entrance.Name);
+            if (fog == null) continue;
+
+            for (int i = 0; i <= 1; i++)
+            {
+                bool front = i == 0;
+                var side = front ? entrance.ASide : entrance.BSide;
+                if (side == null) continue;
+
+                // Destination map for player spawn: override or same as entrance area
+                string destAreaName = side.DestinationMap ?? entrance.Area;
+                if (!areaToMapId.TryGetValue(destAreaName, out string? destMapId))
+                    destMapId = entrMapId;
+                if (!gameData.Maps.TryGetValue(destMapId, out MSB1? destMsb))
+                    destMsb = entrMsb;
+
+                // ── Trigger region ───────────────────────────────────────────
+
+                int actionId;
+                if (side.ActionRegion != 0)
+                {
+                    actionId = side.ActionRegion;
+                }
+                else
+                {
+                    var region = new MSB1.Region();
+                    region.EntityID = mk++;
+                    actionId = region.EntityID;
+                    region.Name = $"{(front ? "FR" : "BR")}: {entrance.Text ?? entrance.Name}";
+
+                    // Rotation: front uses fog rotation, back uses opposite (180°)
+                    float rotY = fog.Rotation.Y + (front ? 0 : 180);
+                    if (rotY > 180) rotY -= 360;
+                    region.Rotation = new Vector3(fog.Rotation.X, rotY, fog.Rotation.Z);
+
+                    // Move 1m in region's facing direction, drop 1m vertically for fog gates
+                    region.Position = MoveInDirection(
+                        fog.Position,
+                        region.Rotation,
+                        1f,
+                        yOffset: entrance.HasTag("world") ? 0 : -1f);
+
+                    var box = new MSB.Shape.Box
+                    {
+                        Width  = side.CustomActionWidth != 0 ? side.CustomActionWidth : 1.5f,
+                        Height = 3f,
+                        Depth  = 1.5f,
+                    };
+                    region.Shape = box;
+
+                    entrMsb.Regions.Regions.Insert(0, region);
+                }
+
+                // ── Player spawn (warp destination for inbound warps) ────────
+
+                int warpId = mk++;
+
+                Vector3 warpPos, warpRot;
+                if (front)
+                {
+                    // Front side: player spawns 1m in front of fog gate, facing back (180°)
+                    warpRot = new Vector3(0, Opposite(fog.Rotation.Y), 0);
+                    warpPos = MoveInDirection(fog.Position, fog.Rotation, 1f,
+                        yOffset: side.HasTag("higher") ? 1f : 0f);
+                }
+                else
+                {
+                    // Back side: player spawns 1m behind fog gate, facing forward
+                    float oppY = Opposite(fog.Rotation.Y);
+                    warpRot = new Vector3(0, fog.Rotation.Y, 0);
+                    warpPos = MoveInDirection(fog.Position, new Vector3(0, oppY, 0), 1f,
+                        yOffset: side.HasTag("higher") ? 1f : 0f);
+                }
+
+                warpPos.Y += entrance.AdjustHeight + side.AdjustHeight;
+
+                var player = new MSB1.Part.Player();
+                if (!playerCounters.TryGetValue(destAreaName, out int pIdx))
+                    pIdx = 50;
+                player.Name      = $"c0000_{pIdx:d4}";
+                playerCounters[destAreaName] = pIdx + 1;
+                player.ModelName = "c0000";
+                player.EntityID  = warpId;
+                player.Position  = warpPos;
+                player.Rotation  = warpRot;
+                player.Scale     = Vector3.One;
+                destMsb.Parts.Players.Add(player);
+
+                warpPoints[(entrance.FullName, side.Area)] =
+                    new WarpPoint(entrance.ID, actionId, warpId, destAreaName);
+            }
+        }
+
+        // ── Phase 2: Build warp EMEVD events from randomized graph ──────────
+        // The dist EMEVD replaces vanilla area-transition scripts, so ALL fog gates
+        // (fixed and randomized alike) must be re-registered via event 5700.
+
+        var seen = new HashSet<string>();
+        var vanillaSeen = new HashSet<string>();
+
+        foreach (var node in graph.Nodes.Values)
+        {
+            foreach (var exit in node.To)
+            {
+                if (exit.Link == null) continue;
+                var entrance = exit.Link;
+                if (exit.Name == null || entrance.Name == null) continue;
+
+                // Avoid processing each pair twice
+                string pairKey = string.CompareOrdinal(exit.Name, entrance.Name) <= 0
+                    ? $"{exit.Name}|{entrance.Name}"
+                    : $"{entrance.Name}|{exit.Name}";
+                if (!seen.Add(pairKey)) continue;
+
+                if (!graph.EntranceIds.TryGetValue(exit.Name, out var exitAnn)) continue;
+                if (!graph.EntranceIds.TryGetValue(entrance.Name, out var entAnn)) continue;
+
+                // ── Fixed (vanilla) fog gate ──────────────────────────────────
+                // Re-register with event 5700 so the dist EMEVD can handle them.
+                if (exit.IsFixed && exit.Name == entrance.Name)
+                {
+                    if (vanillaSeen.Add(exitAnn.FullName))
+                    {
+                        if (exitAnn.HasTag("pvp") || (!exitAnn.HasTag("world") && !exitAnn.HasTag("boss")))
+                        {
+                            // Mode 1: standard fog gate (uses vanilla entity IDs)
+                            if (!areaToMapId.TryGetValue(exitAnn.Area, out string? fixedMapId)) continue;
+                            (byte fa, byte fb) = ParseMapId(fixedMapId);
+                            warpEvents.Add(new List<object>
+                            {
+                                slot++, (uint)5700,
+                                (byte)1, fa, fb, (byte)0,
+                                exitAnn.ID, exitAnn.ID + 1,
+                                0, 0, 0, 0, 0,
+                            });
+                        }
+                        // "world" fog gates (mode 3) need action regions that we don't build for fixed
+                        // entrances — skip them; they'll still transition via the vanilla backing logic.
+                    }
+                    continue;
+                }
+
+                // ── Randomized fog gate ───────────────────────────────────────
+                string? exitSideArea = exit.From;
+                string? entSideArea  = entrance.To;
+                if (exitSideArea == null || entSideArea == null) continue;
+
+                if (!warpPoints.TryGetValue((exitAnn.FullName, exitSideArea), out var a)) continue;
+                if (!warpPoints.TryGetValue((entAnn.FullName,  entSideArea),  out var b)) continue;
+
+                // Exit side → destination at entrance side (forward warp)
+                AddWarpEvent(warpEvents, ref slot, exitSideArea, b, a, exitAnn, entAnn, isFront: true, areaToMapId);
+                // Entrance side → destination at exit side (return warp)
+                AddWarpEvent(warpEvents, ref slot, entSideArea, a, b, entAnn, exitAnn, isFront: false, areaToMapId);
+            }
+        }
+
+        // ── Phase 3: Starting-area warp ─────────────────────────────────────
+        // When RandomizeStartingArea is on, inject FogMod event 8950 into common.emevd
+        // so the game warps the player out of the Asylum and into the first reachable
+        // connected area immediately on new-game start.
+
+        if (fogSettings?.RandomizeStartingArea == true)
+            TryAddStartAreaWarp(graph, warpPoints, gameData, areaToMapId, playerCounters,
+                warpEvents, ref mk);
+
+        // ── Phase 4: Write EMEVD files ──────────────────────────────────────
+
+        WriteEmevdFiles(outDir, warpEvents, slot);
+    }
+
+    private static void AddWarpEvent(
+        List<List<object>> events,
+        ref int slot,
+        string triggerArea,
+        WarpPoint dest,
+        WarpPoint trigger,
+        AnnotationEntrance triggerAnn,
+        AnnotationEntrance destAnn,
+        bool isFront,
+        Dictionary<string, string> areaToMapId)
+    {
+        // Find destination map ID from dest.Map (area name)
+        if (!areaToMapId.TryGetValue(dest.Map, out string? destMapId))
+        {
+            // Try parent area (e.g. "burg_upper" → look at entrance area)
+            // Fall back: dest.Map itself
+            destMapId = dest.Map;
+        }
+
+        (byte destArea, byte destBlock) = ParseMapId(destMapId);
+
+        // Side flags
+        var triggerSide = isFront ? triggerAnn.ASide : triggerAnn.BSide;
+        var destSide    = isFront ? destAnn.BSide    : destAnn.ASide;
+        triggerSide ??= triggerAnn.ASide ?? triggerAnn.BSide!;
+        destSide    ??= destAnn.ASide    ?? destAnn.BSide!;
+
+        events.Add(new List<object>
+        {
+            slot++,
+            (uint)5700,
+            (byte)0,        // mode: regular fog gate warp
+            destArea,
+            destBlock,
+            (byte)0,        // hasCutscene
+            trigger.ID,     // entrance ID (used to check lordvessel flag etc)
+            dest.Player,    // player spawn entity in destination map
+            triggerSide?.TrapFlag ?? 0,
+            trigger.Action, // action region entity that triggers this warp
+            triggerSide?.Flag ?? 0,
+            destSide?.EntryFlag ?? 0,
+            destSide?.BeforeWarpFlag ?? 0,
+        });
+    }
+
+    private void WriteEmevdFiles(string outDir, List<List<object>> warpEvents, int slotCount)
+    {
+        if (!Directory.Exists(_distEventDir))
+        {
+            // Cannot write fog gate EMEVD — log a warning but don't crash
+            System.Diagnostics.Debug.WriteLine(
+                $"FogGateWriter: dist event dir not found: {_distEventDir}");
+            return;
+        }
+
+        string outEventDir = Path.Combine(outDir, "event");
+        Directory.CreateDirectory(outEventDir);
+
+        foreach (string distPath in Directory.EnumerateFiles(_distEventDir, "*.emevd*"))
+        {
+            string fileName = Path.GetFileName(distPath);
+            string outPath  = Path.Combine(outEventDir, fileName);
+            string baseName = fileName.Replace(".emevd.dcx", "").Replace(".emevd", "");
+
+            EMEVD evd;
+            try { evd = EMEVD.Read(distPath); }
+            catch { continue; }
+
+            if (baseName == "common" && warpEvents.Count > 0)
+            {
+                // Inject warp event initialization calls into event 0 (constructor)
+                var evt0 = evd.Events.FirstOrDefault(e => e.ID == 0);
+                if (evt0 != null)
+                {
+                    foreach (var args in warpEvents)
+                        evt0.Instructions.Add(new EMEVD.Instruction(2000, 0, args));
+                }
+            }
+
+            try { evd.Write(outPath); }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"FogGateWriter: failed to write {outPath}: {ex.Message}");
+            }
+        }
+    }
+
+    // ── Start-area warp ─────────────────────────────────────────────────────
+
+    // Injects FogMod event 8950 into common.emevd to warp the player from the
+    // Asylum to a randomly chosen CustomStart location at new-game start.
+    //
+    // Event 8950's parameter mapping (decoded from FogMod's dist common.emevd):
+    //   p0 (byte 0)      → WARP_PLAYER area byte
+    //   p1 (byte 1)      → WARP_PLAYER block byte
+    //   p2 (bytes 4-7)   → WARP_PLAYER target entity  (where the player lands)
+    //   p3 (bytes 8-11)  → SetPlayerRespawn entity     (where the player respawns)
+    //
+    // Both p2 and p3 must reference an entity that actually lives in the
+    // destination map — otherwise the engine falls back to a default spawn
+    // (consistently Firelink/Parish in practice). Earlier we created a
+    // "soft warp" Player in the Asylum and passed its ID as p2, which is
+    // why the warp never landed at the requested CustomStart.
+    private static void TryAddStartAreaWarp(
+        WorldGraph graph,
+        Dictionary<(string, string), WarpPoint> warpPoints,
+        GameData gameData,
+        Dictionary<string, string> areaToMapId,
+        Dictionary<string, int> playerCounters,
+        List<List<object>> warpEvents,
+        ref int mk)
+    {
+        // Find the CustomStart matching the graph's chosen starting area
+        var start = graph.CustomStart;
+        if (start == null) return;
+        if (string.IsNullOrEmpty(start.MapId) || string.IsNullOrEmpty(start.Pos)) return;
+
+        if (!areaToMapId.TryGetValue(start.MapId, out string? destMapId)) return;
+        (byte da, byte db) = ParseMapId(destMapId);
+
+        // Parse destination coordinates from the CustomStart "X Y Z" string
+        var parts = start.Pos.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length < 3) return;
+        if (!float.TryParse(parts[0], System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out float px)) return;
+        if (!float.TryParse(parts[1], System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out float py)) return;
+        if (!float.TryParse(parts[2], System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out float pz)) return;
+        var destPos = new Vector3(px, py, pz);
+
+        if (!gameData.Maps.TryGetValue(destMapId, out var destMsb)) return;
+
+        // One Player part in the destination map at the CustomStart position.
+        // Reused as both the warp target (p2) and respawn point (p3).
+        int destSpawnId = mk++;
+        int pIdx = playerCounters.GetValueOrDefault(start.MapId, 50);
+        playerCounters[start.MapId] = pIdx + 1;
+
+        destMsb.Parts.Players.Add(new MSB1.Part.Player
+        {
+            Name      = $"c0000_{pIdx:d4}",
+            ModelName = "c0000",
+            EntityID  = destSpawnId,
+            Position  = destPos,
+            Rotation  = Vector3.Zero,
+            Scale     = Vector3.One,
+        });
+
+        // Slot 0: there is only ever one start-area warp event.
+        warpEvents.Add(new List<object>
+        {
+            0,            // slot 0 — unique among 8950 instances
+            (uint)8950,
+            da,           // p0: destination map area byte  (e.g. 15 for m15_xx)
+            db,           // p1: destination map block byte (e.g. 0 for m15_00, 1 for m15_01)
+            destSpawnId,  // p2: WARP_PLAYER target — where the warp lands
+            destSpawnId,  // p3: SetPlayerRespawn target — where the player respawns
+        });
+    }
+
+    // ── Helpers ─────────────────────────────────────────────────────────────
+
+    private static Vector3 MoveInDirection(Vector3 pos, Vector3 rot, float dist, float yOffset = 0f)
+    {
+        float angle = rot.Y * MathF.PI / 180f;
+        return new Vector3(
+            pos.X + MathF.Sin(angle) * dist,
+            pos.Y + yOffset,
+            pos.Z + MathF.Cos(angle) * dist);
+    }
+
+    private static float Opposite(float rotY)
+    {
+        float opp = rotY + 180f;
+        return opp > 180f ? opp - 360f : opp;
+    }
+
+    private static (byte area, byte block) ParseMapId(string mapId)
+    {
+        // "m10_02_00_00" → area=10, block=2
+        ReadOnlySpan<char> s = mapId.AsSpan();
+        if (s.StartsWith("m")) s = s.Slice(1);
+        int sep = s.IndexOf('_');
+        if (sep < 0) return (0, 0);
+        byte area  = byte.TryParse(s.Slice(0, sep), out byte a) ? a : (byte)0;
+        s = s.Slice(sep + 1);
+        sep = s.IndexOf('_');
+        byte block = byte.TryParse(sep >= 0 ? s.Slice(0, sep) : s, out byte b) ? b : (byte)0;
+        return (area, block);
+    }
+}

@@ -1,0 +1,175 @@
+<UserControl x:Class="DS1MegaRando.UI.Pages.ItemPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource DS1Bg}">
+    <StackPanel Margin="0,0,0,24">
+
+        <TextBlock Text="ITEM RANDOMIZER"
+                   Style="{StaticResource DS1Heading}" FontSize="20" Margin="0,0,0,20"/>
+
+        <!-- Master toggle -->
+        <Border Style="{StaticResource DS1PanelBorder}" Margin="0,0,0,16">
+            <CheckBox Style="{StaticResource DS1CheckBox}"
+                      Content="Enable Item Randomizer"
+                      IsChecked="{Binding Items.EnableItemRandomizer}"
+                      FontSize="15"/>
+        </Border>
+
+        <!-- Difficulty -->
+        <Border Style="{StaticResource DS1PanelBorder}" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="DIFFICULTY" Style="{StaticResource DS1SectionTitle}" Margin="0,0,0,12"/>
+                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="ItemDiff"
+                             Content="Easy  —  Good items tend to appear in easy locations"
+                             IsChecked="{Binding Items.Difficulty, Converter={StaticResource EnumEquals}, ConverterParameter=Easy}"/>
+                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="ItemDiff"
+                             Content="Medium  —  Balanced spread across all locations"
+                             IsChecked="{Binding Items.Difficulty, Converter={StaticResource EnumEquals}, ConverterParameter=Medium}"/>
+                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="ItemDiff"
+                             Content="Hard  —  Good items are hidden in difficult/late locations"
+                             IsChecked="{Binding Items.Difficulty, Converter={StaticResource EnumEquals}, ConverterParameter=Hard}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Key Items -->
+        <Border Style="{StaticResource DS1PanelBorder}" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="KEY ITEM LOGIC" Style="{StaticResource DS1SectionTitle}" Margin="0,0,0,12"/>
+                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="KeyMode"
+                             Content="Vanilla  —  Key items stay in their original locations"
+                             IsChecked="{Binding Items.KeyItemMode, Converter={StaticResource EnumEquals}, ConverterParameter=Vanilla}"/>
+                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="KeyMode"
+                             Content="Shuffled  —  Keys placed in reachable locations with BFS logic"
+                             IsChecked="{Binding Items.KeyItemMode, Converter={StaticResource EnumEquals}, ConverterParameter=Shuffled}"/>
+                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="KeyMode"
+                             Content="Race Mode  —  Keys restricted to ~50 curated 'easy to check' locations"
+                             IsChecked="{Binding Items.KeyItemMode, Converter={StaticResource EnumEquals}, ConverterParameter=RaceMode}"/>
+                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="KeyMode"
+                             Content="Speedrun Mode  —  Includes speedrun skips and glitch locations"
+                             IsChecked="{Binding Items.KeyItemMode, Converter={StaticResource EnumEquals}, ConverterParameter=SpeedrunMode}"/>
+                <Separator Style="{StaticResource DS1Separator}"/>
+                <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,4"
+                          Content="Randomize Lordvessel (Gwynevere gives a random item)"
+                          IsChecked="{Binding Items.RandomizeLordvessel}"/>
+                <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,4"
+                          Content="Randomize Lord Soul Trades (Primordial Serpent rewards randomized)"
+                          IsChecked="{Binding Items.RandomizeLordSouls}"/>
+                <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,4"
+                          Content="Include DLC Item Locations"
+                          IsChecked="{Binding Items.IncludeDLCItemLocations}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Boss Souls -->
+        <Border Style="{StaticResource DS1PanelBorder}" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="BOSS SOUL HANDLING" Style="{StaticResource DS1SectionTitle}" Margin="0,0,0,12"/>
+                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="BossSoul"
+                             Content="Shuffle  —  Boss souls placed at random locations"
+                             IsChecked="{Binding Items.BossSoulHandling, Converter={StaticResource EnumEquals}, ConverterParameter=Shuffle}"/>
+                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="BossSoul"
+                             Content="Replace With Consumable  —  Boss souls become random consumables"
+                             IsChecked="{Binding Items.BossSoulHandling, Converter={StaticResource EnumEquals}, ConverterParameter=ReplaceWithConsumable}"/>
+                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="BossSoul"
+                             Content="Allow Transpose  —  Boss souls can be used at Frampt for weapons"
+                             IsChecked="{Binding Items.BossSoulHandling, Converter={StaticResource EnumEquals}, ConverterParameter=AllowTranspose}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Shops -->
+        <Border Style="{StaticResource DS1PanelBorder}" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="SHOPS" Style="{StaticResource DS1SectionTitle}" Margin="0,0,0,12"/>
+                <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,0,0,8"
+                          Content="Randomize shop inventories"
+                          IsChecked="{Binding Items.RandomizeShops}"/>
+                <TextBlock Text="Price Mode" Style="{StaticResource DS1Label}" Margin="0,0,0,4"/>
+                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="ShopPrice"
+                             Content="Vanilla  —  Original prices"
+                             IsChecked="{Binding Items.ShopPriceMode, Converter={StaticResource EnumEquals}, ConverterParameter=Vanilla}"/>
+                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="ShopPrice"
+                             Content="Scaled  —  Prices adjusted to item rarity"
+                             IsChecked="{Binding Items.ShopPriceMode, Converter={StaticResource EnumEquals}, ConverterParameter=Scaled}"/>
+                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="ShopPrice"
+                             Content="Random  —  Completely random prices in the range below"
+                             IsChecked="{Binding Items.ShopPriceMode, Converter={StaticResource EnumEquals}, ConverterParameter=Random}"/>
+                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="ShopPrice"
+                             Content="Free  —  All shop items cost 0 souls"
+                             IsChecked="{Binding Items.ShopPriceMode, Converter={StaticResource EnumEquals}, ConverterParameter=Free}"/>
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="100"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Min Price:" Style="{StaticResource DS1Label}" VerticalAlignment="Center"/>
+                    <TextBox Grid.Column="1" Style="{StaticResource DS1TextBox}"
+                             Text="{Binding Items.ShopPriceRandomMin}"/>
+                    <TextBlock Grid.Column="3" Text="Max Price:" Style="{StaticResource DS1Label}" VerticalAlignment="Center"/>
+                    <TextBox Grid.Column="4" Style="{StaticResource DS1TextBox}"
+                             Text="{Binding Items.ShopPriceRandomMax}"/>
+                </Grid>
+                <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,8,0,0"
+                          Content="Allow key items to appear in shops"
+                          IsChecked="{Binding Items.AllowKeyItemsInShops}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Starting Loadout -->
+        <Border Style="{StaticResource DS1PanelBorder}" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="STARTING LOADOUT" Style="{StaticResource DS1SectionTitle}" Margin="0,0,0,12"/>
+                <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,0,0,8"
+                          Content="Randomize starting weapon and shield"
+                          IsChecked="{Binding Items.RandomizeStartingLoadout}"/>
+                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="StartLoadout"
+                             Content="Shield + 1H Weapon"
+                             IsChecked="{Binding Items.StartingLoadoutMode, Converter={StaticResource EnumEquals}, ConverterParameter=ShieldAnd1H}"/>
+                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="StartLoadout"
+                             Content="Shield + 1H + 2H Weapons"
+                             IsChecked="{Binding Items.StartingLoadoutMode, Converter={StaticResource EnumEquals}, ConverterParameter=ShieldAnd1HAnd2H}"/>
+                <RadioButton Style="{StaticResource DS1RadioButton}" Margin="0,4" GroupName="StartLoadout"
+                             Content="Combined Pool  —  Any weapon, shield is optional"
+                             IsChecked="{Binding Items.StartingLoadoutMode, Converter={StaticResource EnumEquals}, ConverterParameter=CombinedPool}"/>
+                <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,8,0,0"
+                          Content="Fashion Souls (randomize starting armor per class)"
+                          IsChecked="{Binding Items.FashionSouls}"/>
+                <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,4,0,0"
+                          Content="Adjust stats to meet weapon requirements — auto-enabled when starting loadout is randomized (boosts STR/DEX/INT/FTH + soul level as needed)"
+                          IsChecked="{Binding Items.AdjustStatsForWeapons}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- NPCs & Guarantees -->
+        <Border Style="{StaticResource DS1PanelBorder}">
+            <StackPanel>
+                <TextBlock Text="NPC &amp; GUARANTEES" Style="{StaticResource DS1SectionTitle}" Margin="0,0,0,12"/>
+                <UniformGrid Columns="2">
+                    <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,4"
+                              Content="Randomize NPC Armor Drops (Laundromat)"
+                              IsChecked="{Binding Items.RandomizeNPCDropArmor}"/>
+                    <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,4"
+                              Content="Protect NPC Quest Items"
+                              IsChecked="{Binding Items.ProtectNPCQuestItems}"
+                              ToolTip="Ensures quest-critical items (Elizabeth's Mushroom, etc.) are always obtainable."/>
+                    <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,4"
+                              Content="Ensure Upgrade Material Access"
+                              IsChecked="{Binding Items.EnsureUpgradeMaterialAccess}"
+                              ToolTip="Titanite Shards are guaranteed in early locations."/>
+                    <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,4"
+                              Content="Guarantee Repair Box Access"
+                              IsChecked="{Binding Items.GuaranteeRepairBox}"/>
+                    <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,4"
+                              Content="Exclude Useless Items (Dried Fingers, etc.)"
+                              IsChecked="{Binding Items.ExcludeUselessItems}"/>
+                </UniformGrid>
+                <CheckBox Style="{StaticResource DS1CheckBox}" Margin="0,8,0,0"
+                          Content="Include item placements in spoiler log"
+                          IsChecked="{Binding Items.SpoilerLogItemPlacements}"/>
+            </StackPanel>
+        </Border>
+
+    </StackPanel>
+</UserControl>

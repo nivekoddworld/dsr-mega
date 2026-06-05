@@ -1,0 +1,12 @@
+=== m99_99_98_25.emevd | 1 events ===
+
+Event 0  (rest=Default) {
+    Register Ladder(Disable Top Event Flag ID=19900010, Disable Bottom Event Flag ID=19900011, Entity ID=9901000)
+    Register Ladder(Disable Top Event Flag ID=19900012, Disable Bottom Event Flag ID=19900013, Entity ID=9901001)
+    Register Ladder(Disable Top Event Flag ID=19900014, Disable Bottom Event Flag ID=19900015, Entity ID=9901002)
+    Register Ladder(Disable Top Event Flag ID=19900016, Disable Bottom Event Flag ID=19900017, Entity ID=9901003)
+    Register Ladder(Disable Top Event Flag ID=19900018, Disable Bottom Event Flag ID=19900019, Entity ID=9901004)
+    Register Ladder(Disable Top Event Flag ID=19900020, Disable Bottom Event Flag ID=19900021, Entity ID=9901005)
+    Register Ladder(Disable Top Event Flag ID=19900022, Disable Bottom Event Flag ID=19900023, Entity ID=9901006)
+}
+

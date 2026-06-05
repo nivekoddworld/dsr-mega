@@ -1,5 +1,14 @@
 <Solution>
-  <Project Path="DS1MegaRando.Core/DS1MegaRando.Core.csproj" />
-  <Project Path="DS1MegaRando.Data/DS1MegaRando.Data.csproj" />
-  <Project Path="DS1MegaRando.UI/DS1MegaRando.UI.csproj" />
+  <Project Path="src/DS1MegaRando.Settings/DS1MegaRando.Settings.csproj" />
+  <Project Path="src/DS1MegaRando.Annotations/DS1MegaRando.Annotations.csproj" />
+  <Project Path="src/DS1MegaRando.Graph/DS1MegaRando.Graph.csproj" />
+  <Project Path="src/DS1MegaRando.IO/DS1MegaRando.IO.csproj" />
+  <Project Path="src/DS1MegaRando.FogGate/DS1MegaRando.FogGate.csproj" />
+  <Project Path="src/DS1MegaRando.Items/DS1MegaRando.Items.csproj" />
+  <Project Path="src/DS1MegaRando.Enemies/DS1MegaRando.Enemies.csproj" />
+  <Project Path="src/DS1MegaRando.Verification/DS1MegaRando.Verification.csproj" />
+  <Project Path="src/DS1MegaRando.Spoiler/DS1MegaRando.Spoiler.csproj" />
+  <Project Path="src/DS1MegaRando.Core/DS1MegaRando.Core.csproj" />
+  <Project Path="src/DS1MegaRando.Data/DS1MegaRando.Data.csproj" />
+  <Project Path="src/DS1MegaRando.UI/DS1MegaRando.UI.csproj" />
 </Solution>

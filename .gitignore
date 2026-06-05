@@ -1,6 +1,7 @@
 # Build outputs
 bin/
 obj/
+publish/
 
 # Visual Studio
 .vs/
@@ -14,6 +15,12 @@ obj/
 # Rider
 .idea/
 
+# Python bytecode
+__pycache__/
+*.pyc
+
 # OS
 Thumbs.db
 desktop.ini
+DSR-Gadget/
+ListParamsTool/
