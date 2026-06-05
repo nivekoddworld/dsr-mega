@@ -340,22 +340,23 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
                 .Restart());
 
             // ════════════════════════════════════════════════════════════════
-            // API: EventBuilder — WhenAllOf (AND compound condition)
+            // API: EventBuilder — WhenHpBelow (direct MAIN condition)
             //
-            // Block until BOTH conditions are simultaneously true:
-            //   • demon HP below 50 %
-            //   • player is alive
-            // Then award the infinite draught lot as a mid-fight reward.
-            //
-            // DS1 supports up to 7 AND groups per event.
+            // Block until demon HP ratio drops below 50%, then award the
+            // draught lot once. This matches the vanilla DS1R pattern used
+            // for Sif's phase transition (m12_01, LessOrEqual 0.3) and
+            // Bell Gargoyle's second spawn (m10_01, LessOrEqual 0.6) —
+            // a single IF HP Ratio on condGroup MAIN. The WhenAllOf +
+            // Alive(Player) approach was replaced because mixing an
+            // IfCharDeadAlive(Player) check with a boss HP ratio in the
+            // same AND group is not a vanilla-supported pattern and caused
+            // the AND group to never satisfy in practice.
             // ════════════════════════════════════════════════════════════════
             emevd.DefineEvent(EvtAwardTrinket, EMEVD.Event.RestBehaviorType.Default, ev => ev
-                .WhenAllOf(and => and
-                    .HpBelow(DemonEntity, 0.5f)   // demon at half health
-                    .Alive(Player))               // player still alive
-                .AwardItemLot(DraughtLotId)       // award infinite draught lot
+                .WhenHpBelow(DemonEntity, 0.5f)   // block until demon HP < 50%
+                .AwardItemLot(DraughtLotId)        // award 3x Goofy Draught
                 .DisplayStatusMessage(MsgTrinketFound)
-                .SetFlag(11819410, FlagState.On)  // "mid-fight reward given" flag
+                .SetFlag(11819410, FlagState.On)   // "mid-fight reward given" flag
                 .End());
 
             // ════════════════════════════════════════════════════════════════
@@ -600,7 +601,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         DS1ImGui.Text("  Runtime — do these in-game:");
         DrawCheck("hooks.ItemUsed — use the Goofy Draught",            _rtDraughtUsed);
         DrawCheck("DefineLot once-only — collect Stone Trinket",       _rtTrinketCollected);
-        DrawCheck("WhenAllOf — demon HP < 50 %% while alive",          _rtMidFightReward);
+        DrawCheck("WhenHpBelow — demon HP < 50 %% (draught reward)",    _rtMidFightReward);
         DrawCheck("WhenDead — Asylum Demon killed",                     _rtBossDead);
         DrawCheck("SetActiveFlagInRange — AI mood 0 (stomp)",          _rtAiMood0);
         DrawCheck("SetActiveFlagInRange — AI mood 1 (spin+leave)",     _rtAiMood1);
