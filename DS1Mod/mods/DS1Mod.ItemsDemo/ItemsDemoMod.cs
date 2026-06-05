@@ -183,7 +183,9 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         g.DefineSpEffect(paramdefs, new SpEffectDef
         {
             Id             = DraughtSpEffect,
-            DonorId        = 7000,           // clone from generic buff row
+            // DonorId omitted → uses framework default (110), a benign
+            // vanilla DSR row. The legacy 7000 ("generic buff") doesn't
+            // exist in DSR's SpEffectParam and threw at patch time.
             Duration       = 0f,             // instant — fires once on use
             HpRecoverPoint = 400,            // flat HP restored
 
