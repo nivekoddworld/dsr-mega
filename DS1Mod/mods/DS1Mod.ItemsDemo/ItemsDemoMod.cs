@@ -96,6 +96,10 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
     private const int EvtBossIntro     = 11819407; // EMEVD OR-group + boss-bar demo
     private const int EvtDemonControl  = 11819408; // char enable/disable/AI/immortal demo
     private const int EvtRawEscape     = 11819409; // Raw() escape hatch demo
+    private const int EvtHideTrinket   = 11819411; // hide the ground o0500 after pickup
+
+    // MSB entity IDs
+    private const int TrinketEntityId  = 1811999; // unused range in m18_01 — bound to our o0500
 
     // FMG message IDs (Event_text)
     private const int MsgDraughtUsed   = 6900760;
@@ -281,10 +285,19 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         //
         // Adds a glowing o0500 ground-pickup object at TrinketPos with a
         // Treasure event pointing to TrinketLotId. The collision mesh is
-        // borrowed from the nearest existing o0500 object automatically.
+        // borrowed from the nearest existing collision part automatically.
+        //
+        // EntityID is assigned (TrinketEntityId) so the EMEVD event
+        // EvtHideTrinket can reference the part and disable it once the
+        // player collects the lot — without that, the o0500 stays in the
+        // world after pickup and the player can re-trigger the pickup
+        // animation indefinitely with nothing in the lot.
         // ════════════════════════════════════════════════════════════════════
         g.EditMsb(Map, msb => msb
-            .PlaceTreasure(lotId: TrinketLotId, position: TrinketPos));
+            .PlaceTreasure(
+                lotId:    TrinketLotId,
+                position: TrinketPos,
+                entityId: TrinketEntityId));
     }
 
     // ── EMEVD ─────────────────────────────────────────────────────────────────
@@ -417,6 +430,20 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
                 .Raw(2006, 3, 1, DemonEntity, 220, 5090)   // SpawnOneshotSfx
                 .WhenOutsideArea(Player, areaEntityId: 1812100)
                 .Restart());
+
+            // ════════════════════════════════════════════════════════════════
+            // API: EventBuilder — SetObjectEnabled
+            //
+            // Hide the Stone Trinket o0500 once the player has picked it up.
+            // Pairs with the lot's OnceOnlyFlag (TrinketGetFlag) and the
+            // EntityID we assigned in PlaceTreasure. Without this event the
+            // prop stays in the world: pickup animation plays on every
+            // approach but the lot is already collected so nothing drops.
+            // ════════════════════════════════════════════════════════════════
+            emevd.DefineEvent(EvtHideTrinket, EMEVD.Event.RestBehaviorType.Default, ev => ev
+                .WhenFlag(TrinketGetFlag, FlagState.On)
+                .SetObjectEnabled(TrinketEntityId, EnabledState.Disabled)
+                .End());
         });
 
         // ════════════════════════════════════════════════════════════════════
@@ -435,7 +462,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
     private static void PatchAi(GamePatch g)
     {
         // ════════════════════════════════════════════════════════════════════
-        // API: EditAi / AiBuilder — Goal, OnActivate (deterministic), Helper,
+        // API: EditAi / AiBuilder — Goal, OnActivate (deterministic),
         //      OnInterrupt
         //      SubGoalQueue: ApproachTarget, Attack, SpinStep, Wait,
         //                    SidewayMove, LeaveTarget, WaitRandom, Raw
@@ -448,18 +475,17 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         //      while the player is in the starting cell, setting mood
         //      flags and trying to ApproachTarget a phantom Enemy0.
         //
-        //   2. First tick with player in the arena — play the wake-up
-        //      animation (NonspinningAttack 3020). Vanilla 223200_battle.lua
-        //      relied on this animation to transition the demon out of his
-        //      dormant pose; without it he stays frozen and invulnerable
-        //      and his HP never drops, so WhenAllOf(HpBelow 0.5) never
-        //      fires. ai:GetNumber/SetNumber stores the "already woken"
-        //      bit across Activate cycles.
+        //   2. Normal combat — weighted 70/30 pick between a slam act
+        //      and an evasion act. Each branch flips the mood flag pair
+        //      so the in-game checklist (and any C# code watching those
+        //      flags) sees the current act.
         //
-        //   3. Normal combat — weighted 70/30 pick between a slam act and
-        //      an evasion act. Each branch updates the mood flag pair
-        //      (one flag set, the other cleared) so the in-game checklist
-        //      and any C# code watching those flags sees the current act.
+        // The previous version also queued a NonspinningAttack 3020
+        // wake-up subgoal on first arena entry, but vanilla EMEVD already
+        // plays the boss entrance animation before our AI ticks. The
+        // redundant wake-up subgoal blocked Activate (cancelTime 10s of
+        // an animation the engine ignored), so the AI never reached the
+        // combat phase — demon "jumped down and stood idle". Dropped.
         //
         // Mixing AiBuilder's typed SubGoal helpers (ApproachTarget /
         // Attack / SpinStep / SidewayMove / LeaveTarget / WaitRandom /
@@ -480,14 +506,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
                     .Raw("    return")
                     .Raw("end")
 
-                    // ── (2) Wake-up — first activation after entering arena ──
-                    .Raw("if ai:GetNumber(0) == 0 then")
-                    .Raw("    ai:SetNumber(0, 1)")
-                    .Raw("    goal:AddSubGoal(GOAL_COMMON_NonspinningAttack, 10, 3020, TARGET_ENE_0, DIST_Middle)")
-                    .Raw("    return")
-                    .Raw("end")
-
-                    // ── (3) Normal combat — weighted random act + mood flag ──
+                    // ── (2) Combat — weighted random act + mood flag ──
                     .Raw("for _i = 0, 1 do ai:SetEventFlag(" + FlagAiMood0 + " + _i, false) end")
                     .Raw("if ai:GetRandam_Int(1, 100) <= 70 then")
                     .Raw("    ai:SetEventFlag(" + FlagAiMood0 + ", true)") // mood 0 = stomp

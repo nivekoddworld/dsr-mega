@@ -96,6 +96,13 @@ public static class Instr
     public static EMEVD.Instruction SetCharacterEnabled(int entityId, EnabledState state) =>
         new(2004, 5, new List<object> { entityId, (byte)state });
 
+    /// <summary>2005:3 — enable or disable a map object (visibility + collision).
+    /// The matching o0500 / chest / lever / etc. part vanishes when disabled —
+    /// use this with the once-only flag from a Treasure event to hide the prop
+    /// after the player picks it up.</summary>
+    public static EMEVD.Instruction SetObjectEnabled(int entityId, EnabledState state) =>
+        new(2005, 3, new List<object> { entityId, (byte)state });
+
     /// <summary>2004:4 — force character death.</summary>
     public static EMEVD.Instruction KillCharacter(int entityId, bool awardSouls = false) =>
         new(2004, 4, new List<object> { entityId, (byte)(awardSouls ? 1 : 0) });
@@ -423,6 +430,20 @@ public sealed class EventBuilder
     public EventBuilder SetCharacterEnabled(int entityId, EnabledState state)
     {
         _instrs.Add(Instr.SetCharacterEnabled(entityId, state));
+        return this;
+    }
+
+    /// <summary>Enable or disable a map object (visibility + collision).
+    /// <para>Pair with the once-only flag of a Treasure event to make the
+    /// o0500 ground pickup disappear after the player collects it:</para>
+    /// <code>
+    /// ev.WhenFlag(trinketGetFlag, FlagState.On)
+    ///   .SetObjectEnabled(trinketEntityId, EnabledState.Disabled)
+    ///   .End();
+    /// </code></summary>
+    public EventBuilder SetObjectEnabled(int entityId, EnabledState state)
+    {
+        _instrs.Add(Instr.SetObjectEnabled(entityId, state));
         return this;
     }
 
