@@ -61,7 +61,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
     // ── IDs ──────────────────────────────────────────────────────────────────
 
     // Map
-    private const string Map           = "m18_01_00_00";
+    private const string Map           = IdSpaces.Asylum;
     private const int    Player        = 10000;
     private const int    DemonEntity   = 1810800;
     private const int    DemonDeadFlag = 16;
@@ -143,23 +143,23 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         // ════════════════════════════════════════════════════════════════════
 
         // PARAM rows (2 goods, 2 lots, 1 speffect)
-        DraughtGoodsId  = ctx.AllocateIds("EquipParamGoods", 2);
+        DraughtGoodsId  = ctx.AllocateIds(IdSpaces.EquipParamGoods, 2);
         TrinketGoodsId  = DraughtGoodsId + 1;
 
-        DraughtLotId    = ctx.AllocateIds("ItemLotParam", 2);
+        DraughtLotId    = ctx.AllocateIds(IdSpaces.ItemLotParam, 2);
         TrinketLotId    = DraughtLotId + 1;
 
-        DraughtSpEffect = ctx.AllocateId("SpEffectParam");
+        DraughtSpEffect = ctx.AllocateId(IdSpaces.SpEffectParam);
 
-        // Event flags (m18_01 section 9): 5 flags for item/AI logic
-        DraughtUseFlag  = ctx.AllocateIds("EventFlags_m18_01", 5);
+        // Event flags (Asylum): 5 flags for item/AI logic
+        DraughtUseFlag  = ctx.AllocateIds(IdSpaces.EventFlags(Map), 5);
         TrinketGetFlag  = DraughtUseFlag + 1;
         FlagUsedDraught = DraughtUseFlag + 2;
         FlagAiMood0     = DraughtUseFlag + 3;
         FlagAiMood1     = DraughtUseFlag + 4;
 
-        // EMEVD events (m18_01): 7 events
-        EvtItemTrigger  = ctx.AllocateIds("EmevdEvents_m18_01", 7);
+        // EMEVD events (Asylum): 7 events
+        EvtItemTrigger  = ctx.AllocateIds(IdSpaces.EmevdEvents(Map), 7);
         EvtUseResponse  = EvtItemTrigger + 1;
         EvtAwardTrinket = EvtItemTrigger + 2;
         EvtBossIntro    = EvtItemTrigger + 3;
@@ -167,11 +167,11 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         EvtRawEscape    = EvtItemTrigger + 5;
         EvtHideTrinket  = EvtItemTrigger + 6;
 
-        // MSB entity IDs (m18_01): 1 entity for trinket pickup
-        TrinketEntityId = ctx.AllocateId("MsbEntities_m18_01");
+        // MSB entity IDs (Asylum): 1 entity for trinket pickup
+        TrinketEntityId = ctx.AllocateId(IdSpaces.MsbEntities(Map));
 
         // FMG message IDs (event text): 3 messages
-        int msgBase     = ctx.AllocateIds("EventText", 3);
+        int msgBase     = ctx.AllocateIds(IdSpaces.EventText, 3);
         MsgDraughtUsed  = msgBase;
         MsgTrinketFound = msgBase + 1;
         int MsgDemonWarning = msgBase + 2;

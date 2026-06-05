@@ -95,18 +95,18 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
         // ════════════════════════════════════════════════════════════════════
 
         // Mood system: 10 flags + 10 messages + 10 events
-        MoodFlagBase  = ctx.AllocateIds("EventFlags_m18_01", 10);
-        MoodMsgBase   = ctx.AllocateIds("EventText", 10);
-        MoodEventBase = ctx.AllocateIds("EmevdEvents_m18_01", 10);
+        MoodFlagBase  = ctx.AllocateIds(IdSpaces.EventFlags(IdSpaces.Asylum), 10);
+        MoodMsgBase   = ctx.AllocateIds(IdSpaces.EventText, 10);
+        MoodEventBase = ctx.AllocateIds(IdSpaces.EmevdEvents(IdSpaces.Asylum), 10);
 
         // Fart message (1 FMG entry)
-        FartMsgId     = ctx.AllocateId("EventText");
+        FartMsgId     = ctx.AllocateId(IdSpaces.EventText);
 
         // Dignity trinket: 1 goods + 1 lot + 1 once-only flag + 1 event
-        DignityGoodsId = ctx.AllocateId("EquipParamGoods");
-        DignityLotId   = ctx.AllocateId("ItemLotParam");
-        DignityGetFlag = ctx.AllocateId("ItemObtainedFlags");
-        DignityEvent   = ctx.AllocateIds("EmevdEvents_m18_01", 1);
+        DignityGoodsId = ctx.AllocateId(IdSpaces.EquipParamGoods);
+        DignityLotId   = ctx.AllocateId(IdSpaces.ItemLotParam);
+        DignityGetFlag = ctx.AllocateId(IdSpaces.ItemObtainedFlags);
+        DignityEvent   = ctx.AllocateIds(IdSpaces.EmevdEvents(IdSpaces.Asylum), 1);
 
         var g = new GamePatch(ctx);
 
