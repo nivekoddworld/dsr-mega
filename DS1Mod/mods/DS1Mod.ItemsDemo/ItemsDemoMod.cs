@@ -190,8 +190,8 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
             // DonorId omitted → uses framework default (110), a benign
             // vanilla DSR row. The legacy 7000 ("generic buff") doesn't
             // exist in DSR's SpEffectParam and threw at patch time.
-            Duration       = 0f,             // instant — fires once on use
-            HpRecoverPoint = 400,            // flat HP restored
+            Duration       = 5f,             // 5s visible window for EMEVD detection
+            HpRecoverPoint = 400,            // flat HP restored on application
 
             // Configure: set any field not covered by named props
             Configure      = row => row["motionInterval"].Value = 0f,
@@ -355,7 +355,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
             emevd.DefineEvent(EvtAwardTrinket, EMEVD.Event.RestBehaviorType.Default, ev => ev
                 .WhenHpBelow(DemonEntity, 0.5f)   // block until demon HP < 50%
                 .AwardItemLot(DraughtLotId)        // award 3x Goofy Draught
-                .DisplayStatusMessage(MsgTrinketFound)
+                .DisplayMessage(MsgTrinketFound)
                 .SetFlag(11819410, FlagState.On)   // "mid-fight reward given" flag
                 .End());
 
