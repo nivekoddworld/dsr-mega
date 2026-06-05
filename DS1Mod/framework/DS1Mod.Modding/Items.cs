@@ -102,6 +102,18 @@ public sealed class MsbEditor
     public MsbEditor PlaceTreasure(int lotId, Vector3 position,
         string? collisionName = null, bool inChest = false, int entityId = -1)
     {
+        // Idempotency: if a Treasure event for this lot already exists (from a
+        // previous Patch() run on the same game file), remove it and its
+        // associated o0500 object before re-adding. Without this, each game
+        // launch appends a duplicate — two Treasure events for the same spot
+        // both fire on pickup, doubling the phantom item drops.
+        var existing = _msb.Events.Treasures.FirstOrDefault(t => t.ItemLots[0] == lotId);
+        if (existing is not null)
+        {
+            _msb.Parts.Objects.RemoveAll(o => o.Name == existing.TreasurePartName);
+            _msb.Events.Treasures.Remove(existing);
+        }
+
         // 1. Ensure o0500 model is registered. When the map has no o0500 yet
         //    we register a bare entry; vanilla maps already have one with the
         //    correct SibPath, which we leave untouched.
