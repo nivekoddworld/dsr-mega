@@ -75,7 +75,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
     private const int TrinketGoodsId = 8101;     // key item, no use effect
 
     // SpEffect
-    private const int DraughtSpEffect = 9100;
+    private const int DraughtSpEffect = 9000;
 
     // Lots
     private const int DraughtLotId  = 8600;      // infinite — no once-only flag
@@ -211,14 +211,15 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         // ════════════════════════════════════════════════════════════════════
         g.DefineGoods(paramdefs, new ItemDef
         {
-            Id          = DraughtGoodsId,
-            DonorId     = 384,               // Estus Flask row as base
-            SpEffectId  = DraughtSpEffect,   // consumable, triggers SpEffect 9100
-            Name        = "Goofy Draught",
+            Id = DraughtGoodsId,
+            DonorId = 384,               // Estus Flask row as base
+            SpEffectId = DraughtSpEffect,   // consumable, triggers SpEffect 9100
+            Name = "Goofy Draught",
             Description = "Restores 400 HP. Tastes of regret.",
-            LongDesc    = "Brewed from the tears of the Asylum Demon after he lost a "
+            LongDesc = "Brewed from the tears of the Asylum Demon after he lost a "
                         + "staring contest with a Hollow.\n\nConsume to restore HP.",
-            MaxCount    = 5,
+            MaxCount = 5,
+            AllowQuickUse = true,
         });
 
         // ════════════════════════════════════════════════════════════════════
@@ -237,7 +238,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
             LongDesc    = "Found on the floor of the Undead Asylum.\n\n"
                         + "It has no function whatsoever. You picked it up anyway.",
             MaxCount    = 1,
-            Configure   = row => row["goodsType"].Value = (byte)4,  // key item
+            GoodsType = 1,
         });
     }
 
@@ -256,6 +257,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
             LotId        = DraughtLotId,
             ItemId       = DraughtGoodsId,
             Category     = LotCategory.Goods,
+            Rarity = 3,
             Count        = 3,
             OnceOnlyFlag = -1,              // infinite — re-awards each time
         });
@@ -271,7 +273,8 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
             LotId        = TrinketLotId,
             ItemId       = TrinketGoodsId,
             Category     = LotCategory.Goods,
-            Count        = 1,
+            Rarity = 3,
+            Count = 1,
             OnceOnlyFlag = TrinketGetFlag,  // set once when obtained
         });
     }
@@ -353,35 +356,38 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
             // the AND group to never satisfy in practice.
             // ════════════════════════════════════════════════════════════════
             emevd.DefineEvent(EvtAwardTrinket, EMEVD.Event.RestBehaviorType.Default, ev => ev
+                .WhenDead(DemonEntity)
                 .WhenHpBelow(DemonEntity, 0.5f)   // block until demon HP < 50%
                 .AwardItemLot(DraughtLotId)        // award 3x Goofy Draught
                 .DisplayMessage(MsgTrinketFound)
                 .SetFlag(11819410, FlagState.On)   // "mid-fight reward given" flag
                 .End());
 
-            // ════════════════════════════════════════════════════════════════
-            // API: EventBuilder — WhenAnyOf (OR compound condition)
-            //      DisplayBossHealthBar
-            //      RestBehaviorType.Default
-            //
-            // Boss intro event: show the HP bar as soon as the demon is
-            // alive OR the demon-dead flag is off. We deliberately do NOT
-            // ForceAnimation or HandleBossDefeat here — the vanilla EMEVD
-            // already runs the boss fight, and stacking ForceAnimation /
-            // HandleBossDefeat on top double-grants souls and pops a
-            // second Victory banner once he dies for real.
-            //
-            // For a full ForceAnimation showcase, see the comment block on
-            // EvtDemonControl below.
-            // ════════════════════════════════════════════════════════════════
-            emevd.DefineEvent(EvtBossIntro, EMEVD.Event.RestBehaviorType.Default, ev => ev
-                .WhenAnyOf(or => or
-                    .Alive(DemonEntity)
-                    .Flag(DemonDeadFlag, FlagState.Off))
-                .DisplayBossHealthBar(DemonEntity, EnabledState.Enabled, slot: 0, nameId: 0)
-                .WhenDead(DemonEntity)
-                .DisplayBossHealthBar(DemonEntity, EnabledState.Disabled)
-                .End());
+            #region DISABLED BECUASE IT CAUSED THE HEALTH BAR TO APPEAR ON RE-LOAD
+
+            //// ════════════════════════════════════════════════════════════════
+            //// API: EventBuilder — WhenAnyOf (OR compound condition)
+            ////      DisplayBossHealthBar
+            ////      RestBehaviorType.Default
+            ////
+            //// Boss intro event: show the HP bar as soon as the demon is
+            //// alive OR the demon-dead flag is off. We deliberately do NOT
+            //// ForceAnimation or HandleBossDefeat here — the vanilla EMEVD
+            //// already runs the boss fight, and stacking ForceAnimation /
+            //// HandleBossDefeat on top double-grants souls and pops a
+            //// second Victory banner once he dies for real.
+            ////
+            //// For a full ForceAnimation showcase, see the comment block on
+            //// EvtDemonControl below.
+            //// ════════════════════════════════════════════════════════════════
+            //emevd.DefineEvent(EvtBossIntro, EMEVD.Event.RestBehaviorType.Default, ev => ev
+            //    .WhenAnyOf(or => or
+            //        .Alive(DemonEntity)
+            //        .Flag(DemonDeadFlag, FlagState.Off))
+            //    .DisplayBossHealthBar(DemonEntity, EnabledState.Enabled, slot: 0, nameId: 0)
+            //    .WhenDead(DemonEntity)
+            //    .DisplayBossHealthBar(DemonEntity, EnabledState.Disabled)
+            //    .End());
 
             // ════════════════════════════════════════════════════════════════
             // API: EventBuilder — SetCharacterEnabled, SetCharacterAI,
@@ -418,6 +424,8 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
                 .SetCharacterImmortal(DemonEntity, EnabledState.Disabled)
                 .SetCharacterInvincible(DemonEntity, EnabledState.Disabled)
                 .End());
+
+            #endregion
 
             // ════════════════════════════════════════════════════════════════
             // API: EventBuilder — Raw(bank, id, args) escape hatch
