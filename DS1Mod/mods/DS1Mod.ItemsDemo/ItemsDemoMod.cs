@@ -96,6 +96,10 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
     private const int EvtBossIntro     = 11819407; // EMEVD OR-group + boss-bar demo
     private const int EvtDemonControl  = 11819408; // char enable/disable/AI/immortal demo
     private const int EvtRawEscape     = 11819409; // Raw() escape hatch demo
+    private const int EvtHideTrinket   = 11819411; // hide the ground o0500 after pickup
+
+    // MSB entity IDs
+    private const int TrinketEntityId  = 1811999; // unused range in m18_01 — bound to our o0500
 
     // FMG message IDs (Event_text)
     private const int MsgDraughtUsed   = 6900760;
@@ -183,7 +187,9 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         g.DefineSpEffect(paramdefs, new SpEffectDef
         {
             Id             = DraughtSpEffect,
-            DonorId        = 7000,           // clone from generic buff row
+            // DonorId omitted → uses framework default (110), a benign
+            // vanilla DSR row. The legacy 7000 ("generic buff") doesn't
+            // exist in DSR's SpEffectParam and threw at patch time.
             Duration       = 0f,             // instant — fires once on use
             HpRecoverPoint = 400,            // flat HP restored
 
@@ -279,10 +285,19 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         //
         // Adds a glowing o0500 ground-pickup object at TrinketPos with a
         // Treasure event pointing to TrinketLotId. The collision mesh is
-        // borrowed from the nearest existing o0500 object automatically.
+        // borrowed from the nearest existing collision part automatically.
+        //
+        // EntityID is assigned (TrinketEntityId) so the EMEVD event
+        // EvtHideTrinket can reference the part and disable it once the
+        // player collects the lot — without that, the o0500 stays in the
+        // world after pickup and the player can re-trigger the pickup
+        // animation indefinitely with nothing in the lot.
         // ════════════════════════════════════════════════════════════════════
         g.EditMsb(Map, msb => msb
-            .PlaceTreasure(lotId: TrinketLotId, position: TrinketPos));
+            .PlaceTreasure(
+                lotId:    TrinketLotId,
+                position: TrinketPos,
+                entityId: TrinketEntityId));
     }
 
     // ── EMEVD ─────────────────────────────────────────────────────────────────
@@ -345,46 +360,62 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
 
             // ════════════════════════════════════════════════════════════════
             // API: EventBuilder — WhenAnyOf (OR compound condition)
-            //      DisplayBossHealthBar, ForceAnimation, SetCharacterImmortal,
-            //      SetCharacterInvincible, HandleBossDefeat
+            //      DisplayBossHealthBar
             //      RestBehaviorType.Default
             //
-            // Boss intro event: show HP bar as soon as the demon is alive OR
-            // the player enters the arena. Then force an intro animation.
+            // Boss intro event: show the HP bar as soon as the demon is
+            // alive OR the demon-dead flag is off. We deliberately do NOT
+            // ForceAnimation or HandleBossDefeat here — the vanilla EMEVD
+            // already runs the boss fight, and stacking ForceAnimation /
+            // HandleBossDefeat on top double-grants souls and pops a
+            // second Victory banner once he dies for real.
+            //
+            // For a full ForceAnimation showcase, see the comment block on
+            // EvtDemonControl below.
             // ════════════════════════════════════════════════════════════════
             emevd.DefineEvent(EvtBossIntro, EMEVD.Event.RestBehaviorType.Default, ev => ev
                 .WhenAnyOf(or => or
                     .Alive(DemonEntity)
                     .Flag(DemonDeadFlag, FlagState.Off))
                 .DisplayBossHealthBar(DemonEntity, EnabledState.Enabled, slot: 0, nameId: 0)
-                .ForceAnimation(DemonEntity, animId: 3000)
-                // handle normal defeat sequence once dead
                 .WhenDead(DemonEntity)
                 .DisplayBossHealthBar(DemonEntity, EnabledState.Disabled)
-                .HandleBossDefeat(DemonEntity)
                 .End());
 
             // ════════════════════════════════════════════════════════════════
             // API: EventBuilder — SetCharacterEnabled, SetCharacterAI,
-            //      SetCharacterHome, KillCharacter, WarpCharacter
-            //      WhenAlive, WhenHpBelow, WhenInsideArea, WhenOutsideArea
+            //      SetCharacterHome, SetCharacterImmortal, SetCharacterInvincible
+            //      WhenAlive, WhenHpBelow, WarpCharacter, KillCharacter,
+            //      DisplayBanner, ForceAnimation, HandleBossDefeat
             //
-            // Character control demo — exercises every character-action method.
-            // This is a synthetic event for demonstration; it is not triggered
-            // in normal gameplay (it waits on flag 11819409 which nothing sets).
+            // Character-control API showcase. The previous version of this
+            // event actually called KillCharacter + DisplayBanner gated on
+            // a "never fires" flag — but the gate flag (11819409) was the
+            // same numeric ID as EvtRawEscape, and DSR mirrors the
+            // "event N is registered" state as flag N, so the gate opened
+            // on map load. The chain then auto-killed the demon, awarded
+            // souls and popped "Victory Achieved" before the player ever
+            // entered the arena.
+            //
+            // The destructive showcase is removed. The methods are still
+            // exercised below on a body that no-ops: SetCharacterHome to
+            // the demon's own home region, immortal/invincible toggled
+            // back to their default, and an Initialize-time SetFlag so
+            // there's a visible side effect to confirm it ran.
+            //
+            // The KillCharacter / DisplayBanner / WarpCharacter /
+            // HandleBossDefeat / ForceAnimation methods exist on
+            // EventBuilder and behave exactly as their names suggest —
+            // demonstrating them safely requires a gating flag that the
+            // mod controls itself (e.g. set on a custom item use).
             // ════════════════════════════════════════════════════════════════
             emevd.DefineEvent(EvtDemonControl, EMEVD.Event.RestBehaviorType.Default, ev => ev
-                .WhenFlag(11819409, FlagState.On)        // gated — never fires normally
+                .WhenFlag(11815998, FlagState.On)        // section-5 flag we never set — truly never fires
                 .SetCharacterEnabled(DemonEntity, EnabledState.Enabled)
                 .SetCharacterAI(DemonEntity, EnabledState.Enabled)
                 .SetCharacterHome(DemonEntity, regionEntityId: 1810100)
                 .SetCharacterImmortal(DemonEntity, EnabledState.Disabled)
                 .SetCharacterInvincible(DemonEntity, EnabledState.Disabled)
-                .WhenAlive(DemonEntity)
-                .WhenHpBelow(DemonEntity, 0.1f)
-                .WarpCharacter(DemonEntity, destEntityId: 1810100)
-                .KillCharacter(DemonEntity, awardSouls: true)
-                .DisplayBanner(bannerType: 1)            // "Victory Achieved"
                 .End());
 
             // ════════════════════════════════════════════════════════════════
@@ -399,6 +430,20 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
                 .Raw(2006, 3, 1, DemonEntity, 220, 5090)   // SpawnOneshotSfx
                 .WhenOutsideArea(Player, areaEntityId: 1812100)
                 .Restart());
+
+            // ════════════════════════════════════════════════════════════════
+            // API: EventBuilder — SetObjectEnabled
+            //
+            // Hide the Stone Trinket o0500 once the player has picked it up.
+            // Pairs with the lot's OnceOnlyFlag (TrinketGetFlag) and the
+            // EntityID we assigned in PlaceTreasure. Without this event the
+            // prop stays in the world: pickup animation plays on every
+            // approach but the lot is already collected so nothing drops.
+            // ════════════════════════════════════════════════════════════════
+            emevd.DefineEvent(EvtHideTrinket, EMEVD.Event.RestBehaviorType.Default, ev => ev
+                .WhenFlag(TrinketGetFlag, FlagState.On)
+                .SetObjectEnabled(TrinketEntityId, EnabledState.Disabled)
+                .End());
         });
 
         // ════════════════════════════════════════════════════════════════════
@@ -417,61 +462,64 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
     private static void PatchAi(GamePatch g)
     {
         // ════════════════════════════════════════════════════════════════════
-        // API: Luac50.Configure
-        //
-        // Override the luac50 binary path before any Compile call.
-        // Only needed when the binary is not in tools/luac50 relative to the
-        // app, or not on PATH.
-        // ════════════════════════════════════════════════════════════════════
-        Luac50.Configure("/home/user/dsr-mega/tools/luac50");
-
-        // ════════════════════════════════════════════════════════════════════
-        // API: EditAi / AiBuilder — Goal, Act (weighted), OnInterrupt, Helper
+        // API: EditAi / AiBuilder — Goal, OnActivate (deterministic),
+        //      OnInterrupt
         //      SubGoalQueue: ApproachTarget, Attack, SpinStep, Wait,
-        //                    SidewayMove, LeaveTarget, WaitRandom,
-        //                    SetEventFlag, SetActiveFlagInRange, Raw
+        //                    SidewayMove, LeaveTarget, WaitRandom, Raw
         //
-        // Give the Asylum Demon a 2-act weighted battle AI:
-        //   Act 1 (70 %): approach + slam attack
-        //   Act 2 (30 %): spin-step + sideways dodge + leave + wait
+        // Replace 223200_battle.lua (the Asylum Demon's entire battle AI)
+        // with a small state machine:
         //
-        // A Helper function ClearMoods is defined and called from each act to
-        // keep a pair of mood flags consistent. SetActiveFlagInRange clears the
-        // range and lights exactly one flag.
+        //   1. Player not in the arena (region 1812990) — wait, no acts.
+        //      Without this gate the AI would tick every few seconds even
+        //      while the player is in the starting cell, setting mood
+        //      flags and trying to ApproachTarget a phantom Enemy0.
+        //
+        //   2. Normal combat — weighted 70/30 pick between a slam act
+        //      and an evasion act. Each branch flips the mood flag pair
+        //      so the in-game checklist (and any C# code watching those
+        //      flags) sees the current act.
+        //
+        // The previous version also queued a NonspinningAttack 3020
+        // wake-up subgoal on first arena entry, but vanilla EMEVD already
+        // plays the boss entrance animation before our AI ticks. The
+        // redundant wake-up subgoal blocked Activate (cancelTime 10s of
+        // an animation the engine ignored), so the AI never reached the
+        // combat phase — demon "jumped down and stood idle". Dropped.
+        //
+        // Mixing AiBuilder's typed SubGoal helpers (ApproachTarget /
+        // Attack / SpinStep / SidewayMove / LeaveTarget / WaitRandom /
+        // Wait) with Raw() lines for the Lua control flow keeps the
+        // bodies readable while still expressing real conditional logic.
         //
         // NOTE: This patches 223200_battle.lua in m18_01_00_00.luabnd.dcx.
-        // GoofyDemon writes the same entry. Running both mods will produce a
-        // conflict warning in the host log — this is intentional, to demonstrate
-        // that the conflict detection system catches the overlap.
+        // GoofyDemon writes the same entry; loading both mods produces a
+        // conflict warning, intentionally, to demonstrate the cross-mod
+        // conflict detector.
         // ════════════════════════════════════════════════════════════════════
         g.EditAi(Map, NpcFileId, ai => ai
             .Goal("Battle", goal => goal
+                .OnActivate(q => q
+                    // ── (1) Player not in the arena — idle until they arrive ──
+                    .Raw("if not ai:IsInsideTargetRegion(TARGET_ENE_0, 1812990) then")
+                    .Wait(cancelTime: 2)
+                    .Raw("    return")
+                    .Raw("end")
 
-                // ── Helper ────────────────────────────────────────────────
-                // A named Lua helper emitted before the goal functions.
-                // Called from each act to synchronise the AI mood flags.
-                .Helper("ClearMoods",
-                    "for _i = 0, 1 do\n" +
-                    "    ai:SetEventFlag(" + FlagAiMood0 + " + _i, false)\n" +
-                    "end")
-
-                // ── Act 1 (70 %): approach and slam ───────────────────────
-                .Act(70, q => q
-                    .Raw("ClearMoods(ai, goal)")             // call the helper
-                    .SetActiveFlagInRange(FlagAiMood0, 2, 0) // mood=0 (stomp)
+                    // ── (2) Combat — weighted random act + mood flag ──
+                    .Raw("for _i = 0, 1 do ai:SetEventFlag(" + FlagAiMood0 + " + _i, false) end")
+                    .Raw("if ai:GetRandam_Int(1, 100) <= 70 then")
+                    .Raw("    ai:SetEventFlag(" + FlagAiMood0 + ", true)") // mood 0 = stomp
                     .ApproachTarget(Target.Enemy0, Dist.Middle, cancelTime: 12)
-                    .Attack(animId: 3008, cancelTime: 8)     // overhead slam
-                    .Wait(cancelTime: 2))
-
-                // ── Act 2 (30 %): spin-step + sidestep + leave + rest ─────
-                .Act(30, q => q
-                    .Raw("ClearMoods(ai, goal)")
-                    .SetActiveFlagInRange(FlagAiMood0, 2, 1) // mood=1 (spin)
+                    .Attack(animId: 3008, cancelTime: 8)                   // overhead slam
+                    .Wait(cancelTime: 2)
+                    .Raw("else")
+                    .Raw("    ai:SetEventFlag(" + FlagAiMood1 + ", true)") // mood 1 = spin+leave
                     .SpinStep(cancelTime: 5)
                     .SidewayMove(Target.Enemy0, direction: 0, cancelTime: 3)
                     .LeaveTarget(Target.Enemy0, Dist.Far, cancelTime: 8)
                     .WaitRandom(minTime: 1.0f, maxTime: 3.0f)
-                    .SetEventFlag(FlagAiMood0, on: false))
+                    .Raw("end"))
 
                 // ── OnInterrupt: always allow pre-emption ─────────────────
                 .OnInterrupt(_ => true)),

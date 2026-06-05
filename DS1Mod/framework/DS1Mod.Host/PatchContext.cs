@@ -36,6 +36,12 @@ internal sealed class PatchContext : IPatchContext
         string key = $"{filePath}|{selector}";
         if (_globalEdits.TryGetValue(key, out string? prev))
         {
+            // Same mod writing the same selector twice in its own Patch
+            // is fine — DefineGoods is called once per item, EditBnd3Glob
+            // iterates every locale's FMG bundle, etc. Only complain when
+            // a DIFFERENT mod targets a selector that's already claimed.
+            if (string.Equals(prev, _currentMod, StringComparison.Ordinal)) return;
+
             Console.WriteLine(
                 $"[DS1Mod.Patch] CONFLICT: '{_currentMod}' and '{prev}' both write {selector} in {Path.GetFileName(filePath)}");
         }

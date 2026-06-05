@@ -115,6 +115,17 @@ if exist "%PUB_INJECTOR%\dinput8.dll" (
     goto :summary
 )
 
+:: Stage tools/luac50.exe — required by DS1Mod.Modding.Luac50 for the AI
+:: builder. The launcher copies this whole subfolder into the game dir so
+:: that, at mod runtime, FindLuac() resolves <gameDir>\tools\luac50.exe.
+if exist "%REPO%tools\luac50.exe" (
+    if not exist "%PUB_FRAMEWORK%\tools" mkdir "%PUB_FRAMEWORK%\tools"
+    copy /Y "%REPO%tools\luac50.exe" "%PUB_FRAMEWORK%\tools\luac50.exe" >nul
+    echo        + tools\luac50.exe
+) else (
+    echo [WARN] tools\luac50.exe missing — mods that call EditAi will fail at runtime.
+)
+
 :: imgui is compiled into dinput8.dll — no separate cimgui.dll needed.
 
 :: Collect bundled mods

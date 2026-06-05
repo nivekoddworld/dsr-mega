@@ -172,8 +172,12 @@ public sealed class GamePatch
                 if (p[def.Id] != null) return; // idempotent
                 ParamRepository.AddClone(p, def.DonorId, def.Id, def.Name, row =>
                 {
-                    row["maxNum"].Value        = def.MaxCount;
-                    row["refId_default"].Value = def.SpEffectId >= 0 ? def.SpEffectId : def.Id;
+                    row["maxNum"].Value = def.MaxCount;
+                    // DSR's EquipParamGoods uses "refId" (singular). The
+                    // "_default" suffix is from a later From Soft title's
+                    // paramdef and doesn't exist in DSR — looking it up
+                    // throws "Sequence contains no matching element".
+                    row["refId"].Value  = def.SpEffectId >= 0 ? def.SpEffectId : def.Id;
                     if (def.SpEffectId >= 0)
                         row["goodsType"].Value = (byte)0; // consumable
                     def.Configure?.Invoke(row);
@@ -182,11 +186,16 @@ public sealed class GamePatch
         });
 
         // ── FMG ────────────────────────────────────────────────────────────────
+        // Use Texts.Set (Contains-match across every locale-specific FMG)
+        // with the canonical name fragments. The previous SetFmgEntry helper
+        // did exact-match on "GoodsName", which never matched DSR's actual
+        // "Item_name_.fmg" — items would land in the param but their
+        // inventory display would show "?GoodsName? ID: ###".
         EditBnd3Glob("msg", "item.msgbnd.dcx", bnd =>
         {
-            SetFmgEntry(bnd, "GoodsName",    def.Id, def.Name);
-            SetFmgEntry(bnd, "GoodsInfo",    def.Id, def.Description);
-            SetFmgEntry(bnd, "GoodsCaption", def.Id, def.LongDesc);
+            Texts.Set(bnd, Texts.GoodsName,        def.Id, def.Name);
+            Texts.Set(bnd, Texts.GoodsDescription, def.Id, def.Description);
+            Texts.Set(bnd, Texts.GoodsLongDesc,    def.Id, def.LongDesc);
         });
     }
 
@@ -240,21 +249,25 @@ public sealed class GamePatch
                 if (p[def.Id] != null) return; // idempotent
                 ParamRepository.AddClone(p, def.DonorId, def.Id, $"sp_{def.Id}", row =>
                 {
+                    // DSR field names — verified against the shipped
+                    // SpEffectParam paramdef. They differ from later From
+                    // Soft titles (no "Recover"/"AtkPower"/"DefRate"
+                    // shortcuts; "Diffence" is misspelled in vanilla).
                     row["effectEndurance"].Value = def.Duration;
 
-                    if (def.HpRecoverPoint   != 0) row["hpRecoverPoint"].Value   = def.HpRecoverPoint;
-                    if (def.HpRecoverRate    != 0) row["hpRecoverRate"].Value    = def.HpRecoverRate;
-                    if (def.StaminaRecoverPoint != 0) row["staminaRecoverPoint"].Value = def.StaminaRecoverPoint;
+                    if (def.HpRecoverPoint      != 0) row["changeHpPoint"].Value      = def.HpRecoverPoint;
+                    if (def.HpRecoverRate       != 0) row["hpRecoverRate"].Value      = def.HpRecoverRate;
+                    if (def.StaminaRecoverPoint != 0) row["changeStaminaPoint"].Value = def.StaminaRecoverPoint;
 
-                    if (def.MaxHpRate         != 1f) row["maxHpRate"].Value         = def.MaxHpRate;
-                    if (def.PhysAtkPowerRate  != 1f) row["physAtkPowerRate"].Value  = def.PhysAtkPowerRate;
-                    if (def.MagicAtkPowerRate != 1f) row["magicAtkPowerRate"].Value = def.MagicAtkPowerRate;
-                    if (def.FireAtkPowerRate  != 1f) row["fireAtkPowerRate"].Value  = def.FireAtkPowerRate;
-                    if (def.ThunderAtkPowerRate != 1f) row["thunderAtkPowerRate"].Value = def.ThunderAtkPowerRate;
-                    if (def.PhysDefRate       != 1f) row["physDefRate"].Value       = def.PhysDefRate;
-                    if (def.MagicDefRate      != 1f) row["magicDefRate"].Value      = def.MagicDefRate;
-                    if (def.FireDefRate       != 1f) row["fireDefRate"].Value       = def.FireDefRate;
-                    if (def.ThunderDefRate    != 1f) row["thunderDefRate"].Value    = def.ThunderDefRate;
+                    if (def.MaxHpRate           != 1f) row["maxHpRate"].Value              = def.MaxHpRate;
+                    if (def.PhysAtkPowerRate    != 1f) row["physicsAttackPowerRate"].Value = def.PhysAtkPowerRate;
+                    if (def.MagicAtkPowerRate   != 1f) row["magicAttackPowerRate"].Value   = def.MagicAtkPowerRate;
+                    if (def.FireAtkPowerRate    != 1f) row["fireAttackPowerRate"].Value    = def.FireAtkPowerRate;
+                    if (def.ThunderAtkPowerRate != 1f) row["thunderAttackPowerRate"].Value = def.ThunderAtkPowerRate;
+                    if (def.PhysDefRate         != 1f) row["physicsDiffenceRate"].Value    = def.PhysDefRate;
+                    if (def.MagicDefRate        != 1f) row["magicDiffenceRate"].Value      = def.MagicDefRate;
+                    if (def.FireDefRate         != 1f) row["fireDiffenceRate"].Value       = def.FireDefRate;
+                    if (def.ThunderDefRate      != 1f) row["thunderDiffenceRate"].Value    = def.ThunderDefRate;
 
                     def.Configure?.Invoke(row);
                 });
@@ -291,21 +304,6 @@ public sealed class GamePatch
                 .WhenCharacterLosesSpEffect(Player, spEffectId)
                 .SetFlag(triggerFlagId, FlagState.Off)
                 .Restart()));
-    }
-
-    // ── helpers ───────────────────────────────────────────────────────────────
-
-    private static void SetFmgEntry(BND3 bnd, string fmgName, int id, string text)
-    {
-        var file = bnd.Files.FirstOrDefault(
-            f => Path.GetFileNameWithoutExtension(f.Name)
-                      .Equals(fmgName, StringComparison.OrdinalIgnoreCase));
-        if (file == null) return;
-        var fmg = FMG.Read(file.Bytes);
-        var entry = fmg.Entries.FirstOrDefault(e => e.ID == id);
-        if (entry != null) entry.Text = text;
-        else               fmg.Entries.Add(new FMG.Entry(id, text));
-        file.Bytes = fmg.Write();
     }
 
     /// <summary>

@@ -44,8 +44,14 @@ public sealed class SpEffectDef
     /// <summary>SpEffectParam row ID. Must be unique (use 9000+ range for mods).</summary>
     public int Id { get; set; }
 
-    /// <summary>Existing SpEffect row to clone as the base. Default 7000 (generic buff row).</summary>
-    public int DonorId { get; set; } = 7000;
+    /// <summary>
+    /// Existing SpEffect row to clone as the base.
+    /// Default <c>110</c> — a vanilla DSR row with benign properties
+    /// (instant, targets self+player, no state side-effect) that makes a
+    /// safe template for custom on-use effects. Override if you need a
+    /// different starting point (e.g. a stat-multiplier buff).
+    /// </summary>
+    public int DonorId { get; set; } = 110;
 
     /// <summary>
     /// How long the effect lasts in seconds.

@@ -41,7 +41,8 @@ public static class Instr
     public static EMEVD.Instruction IfCharacterDeadAlive(LifeState state, int entityId, sbyte condGroup = 0) =>
         new(4, 0, new List<object> { condGroup, entityId, (byte)state });
 
-    /// <summary>4:2 — block until entity HP ratio meets a comparison (type: 0=&lt;, 1=&lt;=, 2==, 3=&gt;=, 4=&gt;).</summary>
+    /// <summary>4:2 — block until entity HP ratio meets a comparison
+    /// (type: 0=Equal, 1=NotEqual, 2=Greater, 3=Less, 4=GreaterOrEqual, 5=LessOrEqual).</summary>
     public static EMEVD.Instruction IfHpRatio(int entityId, sbyte compType, float ratio, sbyte condGroup = 0) =>
         new(4, 2, new List<object> { condGroup, entityId, compType, ratio });
 
@@ -94,6 +95,13 @@ public static class Instr
     /// <summary>2004:5 — enable or disable a character (visibility + collision).</summary>
     public static EMEVD.Instruction SetCharacterEnabled(int entityId, EnabledState state) =>
         new(2004, 5, new List<object> { entityId, (byte)state });
+
+    /// <summary>2005:3 — enable or disable a map object (visibility + collision).
+    /// The matching o0500 / chest / lever / etc. part vanishes when disabled —
+    /// use this with the once-only flag from a Treasure event to hide the prop
+    /// after the player picks it up.</summary>
+    public static EMEVD.Instruction SetObjectEnabled(int entityId, EnabledState state) =>
+        new(2005, 3, new List<object> { entityId, (byte)state });
 
     /// <summary>2004:4 — force character death.</summary>
     public static EMEVD.Instruction KillCharacter(int entityId, bool awardSouls = false) =>
@@ -205,7 +213,7 @@ public sealed class SubConditionBuilder
     { _parent.Add(Instr.IfCharacterDeadAlive(LifeState.Alive, entityId, _group)); return this; }
 
     public SubConditionBuilder HpBelow(int entityId, float ratio)
-    { _parent.Add(Instr.IfHpRatio(entityId, compType: 0, ratio, _group)); return this; }
+    { _parent.Add(Instr.IfHpRatio(entityId, compType: 3, ratio, _group)); return this; }
 
     public SubConditionBuilder InsideArea(int entityId, int areaEntityId)
     { _parent.Add(Instr.IfInsideArea(entityId, areaEntityId, desired: 1, _group)); return this; }
@@ -295,7 +303,7 @@ public sealed class EventBuilder
     /// <summary>Block until entity HP ratio drops below <paramref name="ratio"/> (0.0–1.0).</summary>
     public EventBuilder WhenHpBelow(int entityId, float ratio)
     {
-        _instrs.Add(Instr.IfHpRatio(entityId, compType: 0, ratio)); // 0 = less-than
+        _instrs.Add(Instr.IfHpRatio(entityId, compType: 3, ratio)); // 3 = Less
         return this;
     }
 
@@ -422,6 +430,20 @@ public sealed class EventBuilder
     public EventBuilder SetCharacterEnabled(int entityId, EnabledState state)
     {
         _instrs.Add(Instr.SetCharacterEnabled(entityId, state));
+        return this;
+    }
+
+    /// <summary>Enable or disable a map object (visibility + collision).
+    /// <para>Pair with the once-only flag of a Treasure event to make the
+    /// o0500 ground pickup disappear after the player collects it:</para>
+    /// <code>
+    /// ev.WhenFlag(trinketGetFlag, FlagState.On)
+    ///   .SetObjectEnabled(trinketEntityId, EnabledState.Disabled)
+    ///   .End();
+    /// </code></summary>
+    public EventBuilder SetObjectEnabled(int entityId, EnabledState state)
+    {
+        _instrs.Add(Instr.SetObjectEnabled(entityId, state));
         return this;
     }
 
