@@ -3,7 +3,6 @@ using DS1Mod.Core;
 using DS1Mod.Core.ImGui;
 using DS1Mod.Modding;
 using DS1Mod.SDK;
-using DS1MegaRando.Data.Enemies;
 using SoulsFormats;
 
 namespace DS1Mod.ItemsDemo;
