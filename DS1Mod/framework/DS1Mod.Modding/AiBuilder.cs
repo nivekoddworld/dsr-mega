@@ -111,10 +111,17 @@ public sealed class SubGoalQueue
         return this;
     }
 
-    /// <summary>Idle wait.</summary>
+    /// <summary>Idle wait for a fixed duration.</summary>
     public SubGoalQueue Wait(int cancelTime = 3)
     {
         Lines.Add($"    goal:AddSubGoal(GOAL_COMMON_Wait, {cancelTime}, TARGET_ENE_0, 0, 0, 0)");
+        return this;
+    }
+
+    /// <summary>Idle wait for a random duration between <paramref name="minTime"/> and <paramref name="maxTime"/>.</summary>
+    public SubGoalQueue WaitRandom(float minTime, float maxTime)
+    {
+        Lines.Add($"    goal:AddSubGoal(GOAL_COMMON_Wait, ai:GetRandam_Float({F(minTime)}, {F(maxTime)}), TARGET_ENE_0, 0, 0, 0)");
         return this;
     }
 
@@ -134,13 +141,46 @@ public sealed class SubGoalQueue
         return this;
     }
 
-    /// <summary>Sideway shuffle (evasion / positioning).</summary>
+    /// <summary>Sideway shuffle (evasion / positioning). direction: 0=left, 1=right.</summary>
     public SubGoalQueue SidewayMove(Target target = Target.Enemy0,
         int direction = 0, int cancelTime = 2)
     {
         Lines.Add(
             $"    goal:AddSubGoal(GOAL_COMMON_SidewayMove, {cancelTime}," +
             $" {LuaTarget(target)}, {direction}, 20, true, true, -1)");
+        return this;
+    }
+
+    /// <summary>Back away from target.</summary>
+    public SubGoalQueue LeaveTarget(Target target = Target.Enemy0,
+        Dist dist = Dist.Far, int cancelTime = 8)
+    {
+        Lines.Add(
+            $"    goal:AddSubGoal(GOAL_COMMON_LeaveTarget, {cancelTime}," +
+            $" {LuaTarget(target)}, {LuaDist(dist)}, TARGET_SELF, false, -1)");
+        return this;
+    }
+
+    /// <summary>
+    /// Set an event flag from within the AI script.
+    /// Use this to broadcast state back to C# (e.g. mood indicators readable via
+    /// <c>IModContext.Reader.GetEventFlag</c>).
+    /// </summary>
+    public SubGoalQueue SetEventFlag(int flagId, bool on)
+    {
+        Lines.Add($"    ai:SetEventFlag({flagId}, {(on ? "true" : "false")})");
+        return this;
+    }
+
+    /// <summary>
+    /// Clear a contiguous block of <paramref name="count"/> flags starting at
+    /// <paramref name="baseFlag"/>, then set the one at index <paramref name="active"/>.
+    /// Emits a Lua for-loop — ideal for "mood" patterns where exactly one flag is active.
+    /// </summary>
+    public SubGoalQueue SetActiveFlagInRange(int baseFlag, int count, int active)
+    {
+        Lines.Add($"    for _i = 0, {count - 1} do ai:SetEventFlag({baseFlag} + _i, false) end");
+        Lines.Add($"    ai:SetEventFlag({baseFlag + active}, true)");
         return this;
     }
 
@@ -153,6 +193,8 @@ public sealed class SubGoalQueue
         Lines.Add("    " + luaLine);
         return this;
     }
+
+    private static string F(float v) => v.ToString("0.0##", System.Globalization.CultureInfo.InvariantCulture);
 
     private static string LuaTarget(Target t) => t switch
     {
@@ -208,8 +250,24 @@ public sealed class GoalBuilder
     private readonly List<Act> _acts = new();
     private bool _canInterrupt = false;
     private SubGoalQueue? _singleActivate;
+    internal readonly List<(string FnName, string Body)> Helpers = new();
 
     internal GoalBuilder(string name) => Name = name;
+
+    /// <summary>
+    /// Define a named Lua helper function that will be emitted before the goal functions.
+    /// Use this for shared logic called from multiple acts (e.g. clearing a flag range).
+    /// <para>The body is the function body — do not include the <c>function</c> declaration.</para>
+    /// <code>
+    /// goal.Helper("ClearMoods", "for i=0,9 do ai:SetEventFlag(11815700+i,false) end")
+    /// // emits: function ClearMoods(ai, goal) ... end
+    /// </code>
+    /// </summary>
+    public GoalBuilder Helper(string fnName, string body)
+    {
+        Helpers.Add((fnName, body));
+        return this;
+    }
 
     /// <summary>
     /// Define a single sequential behaviour for OnActivate.
@@ -263,6 +321,19 @@ public sealed class GoalBuilder
         sb.AppendLine($"REGISTER_GOAL({goalConst}, \"{npcId}{Name}\")");
         sb.AppendLine($"REGISTER_GOAL_NO_UPDATE({goalConst}, 1)");
         sb.AppendLine();
+
+        // ── Helper functions ──────────────────────────────────────────────────
+        foreach (var (fnName, body) in Helpers)
+        {
+            sb.AppendLine($"function {fnName}(ai, goal)");
+            foreach (string line in body.Split('\n'))
+            {
+                string trimmed = line.TrimEnd();
+                if (trimmed.Length > 0) sb.AppendLine("    " + trimmed.TrimStart());
+            }
+            sb.AppendLine("end");
+            sb.AppendLine();
+        }
 
         // ── Activate ──────────────────────────────────────────────────────────
         sb.AppendLine($"function {activateFn}(ai, goal)");
