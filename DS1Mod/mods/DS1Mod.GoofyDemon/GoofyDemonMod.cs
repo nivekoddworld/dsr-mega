@@ -27,7 +27,8 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
     public override string Version => "1.3.0";
     public override string Author  => "DS1MegaRando";
 
-    // ── AI swap ──
+    // ── Map & AI swap ──
+    private const string Map         = IdSpaces.Asylum;
     private const string LuaBnd      = "m18_01_00_00.luabnd.dcx";
     private const string EntryLeaf   = "223200_battle.lua";
     private const string ResourceLua = "223200_battle.luac";
@@ -148,7 +149,7 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
             });
 
         // 5) events — fart, the 10 mood watchers, and the death-drop.
-        g.EditEmevd("m18_01_00_00", e =>
+        g.EditEmevd(Map, e =>
         {
             e.InsertAfter(EntranceEvt, Instr.IsForceAnimation(DemonEntity, JumpAnim),
                 Instr.DisplayMessage(FartMsgId), alreadyPresent: Instr.IsDisplayMessage(FartMsgId));
