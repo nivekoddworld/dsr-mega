@@ -180,17 +180,17 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         MsgTrinketFound = msgBase + 1;
         int MsgDemonWarning = msgBase + 2;
 
-        PatchSpEffects(g, paramdefs);
-        PatchGoods(g, paramdefs);
-        PatchLots(g, paramdefs);
-        PatchMsb(g);
-        PatchEmevd(g);
-        PatchAi(g);
+        PatchSpEffects(this, g, paramdefs);
+        PatchGoods(this, g, paramdefs);
+        PatchLots(this, g, paramdefs);
+        PatchMsb(this, g);
+        PatchEmevd(this, g);
+        PatchAi(this, g);
     }
 
     // ── SpEffect ─────────────────────────────────────────────────────────────
 
-    private static void PatchSpEffects(GamePatch g, byte[] paramdefs)
+    private static void PatchSpEffects(ItemsDemoMod mod, GamePatch g, byte[] paramdefs)
     {
         // ════════════════════════════════════════════════════════════════════
         // API: DefineSpEffect
@@ -204,7 +204,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         // ════════════════════════════════════════════════════════════════════
         g.DefineSpEffect(paramdefs, new SpEffectDef
         {
-            Id             = DraughtSpEffect,
+            Id             = mod.DraughtSpEffect,
             // DonorId omitted → uses framework default (110), a benign
             // vanilla DSR row. The legacy 7000 ("generic buff") doesn't
             // exist in DSR's SpEffectParam and threw at patch time.
@@ -218,7 +218,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
 
     // ── Goods ─────────────────────────────────────────────────────────────────
 
-    private static void PatchGoods(GamePatch g, byte[] paramdefs)
+    private static void PatchGoods(ItemsDemoMod mod, GamePatch g, byte[] paramdefs)
     {
         // ════════════════════════════════════════════════════════════════════
         // API: DefineGoods + ItemDef.SpEffectId
@@ -229,9 +229,9 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         // ════════════════════════════════════════════════════════════════════
         g.DefineGoods(paramdefs, new ItemDef
         {
-            Id = DraughtGoodsId,
+            Id = mod.DraughtGoodsId,
             DonorId = 384,               // Estus Flask row as base
-            SpEffectId = DraughtSpEffect,   // consumable, triggers SpEffect 9100
+            SpEffectId = mod.DraughtSpEffect,   // consumable, triggers SpEffect 9100
             Name = "Goofy Draught",
             Description = "Restores 400 HP. Tastes of regret.",
             LongDesc = "Brewed from the tears of the Asylum Demon after he lost a "
@@ -249,7 +249,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         // ════════════════════════════════════════════════════════════════════
         g.DefineGoods(paramdefs, new ItemDef
         {
-            Id          = TrinketGoodsId,
+            Id          = mod.TrinketGoodsId,
             DonorId     = 384,
             Name        = "Stone Trinket",
             Description = "A small stone. It does nothing.",
@@ -262,7 +262,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
 
     // ── Lots ──────────────────────────────────────────────────────────────────
 
-    private static void PatchLots(GamePatch g, byte[] paramdefs)
+    private static void PatchLots(ItemsDemoMod mod, GamePatch g, byte[] paramdefs)
     {
         // ════════════════════════════════════════════════════════════════════
         // API: DefineLot — infinite variant
@@ -272,8 +272,8 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         // ════════════════════════════════════════════════════════════════════
         g.DefineLot(paramdefs, new LotDef
         {
-            LotId        = DraughtLotId,
-            ItemId       = DraughtGoodsId,
+            LotId        = mod.DraughtLotId,
+            ItemId       = mod.DraughtGoodsId,
             Category     = LotCategory.Goods,
             Rarity = 3,
             Count        = 3,
@@ -288,18 +288,18 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         // ════════════════════════════════════════════════════════════════════
         g.DefineLot(paramdefs, new LotDef
         {
-            LotId        = TrinketLotId,
-            ItemId       = TrinketGoodsId,
+            LotId        = mod.TrinketLotId,
+            ItemId       = mod.TrinketGoodsId,
             Category     = LotCategory.Goods,
             Rarity = 3,
             Count = 1,
-            OnceOnlyFlag = TrinketGetFlag,  // set once when obtained
+            OnceOnlyFlag = mod.TrinketGetFlag,  // set once when obtained
         });
     }
 
     // ── MSB ───────────────────────────────────────────────────────────────────
 
-    private static void PatchMsb(GamePatch g)
+    private static void PatchMsb(ItemsDemoMod mod, GamePatch g)
     {
         // ════════════════════════════════════════════════════════════════════
         // API: EditMsb / PlaceTreasure
@@ -316,14 +316,14 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         // ════════════════════════════════════════════════════════════════════
         g.EditMsb(Map, msb => msb
             .PlaceTreasure(
-                lotId:    TrinketLotId,
+                lotId:    mod.TrinketLotId,
                 position: TrinketPos,
-                entityId: TrinketEntityId));
+                entityId: mod.TrinketEntityId));
     }
 
     // ── EMEVD ─────────────────────────────────────────────────────────────────
 
-    private static void PatchEmevd(GamePatch g)
+    private static void PatchEmevd(ItemsDemoMod mod, GamePatch g)
     {
         // ════════════════════════════════════════════════════════════════════
         // API: DefineItemTrigger
@@ -338,9 +338,9 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         // eventId defaults to triggerFlagId when omitted.
         // ════════════════════════════════════════════════════════════════════
         g.DefineItemTrigger(Map,
-            spEffectId:    DraughtSpEffect,
-            triggerFlagId: DraughtUseFlag,
-            eventId:       EvtItemTrigger);
+            spEffectId:    mod.DraughtSpEffect,
+            triggerFlagId: mod.DraughtUseFlag,
+            eventId:       mod.EvtItemTrigger);
 
         g.EditEmevd(Map, emevd =>
         {
@@ -353,11 +353,11 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
             // then record it permanently. Loops via Restart so it re-arms for
             // future uses.
             // ════════════════════════════════════════════════════════════════
-            emevd.DefineEvent(EvtUseResponse, EMEVD.Event.RestBehaviorType.Restart, ev => ev
-                .WhenFlag(DraughtUseFlag, FlagState.On)
-                .DisplayMessage(MsgDraughtUsed)
-                .SetFlag(FlagUsedDraught, FlagState.On)  // permanent "used" record
-                .WhenFlag(DraughtUseFlag, FlagState.Off)
+            emevd.DefineEvent(mod.EvtUseResponse, EMEVD.Event.RestBehaviorType.Restart, ev => ev
+                .WhenFlag(mod.DraughtUseFlag, FlagState.On)
+                .DisplayMessage(mod.MsgDraughtUsed)
+                .SetFlag(mod.FlagUsedDraught, FlagState.On)  // permanent "used" record
+                .WhenFlag(mod.DraughtUseFlag, FlagState.Off)
                 .Restart());
 
             // ════════════════════════════════════════════════════════════════
@@ -373,12 +373,12 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
             // same AND group is not a vanilla-supported pattern and caused
             // the AND group to never satisfy in practice.
             // ════════════════════════════════════════════════════════════════
-            emevd.DefineEvent(EvtAwardTrinket, EMEVD.Event.RestBehaviorType.Default, ev => ev
+            emevd.DefineEvent(mod.EvtAwardTrinket, EMEVD.Event.RestBehaviorType.Default, ev => ev
                 .WhenDead(DemonEntity)             // skip award if already dead (prevents re-award on save/reload)
                 .WhenHpBelow(DemonEntity, 0.5f)   // block until demon HP < 50%
-                .AwardItemLot(DraughtLotId)        // award 3x Goofy Draught
-                .DisplayStatusMessage(MsgTrinketFound)
-                .SetFlag(FlagMidFightReward, FlagState.On)
+                .AwardItemLot(mod.DraughtLotId)        // award 3x Goofy Draught
+                .DisplayStatusMessage(mod.MsgTrinketFound)
+                .SetFlag(mod.FlagMidFightReward, FlagState.On)
                 .End());
 
             #region DISABLED BECUASE IT CAUSED THE HEALTH BAR TO APPEAR ON RE-LOAD
@@ -434,8 +434,8 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
             // demonstrating them safely requires a gating flag that the
             // mod controls itself (e.g. set on a custom item use).
             // ════════════════════════════════════════════════════════════════
-            emevd.DefineEvent(EvtDemonControl, EMEVD.Event.RestBehaviorType.Default, ev => ev
-                .WhenFlag(FlagDemoNeverFires, FlagState.On)        // allocated flag we never set — truly never fires
+            emevd.DefineEvent(mod.EvtDemonControl, EMEVD.Event.RestBehaviorType.Default, ev => ev
+                .WhenFlag(mod.FlagDemoNeverFires, FlagState.On)        // allocated flag we never set — truly never fires
                 .SetCharacterEnabled(DemonEntity, EnabledState.Enabled)
                 .SetCharacterAI(DemonEntity, EnabledState.Enabled)
                 .SetCharacterHome(DemonEntity, regionEntityId: 1810100)
@@ -452,7 +452,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
             // Play an SFX via the raw escape hatch (SpawnOneshotSfx, bank 2006
             // id 3) — not yet a named EventBuilder method.
             // ════════════════════════════════════════════════════════════════
-            emevd.DefineEvent(EvtRawEscape, EMEVD.Event.RestBehaviorType.Restart, ev => ev
+            emevd.DefineEvent(mod.EvtRawEscape, EMEVD.Event.RestBehaviorType.Restart, ev => ev
                 .WhenInsideArea(Player, areaEntityId: 1812100)
                 .Raw(2006, 3, 1, DemonEntity, 220, 5090)   // SpawnOneshotSfx
                 .WhenOutsideArea(Player, areaEntityId: 1812100)
@@ -467,9 +467,9 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
             // prop stays in the world: pickup animation plays on every
             // approach but the lot is already collected so nothing drops.
             // ════════════════════════════════════════════════════════════════
-            emevd.DefineEvent(EvtHideTrinket, EMEVD.Event.RestBehaviorType.Default, ev => ev
-                .WhenFlag(TrinketGetFlag, FlagState.On)
-                .SetObjectEnabled(TrinketEntityId, EnabledState.Disabled)
+            emevd.DefineEvent(mod.EvtHideTrinket, EMEVD.Event.RestBehaviorType.Default, ev => ev
+                .WhenFlag(mod.TrinketGetFlag, FlagState.On)
+                .SetObjectEnabled(mod.TrinketEntityId, EnabledState.Disabled)
                 .End());
         });
 
@@ -478,15 +478,16 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         // ════════════════════════════════════════════════════════════════════
         g.EditBnd3Glob("msg", "menu.msgbnd.dcx", bnd =>
         {
-            Texts.Set(bnd, Texts.EventText, MsgDraughtUsed,  "The draught takes hold.");
-            Texts.Set(bnd, Texts.EventText, MsgTrinketFound, "A reward for your tenacity.");
+            Texts.Set(bnd, Texts.EventText, mod.MsgDraughtUsed,  "The draught takes hold.");
+            Texts.Set(bnd, Texts.EventText, mod.MsgTrinketFound, "A reward for your tenacity.");
+            int MsgDemonWarning = mod.MsgDraughtUsed + 2;
             Texts.Set(bnd, Texts.EventText, MsgDemonWarning, "The Asylum Demon stirs...");
         });
     }
 
     // ── AI ────────────────────────────────────────────────────────────────────
 
-    private static void PatchAi(GamePatch g)
+    private static void PatchAi(ItemsDemoMod mod, GamePatch g)
     {
         // ════════════════════════════════════════════════════════════════════
         // API: EditAi / AiBuilder — Goal, OnActivate (deterministic),
@@ -518,12 +519,12 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
             .Goal("Battle", goal => goal
                 .Act(70, q => q
                     // mood 0 = overhead slam (anim 3007, approach to 8m first)
-                    .SetActiveFlagInRange(FlagAiMood0, 2, 0)
+                    .SetActiveFlagInRange(mod.FlagAiMood0, 2, 0)
                     .ApproachTarget(Target.Enemy0, distMeters: 8f, cancelTime: 10)
                     .Attack(animId: 3007, cancelTime: 10))
                 .Act(30, q => q
                     // mood 1 = spin-step evasion then back off
-                    .SetActiveFlagInRange(FlagAiMood0, 2, 1)
+                    .SetActiveFlagInRange(mod.FlagAiMood0, 2, 1)
                     .SpinStep(cancelTime: 5)
                     .LeaveTarget(Target.Enemy0, distMeters: 10f, cancelTime: 5)
                     .WaitRandom(minTime: 1.0f, maxTime: 2.0f))
