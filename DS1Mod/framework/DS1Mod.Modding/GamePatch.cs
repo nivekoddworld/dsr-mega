@@ -89,7 +89,9 @@ public sealed class GamePatch
         return n;
     }
 
-    /// <summary>Edit a map's event script: <c>event/&lt;mapId&gt;.emevd.dcx</c>.</summary>
+    /// <summary>
+    /// Edit a map's event script: <c>event/&lt;mapId&gt;.emevd.dcx</c>.
+    /// </summary>
     public bool EditEmevd(string mapId, Action<EmevdEditor> edit)
     {
         string path = Resolve($"event/{mapId}.emevd.dcx");
@@ -101,6 +103,37 @@ public sealed class GamePatch
         edit(editor);
         File.WriteAllBytes(path, DCX.Compress(evd.Write(), type));
         return true;
+    }
+
+    /// <summary>
+    /// Compile and inject an NPC AI script using the <see cref="AiBuilder"/> C# DSL.
+    /// <para>The builder emits Lua 5.0 source, compiles it with <see cref="Luac50"/>,
+    /// and injects the bytecode into <c>script/&lt;mapId&gt;.luabnd.dcx</c>.</para>
+    /// <code>
+    /// g.EditAi("m18_01_00_00", "223200", ai => ai
+    ///     .Goal("Battle", goal => goal
+    ///         .OnActivate(q => q
+    ///             .ApproachTarget(Target.Enemy0, Dist.Middle, cancelTime: 10)
+    ///             .Attack(animId: 3008, cancelTime: 5))
+    ///         .OnInterrupt(_ => true)));
+    /// </code>
+    /// </summary>
+    /// <param name="mapId">Map identifier, e.g. <c>"m18_01_00_00"</c>.</param>
+    /// <param name="npcFileId">The numeric NPC file ID, e.g. <c>"223200"</c>. Used for the .lua filename inside the luabnd.</param>
+    /// <param name="build">Builder action.</param>
+    /// <param name="luaId">
+    /// Optional Lua identifier prefix for function names, e.g. <c>"AsylumSlam"</c>.
+    /// Defaults to <c>"Npc" + npcFileId</c> when <c>npcFileId</c> starts with a digit.
+    /// </param>
+    public bool EditAi(string mapId, string npcFileId, Action<AiBuilder> build, string? luaId = null)
+    {
+        var builder = new AiBuilder();
+        build(builder);
+        string source   = builder.EmitLua(npcFileId, luaId);
+        byte[] bytecode = Luac50.Compile(source);
+        Log($"[AI] {npcFileId}: compiled {bytecode.Length} bytes");
+        return EditBnd3($"script/{mapId}.luabnd.dcx",
+            bnd => bnd.SetFileContaining($"{npcFileId}_battle.lua", bytecode));
     }
 
     /// <summary>

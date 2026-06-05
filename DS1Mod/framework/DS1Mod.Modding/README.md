@@ -255,6 +255,81 @@ with `WhenAllOf`/`WhenAnyOf` for AND/OR logic.
 
 ---
 
+## AI scripts (Lua)
+
+`GamePatch.EditAi` writes a complete NPC AI script in pure C# — no `.lua` file,
+no external compiler step in your build. The framework emits Lua 5.0 source and
+compiles it with the bundled `luac50` binary automatically at patch time.
+
+### Simple deterministic sequence
+
+```csharp
+// Asylum Demon — slam only (replaces the embedded .luac in DS1Mod.AsylumSlam)
+g.EditAi("m18_01_00_00", "223200", luaId: "AsylumSlam", ai => ai
+    .Goal("Battle", goal => goal
+        .OnActivate(q => q
+            .ApproachTarget(Target.Enemy0, Dist.Middle, cancelTime: 10)
+            .Attack(animId: 3008, cancelTime: 5)   // slam
+            .Wait(cancelTime: 2))
+        .OnInterrupt(_ => true)));
+```
+
+`OnActivate` generates a single sequential subgoal queue. The NPC will always
+approach, slam, then wait before the goal restarts.
+
+### Weighted random attacks
+
+```csharp
+g.EditAi("m18_01_00_00", "223200", luaId: "AsylumRandom", ai => ai
+    .Goal("Battle", goal => goal
+        .Act(50, q => q.ApproachTarget().Attack(animId: 3007))          // sweep
+        .Act(30, q => q.ApproachTarget().TunableSpinAttack(animId: 3008)) // slam
+        .Act(20, q => q.ApproachTarget().ComboAttack(3002).ComboFinal(3011))
+        .OnInterrupt(_ => false)));
+```
+
+Weights are relative (don't need to sum to 100). The game's `Common_Battle_Activate`
+does the weighted random selection each time the goal activates.
+
+### SubGoalQueue reference
+
+| Method | Lua equivalent |
+|---|---|
+| `.ApproachTarget(target, dist, cancelTime)` | `GOAL_COMMON_ApproachTarget` |
+| `.Attack(animId, cancelTime, target, dist)` | `GOAL_COMMON_Attack` |
+| `.ComboAttack(animId, ...)` | `GOAL_COMMON_ComboAttack` |
+| `.ComboFinal(animId, ...)` | `GOAL_COMMON_ComboFinal` |
+| `.TunableSpinAttack(animId, ...)` | `GOAL_COMMON_AttackTunableSpin` |
+| `.DashAttack(animId, ...)` | `GOAL_COMMON_DashAttack` |
+| `.Guard(cancelTime)` | `GOAL_COMMON_Guard` |
+| `.SpinStep(animId, cancelTime)` | `GOAL_COMMON_SpinStep` |
+| `.Wait(cancelTime)` | `GOAL_COMMON_Wait` |
+| `.Turn(target, cancelTime)` | `GOAL_COMMON_Turn` |
+| `.BackToHome(cancelTime)` | `GOAL_COMMON_ApproachTarget` → POINT_INITIAL |
+| `.SidewayMove(target, direction, cancelTime)` | `GOAL_COMMON_SidewayMove` |
+| `.Raw(luaLine)` | any raw Lua line |
+
+### Lua ID and file ID
+
+The `npcFileId` is the number used in the `.lua` filename (e.g. `"223200"` → injects
+into `223200_battle.lua`). Since Lua identifiers can't start with a digit, pass
+`luaId:` to give the function prefix a readable name:
+
+```csharp
+g.EditAi("m18_01_00_00", npcFileId: "223200", luaId: "MyMod", ai => ai ...);
+// generates: REGISTER_GOAL(GOAL_MyMod_Battle, ...) + MyModBattle_Activate(...)
+```
+
+If `luaId` is omitted, it defaults to `"Npc" + npcFileId` (e.g. `"Npc223200"`).
+
+### luac50 binary
+
+The framework looks for `tools/luac50` (or `tools/luac50.exe` on Windows) relative
+to the app directory. A pre-built 64-bit Linux binary is in `tools/luac50` in this
+repo. On Windows, provide `tools/luac50.exe` or call `Luac50.Configure(path)`.
+
+---
+
 ## Full example — boss encounter mod
 
 This is the pattern used by `DS1Mod.GoofyDemon`:
@@ -263,9 +338,13 @@ This is the pattern used by `DS1Mod.GoofyDemon`:
 // In your IGamePatcher.Patch(IPatchContext ctx):
 var g = new GamePatch(ctx);
 
-// 1. Swap the AI script
-g.EditBnd3("script/m18_01_00_00.luabnd.dcx", bnd =>
-    bnd.SetFileContaining("223200_battle.lua", _luaBytecode));
+// 1. Define the AI in C# — no .lua file needed
+g.EditAi("m18_01_00_00", npcFileId: "223200", luaId: "GoofyDemon", ai => ai
+    .Goal("Battle", goal => goal
+        .Act(40, q => q.ApproachTarget().Attack(3008))         // slam
+        .Act(30, q => q.ApproachTarget().Attack(3007))         // sweep
+        .Act(30, q => q.ApproachTarget().TunableSpinAttack(3004))
+        .OnInterrupt(_ => true)));
 
 // 2. Add FMG strings for HUD text + item name/info
 g.EditBnd3Glob("msg", "menu.msgbnd.dcx", bnd => {
