@@ -68,7 +68,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
 
     // AI
     private const string NpcFileId = "223200";   // Asylum Demon AI file
-    private const string LuaId     = "DemoAI";   // Lua identifier prefix
+    private const string LuaId     = "MiniGreaterDemon223200"; // must match vanilla goal name prefix
 
     // Goods
     private const int DraughtGoodsId = 8100;     // consumable, uses SpEffect
