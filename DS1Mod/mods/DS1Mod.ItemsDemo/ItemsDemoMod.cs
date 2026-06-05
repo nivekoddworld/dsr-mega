@@ -103,7 +103,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
     private const int MsgDemonWarning  = 6900762;
 
     // World position — ledge near Asylum start
-    private static readonly Vector3 TrinketPos = new(52f, -2f, 103f);
+    private static readonly Vector3 TrinketPos = new(-13.744f, 190.249f, 11.696f);
 
     private IModContext? _ctx;
 
