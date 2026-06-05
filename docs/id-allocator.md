@@ -62,23 +62,34 @@ public void Patch(IPatchContext ctx)
 ```json
 {
   "allocations": {
-    "EquipParamGoods": {
-      "base": 8000,
+    "EventText": {
+      "base": 6900000,
       "claimed": {
-        "DS1Mod.GoofyDemon": [8000, 8000],
-        "DS1Mod.ItemsDemo": [8001, 8002]
+        "DS1Mod.GoofyDemon": [
+          [6900000, 6900009],
+          [6900690, 6900690]
+        ],
+        "DS1Mod.ItemsDemo": [
+          [6900010, 6900012]
+        ]
       }
     },
     "EventFlags_m18_01": {
       "base": 11819000,
       "claimed": {
-        "DS1Mod.GoofyDemon": [11819000, 11819009],
-        "DS1Mod.ItemsDemo": [11819010, 11819024]
+        "DS1Mod.GoofyDemon": [
+          [11819000, 11819009]
+        ],
+        "DS1Mod.ItemsDemo": [
+          [11819010, 11819024]
+        ]
       }
     }
   }
 }
 ```
+
+Note: Each mod can have **multiple allocations** in the same space (represented as an array). The allocator automatically assigns different ranges for each `AllocateIds()` call, preventing collisions even within a single mod.
 
 ## Supported ID Spaces
 
@@ -143,9 +154,13 @@ g.EditEmevd("m18_01_00_00", emevd => emevd.DefineEvent(eventBase + 1, ...));
 
 Usage:
 ```csharp
-int msgId = ctx.AllocateId("EventText");
-int itemNameId = ctx.AllocateIds("ItemName", 2);
+// Multiple allocations in the same space get different ranges
+int moodMessages = ctx.AllocateIds("EventText", 10);   // [6900000–6900009]
+int fartMessage  = ctx.AllocateId("EventText");        // [6900010]
+int itemNames    = ctx.AllocateIds("ItemName", 2);     // [8000–8001]
 ```
+
+Note: You can call `AllocateIds` multiple times in the same space for the same mod. Each call gets a unique, non-overlapping range.
 
 ### MSB Entity IDs (Map-Local)
 

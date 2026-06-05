@@ -17,7 +17,7 @@ internal sealed class IdAllocator
         public int Base { get; set; }
 
         [JsonPropertyName("claimed")]
-        public Dictionary<string, (int Start, int End)> Claimed { get; set; } = new();
+        public Dictionary<string, List<(int Start, int End)>> Claimed { get; set; } = new();
     }
 
     private sealed record AllocationsRoot
@@ -141,29 +141,38 @@ internal sealed class IdAllocator
                 _spaces[space] = allocationSpace;
             }
 
-            // Check if this mod already claimed IDs in this space
-            if (allocationSpace.Claimed.TryGetValue(_currentMod, out var existing))
+            if (!allocationSpace.Claimed.ContainsKey(_currentMod))
             {
-                // Return the existing allocation (deterministic across runs)
-                Console.WriteLine(
-                    $"[IdAllocator] Mod '{_currentMod}' reusing {space} [{existing.Start}–{existing.End}]");
-                return existing.Start;
+                allocationSpace.Claimed[_currentMod] = new();
             }
 
-            // Find the next available slot
+            var modClaims = allocationSpace.Claimed[_currentMod];
+
+            // Find the next available slot (after all allocations in this space)
             int nextStart = allocationSpace.Base;
-            foreach (var (_, (start, end)) in allocationSpace.Claimed)
+            foreach (var (start, end) in modClaims)
             {
-                if (start >= nextStart)
+                if (end >= nextStart)
                     nextStart = end + 1;
             }
 
+            // Also check claims from other mods
+            foreach (var (_, otherModClaims) in allocationSpace.Claimed)
+            {
+                if (otherModClaims == modClaims) continue;  // Skip self
+                foreach (var (start, end) in otherModClaims)
+                {
+                    if (end >= nextStart)
+                        nextStart = end + 1;
+                }
+            }
+
             int nextEnd = nextStart + count - 1;
-            allocationSpace.Claimed[_currentMod] = (nextStart, nextEnd);
+            modClaims.Add((nextStart, nextEnd));
             Save();
 
             Console.WriteLine(
-                $"[IdAllocator] Mod '{_currentMod}' allocated {space} [{nextStart}–{nextEnd}]");
+                $"[IdAllocator] Mod '{_currentMod}' allocated {space} [{nextStart}–{nextEnd}] (claim #{modClaims.Count})");
             return nextStart;
         }
     }
