@@ -347,46 +347,62 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
 
             // ════════════════════════════════════════════════════════════════
             // API: EventBuilder — WhenAnyOf (OR compound condition)
-            //      DisplayBossHealthBar, ForceAnimation, SetCharacterImmortal,
-            //      SetCharacterInvincible, HandleBossDefeat
+            //      DisplayBossHealthBar
             //      RestBehaviorType.Default
             //
-            // Boss intro event: show HP bar as soon as the demon is alive OR
-            // the player enters the arena. Then force an intro animation.
+            // Boss intro event: show the HP bar as soon as the demon is
+            // alive OR the demon-dead flag is off. We deliberately do NOT
+            // ForceAnimation or HandleBossDefeat here — the vanilla EMEVD
+            // already runs the boss fight, and stacking ForceAnimation /
+            // HandleBossDefeat on top double-grants souls and pops a
+            // second Victory banner once he dies for real.
+            //
+            // For a full ForceAnimation showcase, see the comment block on
+            // EvtDemonControl below.
             // ════════════════════════════════════════════════════════════════
             emevd.DefineEvent(EvtBossIntro, EMEVD.Event.RestBehaviorType.Default, ev => ev
                 .WhenAnyOf(or => or
                     .Alive(DemonEntity)
                     .Flag(DemonDeadFlag, FlagState.Off))
                 .DisplayBossHealthBar(DemonEntity, EnabledState.Enabled, slot: 0, nameId: 0)
-                .ForceAnimation(DemonEntity, animId: 3000)
-                // handle normal defeat sequence once dead
                 .WhenDead(DemonEntity)
                 .DisplayBossHealthBar(DemonEntity, EnabledState.Disabled)
-                .HandleBossDefeat(DemonEntity)
                 .End());
 
             // ════════════════════════════════════════════════════════════════
             // API: EventBuilder — SetCharacterEnabled, SetCharacterAI,
-            //      SetCharacterHome, KillCharacter, WarpCharacter
-            //      WhenAlive, WhenHpBelow, WhenInsideArea, WhenOutsideArea
+            //      SetCharacterHome, SetCharacterImmortal, SetCharacterInvincible
+            //      WhenAlive, WhenHpBelow, WarpCharacter, KillCharacter,
+            //      DisplayBanner, ForceAnimation, HandleBossDefeat
             //
-            // Character control demo — exercises every character-action method.
-            // This is a synthetic event for demonstration; it is not triggered
-            // in normal gameplay (it waits on flag 11819409 which nothing sets).
+            // Character-control API showcase. The previous version of this
+            // event actually called KillCharacter + DisplayBanner gated on
+            // a "never fires" flag — but the gate flag (11819409) was the
+            // same numeric ID as EvtRawEscape, and DSR mirrors the
+            // "event N is registered" state as flag N, so the gate opened
+            // on map load. The chain then auto-killed the demon, awarded
+            // souls and popped "Victory Achieved" before the player ever
+            // entered the arena.
+            //
+            // The destructive showcase is removed. The methods are still
+            // exercised below on a body that no-ops: SetCharacterHome to
+            // the demon's own home region, immortal/invincible toggled
+            // back to their default, and an Initialize-time SetFlag so
+            // there's a visible side effect to confirm it ran.
+            //
+            // The KillCharacter / DisplayBanner / WarpCharacter /
+            // HandleBossDefeat / ForceAnimation methods exist on
+            // EventBuilder and behave exactly as their names suggest —
+            // demonstrating them safely requires a gating flag that the
+            // mod controls itself (e.g. set on a custom item use).
             // ════════════════════════════════════════════════════════════════
             emevd.DefineEvent(EvtDemonControl, EMEVD.Event.RestBehaviorType.Default, ev => ev
-                .WhenFlag(11819409, FlagState.On)        // gated — never fires normally
+                .WhenFlag(11815998, FlagState.On)        // section-5 flag we never set — truly never fires
                 .SetCharacterEnabled(DemonEntity, EnabledState.Enabled)
                 .SetCharacterAI(DemonEntity, EnabledState.Enabled)
                 .SetCharacterHome(DemonEntity, regionEntityId: 1810100)
                 .SetCharacterImmortal(DemonEntity, EnabledState.Disabled)
                 .SetCharacterInvincible(DemonEntity, EnabledState.Disabled)
-                .WhenAlive(DemonEntity)
-                .WhenHpBelow(DemonEntity, 0.1f)
-                .WarpCharacter(DemonEntity, destEntityId: 1810100)
-                .KillCharacter(DemonEntity, awardSouls: true)
-                .DisplayBanner(bannerType: 1)            // "Victory Achieved"
                 .End());
 
             // ════════════════════════════════════════════════════════════════

@@ -177,17 +177,24 @@ public sealed class MsbEditor
 
     private string FindNearestCollision(Vector3 pos)
     {
-        // Prefer the collision name from the nearest existing o0500 pickup object
+        // Prefer the actual nearest collision mesh by world position. This
+        // is the collision the player will be standing on when they walk
+        // up to the pickup — and DSR o0500 pickups are culled by
+        // collision-group rather than draw-group, so binding to a far-
+        // away collision makes the prop invisible up close (only visible
+        // once the player stands on that distant collision).
+        var nearestCol = _msb.Parts.Collisions
+            .OrderBy(c => Vector3.DistanceSquared(c.Position, pos))
+            .FirstOrDefault();
+        if (nearestCol is not null) return nearestCol.Name;
+
+        // Fall back to borrowing from the nearest existing o0500 — used
+        // only when the map has no collision parts (essentially never in
+        // real DSR maps, but keeps the function total).
         var nearestObj = _msb.Parts.Objects
             .Where(o => o.ModelName == "o0500" && !string.IsNullOrEmpty(o.CollisionName))
             .OrderBy(o => Vector3.DistanceSquared(o.Position, pos))
             .FirstOrDefault();
-        if (nearestObj is not null) return nearestObj.CollisionName!;
-
-        // Fall back to the nearest collision mesh part by world position
-        var nearestCol = _msb.Parts.Collisions
-            .OrderBy(c => Vector3.DistanceSquared(c.Position, pos))
-            .FirstOrDefault();
-        return nearestCol?.Name ?? string.Empty;
+        return nearestObj?.CollisionName ?? string.Empty;
     }
 }

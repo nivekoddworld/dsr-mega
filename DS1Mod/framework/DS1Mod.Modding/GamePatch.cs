@@ -186,11 +186,16 @@ public sealed class GamePatch
         });
 
         // ── FMG ────────────────────────────────────────────────────────────────
+        // Use Texts.Set (Contains-match across every locale-specific FMG)
+        // with the canonical name fragments. The previous SetFmgEntry helper
+        // did exact-match on "GoodsName", which never matched DSR's actual
+        // "Item_name_.fmg" — items would land in the param but their
+        // inventory display would show "?GoodsName? ID: ###".
         EditBnd3Glob("msg", "item.msgbnd.dcx", bnd =>
         {
-            SetFmgEntry(bnd, "GoodsName",    def.Id, def.Name);
-            SetFmgEntry(bnd, "GoodsInfo",    def.Id, def.Description);
-            SetFmgEntry(bnd, "GoodsCaption", def.Id, def.LongDesc);
+            Texts.Set(bnd, Texts.GoodsName,        def.Id, def.Name);
+            Texts.Set(bnd, Texts.GoodsDescription, def.Id, def.Description);
+            Texts.Set(bnd, Texts.GoodsLongDesc,    def.Id, def.LongDesc);
         });
     }
 
@@ -299,21 +304,6 @@ public sealed class GamePatch
                 .WhenCharacterLosesSpEffect(Player, spEffectId)
                 .SetFlag(triggerFlagId, FlagState.Off)
                 .Restart()));
-    }
-
-    // ── helpers ───────────────────────────────────────────────────────────────
-
-    private static void SetFmgEntry(BND3 bnd, string fmgName, int id, string text)
-    {
-        var file = bnd.Files.FirstOrDefault(
-            f => Path.GetFileNameWithoutExtension(f.Name)
-                      .Equals(fmgName, StringComparison.OrdinalIgnoreCase));
-        if (file == null) return;
-        var fmg = FMG.Read(file.Bytes);
-        var entry = fmg.Entries.FirstOrDefault(e => e.ID == id);
-        if (entry != null) entry.Text = text;
-        else               fmg.Entries.Add(new FMG.Entry(id, text));
-        file.Bytes = fmg.Write();
     }
 
     /// <summary>
