@@ -110,10 +110,13 @@ public sealed class MsbEditor
             _msb.Models.Objects.Add(model);
         }
 
-        // 2. Resolve collision — nearest existing o0500 object if not specified
+        // 2. Find a donor o0500 part to clone all the lighting/shadow/etc. IDs from
+        var donor = _msb.Parts.Objects.FirstOrDefault(o => o.ModelName == PickupModel);
+
+        // 3. Resolve collision — nearest existing o0500 object if not specified
         string col = collisionName ?? FindNearestCollision(position);
 
-        // 3. Auto-generate unique object name: o0500_XXXX
+        // 4. Auto-generate unique object name: o0500_XXXX
         int nextSuffix = _msb.Parts.Objects
             .Select(o => {
                 var p = o.Name.Split('_');
@@ -123,20 +126,27 @@ public sealed class MsbEditor
 
         string objName = $"{PickupModel}_{nextSuffix:D4}";
 
-        // 4. Create the object part
-        var obj = new MSB1.Part.Object
+        // 5. Clone donor (so we inherit LightID, ShadowID, DrawGroups, InitAnimID,
+        // etc. that ground pickups need). Fall back to a fresh part if there is
+        // no existing o0500 in the map — in which case set InitAnimID=50, the
+        // ground-pickup lay-flat animation, otherwise the item won't display.
+        MSB1.Part.Object obj;
+        if (donor is not null)
         {
-            Name          = objName,
-            ModelName     = PickupModel,
-            Position      = position,
-            Rotation      = Vector3.Zero,
-            Scale         = Vector3.One,
-            CollisionName = col,
-            EntityID      = entityId,
-        };
-        // DrawGroups / DispGroups default to all-visible (0xFFFFFFFF)
-        for (int i = 0; i < obj.DrawGroups.Length; i++)  obj.DrawGroups[i]  = 0xFFFFFFFF;
-        for (int i = 0; i < obj.DispGroups.Length; i++) obj.DispGroups[i] = 0xFFFFFFFF;
+            obj = (MSB1.Part.Object)donor.DeepCopy();
+        }
+        else
+        {
+            obj = new MSB1.Part.Object { ModelName = PickupModel, InitAnimID = 50 };
+            for (int i = 0; i < obj.DrawGroups.Length; i++) obj.DrawGroups[i] = 0xFFFFFFFF;
+            for (int i = 0; i < obj.DispGroups.Length; i++) obj.DispGroups[i] = 0xFFFFFFFF;
+        }
+        obj.Name          = objName;
+        obj.Position      = position;
+        obj.Rotation      = Vector3.Zero;
+        obj.Scale         = Vector3.One;
+        obj.CollisionName = col;
+        obj.EntityID      = entityId;
         _msb.Parts.Objects.Add(obj);
 
         // 5. Create the Treasure event

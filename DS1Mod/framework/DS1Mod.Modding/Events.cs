@@ -41,7 +41,8 @@ public static class Instr
     public static EMEVD.Instruction IfCharacterDeadAlive(LifeState state, int entityId, sbyte condGroup = 0) =>
         new(4, 0, new List<object> { condGroup, entityId, (byte)state });
 
-    /// <summary>4:2 — block until entity HP ratio meets a comparison (type: 0=&lt;, 1=&lt;=, 2==, 3=&gt;=, 4=&gt;).</summary>
+    /// <summary>4:2 — block until entity HP ratio meets a comparison.
+    /// Comparison Type: 0=Equal, 1=NotEqual, 2=Greater, 3=Less, 4=GreaterOrEqual, 5=LessOrEqual.</summary>
     public static EMEVD.Instruction IfHpRatio(int entityId, sbyte compType, float ratio, sbyte condGroup = 0) =>
         new(4, 2, new List<object> { condGroup, entityId, compType, ratio });
 
@@ -205,7 +206,7 @@ public sealed class SubConditionBuilder
     { _parent.Add(Instr.IfCharacterDeadAlive(LifeState.Alive, entityId, _group)); return this; }
 
     public SubConditionBuilder HpBelow(int entityId, float ratio)
-    { _parent.Add(Instr.IfHpRatio(entityId, compType: 0, ratio, _group)); return this; }
+    { _parent.Add(Instr.IfHpRatio(entityId, compType: 3, ratio, _group)); return this; }
 
     public SubConditionBuilder InsideArea(int entityId, int areaEntityId)
     { _parent.Add(Instr.IfInsideArea(entityId, areaEntityId, desired: 1, _group)); return this; }
@@ -295,7 +296,7 @@ public sealed class EventBuilder
     /// <summary>Block until entity HP ratio drops below <paramref name="ratio"/> (0.0–1.0).</summary>
     public EventBuilder WhenHpBelow(int entityId, float ratio)
     {
-        _instrs.Add(Instr.IfHpRatio(entityId, compType: 0, ratio)); // 0 = less-than
+        _instrs.Add(Instr.IfHpRatio(entityId, compType: 3, ratio)); // 3 = Less
         return this;
     }
 

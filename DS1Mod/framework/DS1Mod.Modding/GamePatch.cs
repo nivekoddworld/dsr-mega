@@ -133,8 +133,12 @@ public sealed class GamePatch
         string source   = builder.EmitLua(npcFileId, luaId);
         byte[] bytecode = Luac50.Compile(source);
         Log($"[AI] {npcFileId}: compiled {bytecode.Length} bytes");
-        return EditBnd3($"script/{mapId}.luabnd.dcx",
-            bnd => bnd.SetFileContaining($"{npcFileId}_battle.lua", bytecode));
+        return EditBnd3($"script/{mapId}.luabnd.dcx", bnd =>
+        {
+            string entry = $"{npcFileId}_battle.lua";
+            if (!bnd.SetFileContaining(entry, bytecode))
+                Log($"[AI] {entry} not found (or matched more than one entry) in {mapId}.luabnd — AI NOT swapped");
+        });
     }
 
     /// <summary>

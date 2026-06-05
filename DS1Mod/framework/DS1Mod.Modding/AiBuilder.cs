@@ -310,16 +310,22 @@ public sealed class GoalBuilder
         return this;
     }
 
-    internal void Emit(StringBuilder sb, string npcId)
+    internal void Emit(StringBuilder sb, string npcId, string npcFileId, int goalOffset)
     {
-        string goalConst  = $"GOAL_{npcId}_{Name}";
         string activateFn = $"{npcId}{Name}_Activate";
         string updateFn   = $"{npcId}{Name}_Update";
         string terminateFn= $"{npcId}{Name}_Terminate";
         string interuptFn = $"{npcId}{Name}_Interupt";
 
-        sb.AppendLine($"REGISTER_GOAL({goalConst}, \"{npcId}{Name}\")");
-        sb.AppendLine($"REGISTER_GOAL_NO_UPDATE({goalConst}, 1)");
+        // Goal value is the NPC file id (+ offset for non-primary goals). The
+        // engine looks up goals by numeric value (set in goal_list.lua), not
+        // by a symbolic constant name — so we pass the literal value here.
+        string goalValue = goalOffset == 0
+            ? npcFileId
+            : $"{npcFileId} + {goalOffset}";
+
+        sb.AppendLine($"REGISTER_GOAL({goalValue}, \"{npcId}{Name}\")");
+        sb.AppendLine($"REGISTER_GOAL_NO_UPDATE({goalValue}, 1)");
         sb.AppendLine();
 
         // ── Helper functions ──────────────────────────────────────────────────
@@ -444,17 +450,24 @@ public sealed class AiBuilder
 
     /// <summary>
     /// Emit the Lua 5.0 source for this AI script.
-    /// <paramref name="npcId"/> is used as the Lua identifier prefix for function names;
-    /// it must be a valid Lua identifier (letters, digits, underscores, not starting with a digit).
-    /// If it starts with a digit, pass a separate <paramref name="luaId"/> like <c>"Npc223200"</c>.
+    /// <paramref name="npcFileId"/> is the numeric NPC id (e.g. <c>"223200"</c>) — it
+    /// becomes the value passed to <c>REGISTER_GOAL</c> so the engine actually
+    /// associates the goal with this NPC. The first <see cref="Goal"/> is the
+    /// primary goal at <c>npcFileId + 0</c>, the second is <c>+ 1</c>, etc.
+    /// (matching the <c>goal_list.lua</c> convention: Runaway/Hide goals get +1/+2.)
+    ///
+    /// <para><paramref name="luaId"/> overrides the Lua identifier prefix used for
+    /// function names (the prefix must be a valid Lua identifier — letters,
+    /// digits, underscores, not starting with a digit). Defaults to
+    /// <c>"Npc" + npcFileId</c> when <paramref name="npcFileId"/> starts with a digit.</para>
     /// </summary>
-    public string EmitLua(string npcId, string? luaId = null)
+    public string EmitLua(string npcFileId, string? luaId = null)
     {
         // Ensure the identifier used in Lua source is valid
-        string id = luaId ?? (char.IsDigit(npcId[0]) ? "Npc" + npcId : npcId);
+        string id = luaId ?? (char.IsDigit(npcFileId[0]) ? "Npc" + npcFileId : npcFileId);
         var sb = new StringBuilder();
-        foreach (GoalBuilder g in _goals)
-            g.Emit(sb, id);
+        for (int i = 0; i < _goals.Count; i++)
+            _goals[i].Emit(sb, id, npcFileId, goalOffset: i);
         return sb.ToString();
     }
 }
