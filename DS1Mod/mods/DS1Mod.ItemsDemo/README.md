@@ -1,83 +1,259 @@
-# Items & SpEffect API — What Was Added Today
+# DS1Mod Framework — How-To Reference
 
-Everything in this document was added on 2026-06-05. It covers all new
-patch-time and runtime APIs for creating items, placing them in the world,
-defining what happens on use, and reacting to item use in C# and in-game.
+This document covers every API available to mod authors. Each section has a
+brief explanation followed by a working code example drawn from `ItemsDemoMod`.
 
 ---
 
-## New patch-time APIs (DS1Mod.Modding)
+## 1. Conflict Detection
+
+`GamePatch` records every file+selector it writes when constructed from an
+`IPatchContext`. The host (`PatchContext`) collects these records across all
+loaded mods and logs a warning when two mods write the same target.
+
+**Mod authors never call `RecordEdit` directly.** It is called automatically
+inside every `GamePatch` write method (`EditParams`, `EditEmevd`, `EditBnd3`,
+`EditMsb`, `EditAi`, and so on). The only requirement is that you construct
+`GamePatch` from the `IPatchContext` — not from the low-level overload.
+
+```csharp
+// Correct — conflict detection active
+var g = new GamePatch(ctx);   // ctx is the IPatchContext passed to Patch()
+
+// Low-level overload — no conflict detection
+var g = new GamePatch(ctx.GameDir, ctx.BackupFile, ctx.Log);
+```
+
+When two mods write the same location the host prints:
+
+```
+[CONFLICT] DS1Mod.GoofyDemon and DS1Mod.ItemsDemo both modified
+           script/m18_01_00_00.luabnd.dcx :: BND3:script/m18_01_00_00.luabnd.dcx
+```
+
+The second mod's write wins. To test this: install both `GoofyDemon` and
+`ItemsDemo` — both patch `223200_battle.lua` in the Asylum luabnd.
+
+---
+
+## 2. EMEVD / EventBuilder
+
+`g.EditEmevd(mapId, emevd => ...)` opens the map's `.emevd.dcx`, hands you an
+`EmevdEditor`, and writes back. Call `emevd.DefineEvent(id, rest, ev => ...)`
+to create (or idempotently replace) an event using the fluent `EventBuilder`.
+
+The event is auto-registered at the top of event 0 (the constructor) so it
+always runs — appending at the end can be skipped by DS1's multiplayer SKIPs.
+
+```csharp
+g.EditEmevd("m18_01_00_00", emevd =>
+    emevd.DefineEvent(11819405, EMEVD.Event.RestBehaviorType.Restart, ev => ev
+        .WhenFlag(11819400, FlagState.On)
+        .DisplayMessage(6900760)
+        .SetFlag(11819402, FlagState.On)
+        .WhenFlag(11819400, FlagState.Off)
+        .Restart()));
+```
+
+`RestBehaviorType.Default` — event runs once then stops.  
+`RestBehaviorType.Restart` — event loops (use for polling / repeating effects).
+
+### Conditions
+
+Each condition blocks the event until the test is true.
+
+| Method | Blocks until |
+|---|---|
+| `WhenFlag(flagId, FlagState.On/Off)` | Event flag reaches the given state |
+| `WhenDead(entityId)` | Character is dead |
+| `WhenAlive(entityId)` | Character is alive |
+| `WhenHpBelow(entityId, ratio)` | HP ratio drops below threshold (0.0–1.0) |
+| `WhenInsideArea(entityId, areaEntityId)` | Entity enters an area region |
+| `WhenOutsideArea(entityId, areaEntityId)` | Entity leaves an area region |
+| `WhenCharacterHasSpEffect(entityId, spEffectId)` | SpEffect is active on entity |
+| `WhenCharacterLosesSpEffect(entityId, spEffectId)` | SpEffect expires on entity |
+
+### Compound conditions
+
+**`WhenAllOf`** — AND group: block until every sub-condition is true simultaneously.
+
+```csharp
+ev.WhenAllOf(and => and
+    .HpBelow(1810800, 0.5f)   // demon at half health
+    .Alive(10000))            // and player is alive
+```
+
+**`WhenAnyOf`** — OR group: block until at least one sub-condition is true.
+
+```csharp
+ev.WhenAnyOf(or => or
+    .Alive(1810800)
+    .Flag(16, FlagState.Off))
+```
+
+DS1 supports up to 7 AND groups and 7 OR groups per event. `SubConditionBuilder`
+methods: `.Flag`, `.Dead`, `.Alive`, `.HpBelow`, `.InsideArea`, `.OutsideArea`,
+`.HasItem`, `.Raw(bank, id, args)`.
+
+### Actions
+
+| Method | Effect |
+|---|---|
+| `SetFlag(flagId, FlagState)` | Set an event flag on or off |
+| `AwardItemLot(lotId)` | Give the player an item lot |
+| `DisplayMessage(msgId)` | Centered on-screen message (Event_text FMG) |
+| `DisplayStatusMessage(msgId)` | Status text box (Event_text FMG) |
+| `DisplayBanner(bannerType)` | Big banner preset (1=Victory, 2=You Died…) |
+| `DisplayBossHealthBar(entityId, state, slot, nameId)` | Show/hide boss HP bar |
+| `ForceAnimation(entityId, animId)` | Force-play an animation on a character |
+| `SetCharacterEnabled(entityId, state)` | Enable / disable visibility + collision |
+| `KillCharacter(entityId, awardSouls)` | Force character death |
+| `SetCharacterAI(entityId, state)` | Enable / disable character AI |
+| `SetCharacterHome(entityId, regionEntityId)` | Set AI home point to a region |
+| `SetCharacterImmortal(entityId, state)` | Immortal (unkillable) on/off |
+| `SetCharacterInvincible(entityId, state)` | Invincible (no damage) on/off |
+| `WarpCharacter(entityId, destEntityId)` | Teleport character to destination |
+| `HandleBossDefeat(entityId)` | Trigger boss-death music + soul award |
+
+### Control flow
+
+| Method | Effect |
+|---|---|
+| `.End()` | Unconditional end — event runs once |
+| `.Restart()` | Unconditional restart — event loops |
+| `.Raw(bank, id, args)` | Append any instruction by bank/id with explicit args |
+
+**Raw escape hatch example** — spawn a one-shot SFX (bank 2006, id 3):
+
+```csharp
+ev.Raw(2006, 3, 1, 1810800, 220, 5090)   // SpawnOneshotSfx at demon dummypoly 220
+```
+
+---
+
+## 3. Lua AI / AiBuilder
+
+`g.EditAi(mapId, npcFileId, ai => ...)` builds a Lua 5.0 AI script, compiles
+it with `luac50`, and injects the bytecode into the map's `.luabnd.dcx`. The
+builder emits a standard DS1 AI skeleton (REGISTER_GOAL, Activate/Update/
+Terminate/Interupt functions) so you only describe the behaviour, not the boilerplate.
+
+```csharp
+g.EditAi("m18_01_00_00", "223200", ai => ai
+    .Goal("Battle", goal => goal
+        .Act(70, q => q
+            .ApproachTarget(Target.Enemy0, Dist.Middle, cancelTime: 12)
+            .Attack(animId: 3008, cancelTime: 8))
+        .Act(30, q => q
+            .SpinStep(cancelTime: 5)
+            .LeaveTarget(Target.Enemy0, Dist.Far, cancelTime: 8))
+        .OnInterrupt(_ => true)),
+    luaId: "DemoAI");
+```
+
+`luaId` is the Lua identifier prefix for generated function names (default
+`"Npc" + npcFileId`). Pass it when `npcFileId` starts with a digit.
+
+### GoalBuilder methods
+
+| Method | Purpose |
+|---|---|
+| `.Act(weight, q => ...)` | Weighted random action table entry. Weights are relative. |
+| `.OnActivate(q => ...)` | Single deterministic on-activate sequence (no random table) |
+| `.OnInterrupt(_ => bool)` | Whether the goal can be pre-empted (`true`/`false`) |
+| `.Helper(name, body)` | Emit a named Lua helper function before the goal functions |
+
+**Helper example:**
+
+```csharp
+goal.Helper("ClearMoods",
+    "for _i = 0, 1 do\n" +
+    "    ai:SetEventFlag(11819403 + _i, false)\n" +
+    "end")
+// emits:
+//   function ClearMoods(ai, goal)
+//       for _i = 0, 1 do
+//           ai:SetEventFlag(11819403 + _i, false)
+//       end
+//   end
+```
+
+Call from an act with `.Raw("ClearMoods(ai, goal)")`.
+
+### SubGoalQueue methods
+
+Each method appends one `goal:AddSubGoal(...)` call and returns `this`.
+
+| Method | Behaviour |
+|---|---|
+| `ApproachTarget(target, dist, cancelTime)` | Move to within `dist` of `target` |
+| `Attack(animId, cancelTime)` | Play attack animation |
+| `SpinStep(cancelTime)` | Evasive spin-step |
+| `Wait(cancelTime)` | Idle wait for fixed time |
+| `SidewayMove(direction, cancelTime)` | Lateral shuffle (0=left, 1=right) |
+| `LeaveTarget(dist, cancelTime)` | Back away to `dist` |
+| `WaitRandom(minTime, maxTime)` | Idle wait for random duration |
+| `SetEventFlag(flagId, on)` | Set an event flag from Lua |
+| `SetActiveFlagInRange(baseFlag, count, active)` | Clear a flag range; set one active index |
+| `Raw(luaLine)` | Append any Lua line verbatim (4-space indent applied) |
+
+**Target enum:** `Enemy0`, `Self`, `Friend0`, `Event`, `LocalPlayer`, `None`  
+**Dist enum:** `Near`, `Middle`, `Far`, `Out`, `None`
+
+### Override the luac50 binary path
+
+```csharp
+Luac50.Configure("/home/user/dsr-mega/tools/luac50");
+// Call before any g.EditAi() call.
+```
+
+The default search order is: `<appBase>/tools/luac50[.exe]`, then `PATH`.
+
+---
+
+## 4. Items
 
 ### DefineSpEffect
 
-Creates a `SpEffectParam` row — the engine mechanism behind all triggered
-effects (HP restore, buffs, status infliction).
+Creates a `SpEffectParam` row by cloning a donor row and overwriting named fields.
 
 ```csharp
 g.DefineSpEffect(paramdefs, new SpEffectDef
 {
-    Id             = 9100,   // unique SpEffectParam row id
+    Id             = 9100,   // unique row id (use 9000+ for mods)
     DonorId        = 7000,   // clone from this existing row
-    Duration       = 0f,     // 0 = instant; seconds otherwise
+    Duration       = 0f,     // 0 = instant; >0 = seconds
     HpRecoverPoint = 400,    // flat HP restored on application
+
+    // Configure: any field not covered by named props
+    Configure      = row => row["motionInterval"].Value = 0f,
 });
 ```
 
-**`SpEffectDef` fields:**
-
-| Field | Effect |
-|---|---|
-| `Duration` | How long the effect lasts. `0` = instant (fires once). |
-| `HpRecoverPoint` | Flat HP restored instantly |
-| `HpRecoverRate` | HP/second over `Duration` |
-| `StaminaRecoverPoint` | Flat stamina restored |
-| `MaxHpRate` | Max HP multiplier (`1.2` = +20%) |
-| `PhysAtkPowerRate` | Physical attack multiplier |
-| `MagicAtkPowerRate` | Magic attack multiplier |
-| `FireAtkPowerRate` | Fire attack multiplier |
-| `ThunderAtkPowerRate` | Lightning attack multiplier |
-| `PhysDefRate` | Physical defense multiplier |
-| `MagicDefRate` | Magic defense multiplier |
-| `FireDefRate` | Fire defense multiplier |
-| `ThunderDefRate` | Lightning defense multiplier |
-| `Configure` | Raw `Action<PARAM.Row>` callback for any field not listed above |
-
----
+`SpEffectDef` named fields: `Duration`, `HpRecoverPoint`, `HpRecoverRate`,
+`StaminaRecoverPoint`, `MaxHpRate`, `PhysAtkPowerRate`, `MagicAtkPowerRate`,
+`FireAtkPowerRate`, `ThunderAtkPowerRate`, `PhysDefRate`, `MagicDefRate`,
+`FireDefRate`, `ThunderDefRate`. Use `Configure` for anything else.
 
 ### DefineGoods
 
-Creates a row in `EquipParamGoods` and writes name/description strings to every
-locale's `item.msgbnd.dcx`. Idempotent — safe to call every launch.
+Creates an `EquipParamGoods` row and writes name/description strings to every
+locale's `item.msgbnd.dcx`. Idempotent — safe to call on every launch.
 
 ```csharp
+// Consumable (SpEffectId set → auto-wires goodsType=0 + refId_default)
 g.DefineGoods(paramdefs, new ItemDef
 {
     Id          = 8100,
-    DonorId     = 384,          // clone from this existing goods row
-    SpEffectId  = 9100,         // links SpEffect; sets goodsType=consumable automatically
+    DonorId     = 384,         // Estus Flask as base
+    SpEffectId  = 9100,        // wires goodsType=consumable automatically
     Name        = "Goofy Draught",
     Description = "Restores 400 HP.",
     LongDesc    = "A longer description shown in the inventory.",
     MaxCount    = 5,
 });
-```
 
-**`ItemDef` fields:**
-
-| Field | Default | Notes |
-|---|---|---|
-| `Id` | required | Unique `EquipParamGoods` row id |
-| `DonorId` | `384` | Row to clone (copies all param fields as a base) |
-| `SpEffectId` | `-1` | When set: wires `goodsType=0` (consumable) + `refId_default` automatically |
-| `Name` | `"Unnamed Item"` | Shown in inventory |
-| `Description` | `""` | Short description |
-| `LongDesc` | `""` | Long description |
-| `MaxCount` | `1` | Stack size |
-| `Configure` | `null` | Raw `Action<PARAM.Row>` for anything not listed above |
-
-**Key item (no use effect)** — set `goodsType=4` via `Configure`:
-
-```csharp
+// Key item (no use effect — set goodsType=4 via Configure)
 g.DefineGoods(paramdefs, new ItemDef
 {
     Id        = 8101,
@@ -87,216 +263,139 @@ g.DefineGoods(paramdefs, new ItemDef
 });
 ```
 
----
+`ItemDef.SpEffectId = -1` (default) means no SpEffect — key item behaviour.  
+`ItemDef.Configure` is an `Action<PARAM.Row>` called after the donor clone.
 
 ### DefineLot
 
-Creates an `ItemLotParam` row. Used by `AwardItemLot` in EMEVD events and by
-`PlaceTreasure` in MSB Treasure events.
+Creates an `ItemLotParam` row for use with `AwardItemLot` (EMEVD) or
+`PlaceTreasure` (MSB).
 
 ```csharp
-// Once-only lot (won't drop again after flag is set)
-g.DefineLot(paramdefs, new LotDef
-{
-    LotId        = 8601,
-    ItemId       = 8101,               // EquipParamGoods id
-    Category     = LotCategory.Goods,  // Goods / Weapon / Protector / Accessory
-    Count        = 1,
-    OnceOnlyFlag = 11819402,           // event flag id — set when obtained
-});
-
 // Infinite lot
 g.DefineLot(paramdefs, new LotDef
 {
     LotId        = 8600,
     ItemId       = 8100,
+    Category     = LotCategory.Goods,
     Count        = 3,
-    OnceOnlyFlag = -1,                 // -1 = no restriction, infinite
+    OnceOnlyFlag = -1,           // -1 = no restriction, re-awards every time
+});
+
+// Once-only lot (sets flag when obtained; skips on subsequent triggers)
+g.DefineLot(paramdefs, new LotDef
+{
+    LotId        = 8601,
+    ItemId       = 8101,
+    Category     = LotCategory.Goods,
+    Count        = 1,
+    OnceOnlyFlag = 11819401,     // event flag set when item is obtained
 });
 ```
 
----
+`LotCategory` constants: `Goods`, `Weapon`, `Protector`, `Accessory`.
 
-### EditMsb / PlaceTreasure
+### PlaceTreasure
 
-Edits a map's `.msb` file in place. `PlaceTreasure` adds a glowing `o0500`
-ground-pickup object and a `Treasure` event pointing to a lot.
+Adds a glowing `o0500` ground-pickup object and a `Treasure` event to the map.
 
 ```csharp
 g.EditMsb("m18_01_00_00", msb => msb
-    .PlaceTreasure(lotId: 8601, position: new Vector3(52f, -2f, 103f)));
+    .PlaceTreasure(
+        lotId:         8601,
+        position:      new Vector3(52f, -2f, 103f),
+        collisionName: null,   // auto — borrows from nearest existing o0500
+        inChest:       false,
+        entityId:      -1));
 ```
 
-**`PlaceTreasure` parameters:**
-
-| Parameter | Default | Notes |
-|---|---|---|
-| `lotId` | required | `ItemLotParam` row to link |
-| `position` | required | World XYZ position |
-| `collisionName` | nearest existing pickup | Override the collision mesh |
-| `inChest` | `false` | `true` for a chest container |
-| `entityId` | `-1` | Assign an entity id for EMEVD reference |
+`collisionName` defaults to the collision of the nearest existing `o0500` object
+in the map — safe when placing near an existing pickup. Override when placing in
+an area with no existing pickups.
 
 ---
+
+## 5. Item Use Detection
 
 ### DefineItemTrigger
 
 Writes a `Restart` EMEVD event that bridges item use (SpEffect activation) to
-an event flag pulse. This is what connects an item use to both in-game EMEVD
-responses and the C# `ItemUsed` hook.
+an event flag pulse. Required for both the in-game EMEVD response and the C#
+`hooks.ItemUsed` callback.
 
 ```csharp
-g.DefineItemTrigger("m18_01_00_00", spEffectId: 9100, triggerFlagId: 11819401);
+g.DefineItemTrigger(
+    mapId:         "m18_01_00_00",
+    spEffectId:    9100,
+    triggerFlagId: 11819400);
+// eventId defaults to triggerFlagId; pass explicitly to override:
+// g.DefineItemTrigger(..., eventId: 11819450);
 ```
 
-The emitted event:
-1. Waits until entity `10000` (the player) has SpEffect `9100` active
-2. Sets flag `11819401` **ON**
-3. Waits until the SpEffect expires
-4. Sets flag `11819401` **OFF** → restarts — ready for next use
+The emitted event (internally, using `WhenCharacterHasSpEffect` /
+`WhenCharacterLosesSpEffect`):
 
-`eventId` defaults to `triggerFlagId`. Pass it explicitly to override:
+1. Wait until entity `10000` has SpEffect `9100` active
+2. Set flag `11819400` **ON**
+3. Wait until the SpEffect expires
+4. Set flag `11819400` **OFF** → restart
 
-```csharp
-g.DefineItemTrigger(Map, spEffectId: 9100, triggerFlagId: 11819401, eventId: 11819450);
-```
+### hooks.ItemUsed
 
----
-
-### WhenCharacterHasSpEffect / WhenCharacterLosesSpEffect
-
-Two new `EventBuilder` methods for writing the SpEffect condition manually,
-if you need it in your own events rather than via `DefineItemTrigger`.
+Subscribe in `OnLoad`. Fires (within the 500ms poll loop) when the trigger
+flag pulses ON.
 
 ```csharp
-emevd.DefineEvent(11819450, EMEVD.Event.RestBehaviorType.Restart, ev => ev
-    .WhenCharacterHasSpEffect(10000, 9100)  // wait until player has SpEffect active
-    .SetFlag(11819401, FlagState.On)
-    .WhenCharacterLosesSpEffect(10000, 9100) // wait until it expires
-    .SetFlag(11819401, FlagState.Off)
-    .Restart());
-```
-
-These map to EMEVD instruction `4:5 IF Character Has SpEffect`.
-
----
-
-## New runtime APIs (DS1Mod.Core)
-
-### hooks.RegisterItemUsed + hooks.ItemUsed
-
-Register an item to watch and subscribe to the C# event. Fires in the 500ms
-poll loop when the trigger flag pulses ON.
-
-```csharp
-// In OnLoad():
-ctx.Hooks.RegisterItemUsed(goodsId: 8100, triggerFlagId: 11819401);
-ctx.Hooks.ItemUsed += OnItemUsed;
+public override void OnLoad(IModContext ctx)
+{
+    ctx.Hooks.RegisterItemUsed(goodsId: 8100, triggerFlagId: 11819400);
+    ctx.Hooks.ItemUsed += OnItemUsed;
+}
 
 private void OnItemUsed(int goodsId)
 {
     if (goodsId != 8100) return;
-    Console.WriteLine("player used the draught!");
+    Console.WriteLine("Player used the Goofy Draught.");
 
     var stats = ctx.Reader.GetPlayerStats();
-    Console.WriteLine($"HP after use: {stats?.CurrentHp}/{stats?.MaxHp}");
+    Console.WriteLine($"HP: {stats?.CurrentHp}/{stats?.MaxHp}");
 }
 ```
 
-`triggerFlagId` must match the flag written by `DefineItemTrigger` (or your
-own manual EMEVD event).
+### In-game EMEVD response vs. C# response
 
----
-
-## In-game engine response vs. C# response
-
-Both reactions can coexist. Pick the right tool:
-
-| | In-game EMEVD event | C# `hooks.ItemUsed` |
-|---|---|---|
-| Runs inside | Game engine | .NET / DS1Mod poll loop |
-| Can trigger | Animations, messages, flags, item awards | Anything in C# |
-| Timing | Next game frame after SpEffect activates | Within ~500ms |
-| Setup | `DefineItemTrigger` + `DefineEvent` | `RegisterItemUsed` |
+Both can coexist. The EMEVD response runs inside the game engine on the next
+frame; the C# callback fires within ~500ms.
 
 ```csharp
-// Patch(): both together
-g.DefineItemTrigger(Map, spEffectId: 9100, triggerFlagId: 11819401);
-
+// Patch(): EMEVD in-game response — reads the same flag written by DefineItemTrigger
 g.EditEmevd(Map, emevd =>
-    emevd.DefineEvent(11819404, EMEVD.Event.RestBehaviorType.Restart, ev => ev
-        .WhenFlag(11819401, FlagState.On)
-        .DisplayMessage(6900750)           // in-game text popup
-        .SetFlag(11819405, FlagState.On)   // permanent "used" flag
-        .WhenFlag(11819401, FlagState.Off)
+    emevd.DefineEvent(11819405, EMEVD.Event.RestBehaviorType.Restart, ev => ev
+        .WhenFlag(11819400, FlagState.On)
+        .DisplayMessage(6900760)            // shows text popup in-game
+        .SetFlag(11819402, FlagState.On)    // permanent "used at least once" flag
+        .WhenFlag(11819400, FlagState.Off)
         .Restart()));
 
-// OnLoad(): C# side
-ctx.Hooks.RegisterItemUsed(8100, 11819401);
+// OnLoad(): C# response
+ctx.Hooks.RegisterItemUsed(8100, 11819400);
 ctx.Hooks.ItemUsed += id => Console.WriteLine($"used goods id {id}");
 ```
 
 ---
 
-## Full example — item from scratch to use
-
-```csharp
-public void Patch(IPatchContext ctx)
-{
-    byte[] paramdefs = GetEmbeddedResource("paramdef.paramdefbnd.dcx");
-    var g = new GamePatch(ctx);
-
-    // 1. Define what happens on use
-    g.DefineSpEffect(paramdefs, new SpEffectDef { Id=9100, HpRecoverPoint=400 });
-
-    // 2. Create the item (consumable, linked to the SpEffect)
-    g.DefineGoods(paramdefs, new ItemDef
-    {
-        Id=8100, SpEffectId=9100, Name="Goofy Draught", MaxCount=5,
-    });
-
-    // 3. Create the lot
-    g.DefineLot(paramdefs, new LotDef { LotId=8600, ItemId=8100, Count=3 });
-
-    // 4. Place it on the floor
-    g.EditMsb("m18_01_00_00", msb => msb
-        .PlaceTreasure(8600, new Vector3(52f, -2f, 103f)));
-
-    // 5. Also award it via EMEVD on boss death
-    g.EditEmevd("m18_01_00_00", emevd => {
-        emevd.DefineEvent(11819400, EMEVD.Event.RestBehaviorType.Default, ev => ev
-            .WhenFlag(16, FlagState.On)
-            .AwardItemLot(8600)
-            .End());
-
-        // 6a. EMEVD bridge (SpEffect → flag) — required for both response layers
-        // 6b. In-game response: show message when item is used
-        emevd.DefineEvent(11819404, EMEVD.Event.RestBehaviorType.Restart, ev => ev
-            .WhenFlag(11819401, FlagState.On)
-            .DisplayMessage(6900750)
-            .WhenFlag(11819401, FlagState.Off)
-            .Restart());
-    });
-
-    g.DefineItemTrigger("m18_01_00_00", spEffectId:9100, triggerFlagId:11819401);
-}
-
-public override void OnLoad(IModContext ctx)
-{
-    // 6c. C# runtime response
-    ctx.Hooks.RegisterItemUsed(8100, 11819401);
-    ctx.Hooks.ItemUsed += id => Console.WriteLine($"used {id}");
-}
-```
-
----
-
-## ID ranges used by the demo mod
+## Full ID table — demo mod ranges
 
 | Range | Purpose |
 |---|---|
-| `8100–8102` | `EquipParamGoods` new rows |
-| `9100` | `SpEffectParam` new row |
-| `8600–8602` | `ItemLotParam` new rows |
-| `11819401–11819405` | Event flags (m18_01, section 9) |
-| `6900750` | `Event_text` FMG entry (on-use message) |
+| `8100–8101` | `EquipParamGoods` rows (Goofy Draught, Stone Trinket) |
+| `9100` | `SpEffectParam` row (Goofy Draught effect) |
+| `8600–8601` | `ItemLotParam` rows (infinite draught lot, once-only trinket lot) |
+| `11819400` | EMEVD event + event flag — DraughtUseFlag / item trigger |
+| `11819401` | Event flag — TrinketGetFlag (once-only obtained) |
+| `11819402` | Event flag — FlagUsedDraught (permanent "used at least once") |
+| `11819403` | Event flag — AI mood 0 (stomp act active) |
+| `11819404` | Event flag — AI mood 1 (spin act active) |
+| `11819405–11819409` | EMEVD event IDs (use response, AND demo, OR+boss demo, char control, raw) |
+| `11819410` | Event flag — mid-fight reward given |
+| `6900760–6900762` | `Event_text` FMG entries (on-use and status messages) |
