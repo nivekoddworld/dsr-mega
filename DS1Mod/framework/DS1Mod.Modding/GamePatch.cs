@@ -157,119 +157,261 @@ public sealed class GamePatch
     }
 
     /// <summary>
-    /// Add a new goods item: writes a row in <c>EquipParamGoods</c> and three FMG
-    /// strings (name, description, long description).
+    /// Add a new goods item: writes a row in <c>EquipParamGoods</c> and FMG strings
+    /// (name, description, long description).
     /// </summary>
-    /// <param name="paramdefBnd">DS1 paramdefbnd bytes — embed in your mod and pass here.</param>
-    /// <param name="def">Item definition.</param>
+    /// <param name="paramdefBnd">DS1 paramdefbnd bytes — embedded in mod.</param>
+    /// <param name="def">Item definition blueprint.</param>
     public void DefineGoods(byte[] paramdefBnd, ItemDef def)
     {
-        // ── PARAM ──────────────────────────────────────────────────────────────
+        // ─────────────────────────────────────────────────────────────
+        // PARAM: EquipParamGoods
+        // ─────────────────────────────────────────────────────────────
         EditParams(paramdefBnd, repo =>
         {
             repo.Edit("EquipParamGoods", p =>
             {
-                if (p[def.Id] != null) return; // idempotent
+                if (p[def.Id] != null)
+                    return; // idempotent
+
                 ParamRepository.AddClone(p, def.DonorId, def.Id, def.Name, row =>
                 {
+                    // ── CORE IDENTITY ───────────────────────────────────
                     row["maxNum"].Value = def.MaxCount;
-                    // DSR's EquipParamGoods uses "refId" (singular). The
-                    // "_default" suffix is from a later From Soft title's
-                    // paramdef and doesn't exist in DSR — looking it up
-                    // throws "Sequence contains no matching element".
-                    row["refId"].Value  = def.SpEffectId >= 0 ? def.SpEffectId : def.Id;
+
+                    // SpEffect / behavior binding
                     if (def.SpEffectId >= 0)
-                        row["goodsType"].Value = (byte)0; // consumable
+                    {
+                        row["refId"].Value = def.SpEffectId;
+                        row["refCategory"].Value = (byte)1; // SpEffect
+                    }
+                    else
+                    {
+                        row["refId"].Value = def.Id;
+                        row["refCategory"].Value = (byte)0;
+                    }
+
+                    // ── QUICK-USE FIX (CRITICAL DS1 RULE SET) ────────────
+                    // DS1 does NOT respect isEquip alone — enforce full pipeline
+                    if (def.AllowQuickUse)
+                    {
+                        row["isEquip"].Value = (byte)1;
+
+                        // Force consumable classification unless explicitly overridden
+                        if (def.GoodsType.HasValue)
+                            row["goodsType"].Value = def.GoodsType.Value;
+                        else if (def.SpEffectId >= 0)
+                            row["goodsType"].Value = (byte)0; // Consumable default
+                    }
+                    else
+                    {
+                        row["isEquip"].Value = (byte)0;
+                    }
+
+                    // ── CONSUMPTION BEHAVIOR ─────────────────────────────
+                    row["isConsume"].Value = def.IsConsume ? (byte)1 : (byte)0;
+
+                    // ── STORAGE / WORLD RULES ────────────────────────────
+                    row["isDeposit"].Value = def.IsDeposit ? (byte)1 : (byte)0;
+                    row["isDrop"].Value = def.IsDrop ? (byte)1 : (byte)0;
+
+                    // ── UI / INPUT BEHAVIOR ──────────────────────────────
+                    if (def.UseAnim.HasValue)
+                        row["goodsUseAnim"].Value = def.UseAnim.Value;
+
+                    if (def.OpenMenuType.HasValue)
+                        row["opmeMenuType"].Value = def.OpenMenuType.Value;
+
+                    if (def.BehaviorId != 0)
+                        row["behaviorId"].Value = def.BehaviorId;
+
+                    // ── SORT / INVENTORY ────────────────────────────────
+                    row["sortId"].Value = def.SortId;
+
+                    // ── CUSTOM OVERRIDES ────────────────────────────────
                     def.Configure?.Invoke(row);
                 });
             });
         });
 
-        // ── FMG ────────────────────────────────────────────────────────────────
-        // Use Texts.Set (Contains-match across every locale-specific FMG)
-        // with the canonical name fragments. The previous SetFmgEntry helper
-        // did exact-match on "GoodsName", which never matched DSR's actual
-        // "Item_name_.fmg" — items would land in the param but their
-        // inventory display would show "?GoodsName? ID: ###".
+        // ─────────────────────────────────────────────────────────────
+        // FMG TEXT
+        // ─────────────────────────────────────────────────────────────
         EditBnd3Glob("msg", "item.msgbnd.dcx", bnd =>
         {
-            Texts.Set(bnd, Texts.GoodsName,        def.Id, def.Name);
+            Texts.Set(bnd, Texts.GoodsName, def.Id, def.Name);
             Texts.Set(bnd, Texts.GoodsDescription, def.Id, def.Description);
-            Texts.Set(bnd, Texts.GoodsLongDesc,    def.Id, def.LongDesc);
+            Texts.Set(bnd, Texts.GoodsLongDesc, def.Id, def.LongDesc);
         });
     }
 
+
     /// <summary>
-    /// Add an ItemLotParam row so the item can be awarded via <c>AwardItemLot</c>
-    /// or linked from a Treasure event.
+    /// Add a new ItemLotParam row.
+    /// Supports single-item and multi-slot drops.
     /// </summary>
-    /// <param name="paramdefBnd">DS1 paramdefbnd bytes.</param>
-    /// <param name="def">Lot definition.</param>
     public void DefineLot(byte[] paramdefBnd, LotDef def)
     {
         EditParams(paramdefBnd, repo =>
         {
             repo.Edit("ItemLotParam", p =>
             {
-                if (p[def.LotId] != null) return; // idempotent
+                if (p[def.LotId] != null)
+                    return;
 
-                // Use any existing lot row as donor (first row in table)
                 int donorId = p.Rows[0].ID;
+
                 ParamRepository.AddClone(p, donorId, def.LotId, $"lot_{def.LotId}", row =>
                 {
-                    // Clear all slots first, then set slot 0
+                    // ─────────────────────────────────────────────
+                    // CLEAR ALL SLOT DATA FIRST
+                    // ─────────────────────────────────────────────
                     foreach (var cell in row.Cells)
-                        if (cell.Def.InternalName.StartsWith("lotItem"))
+                    {
+                        if (cell.Def.InternalName.StartsWith("lotItem") ||
+                            cell.Def.InternalName.StartsWith("cumulate") ||
+                            cell.Def.InternalName.StartsWith("getItemFlagId") ||
+                            cell.Def.InternalName.StartsWith("enableLuck"))
+                        {
                             cell.Value = cell.Def.Default;
+                        }
+                    }
 
-                    row["lotItemId01"].Value        = def.ItemId;
-                    row["lotItemCategory01"].Value  = def.Category;
-                    row["lotItemBasePoint01"].Value = (ushort)100;
-                    row["lotItemNum01"].Value       = (byte)def.Count;
+                    // ─────────────────────────────────────────────
+                    // SLOT POPULATION
+                    // ─────────────────────────────────────────────
+                    var entries = def.Entries;
 
+                    if (entries != null && entries.Count > 0)
+                    {
+                        // Multi-slot support (01–08)
+                        for (int i = 0; i < Math.Min(entries.Count, 8); i++)
+                        {
+                            var e = entries[i];
+                            int idx = i + 1;
+
+                            row[$"lotItemId{idx:00}"].Value = e.ItemId;
+                            row[$"lotItemCategory{idx:00}"].Value = e.Category;
+                            row[$"lotItemNum{idx:00}"].Value = e.Count;
+                            row[$"lotItemBasePoint{idx:00}"].Value = e.Weight;
+                        }
+                    }
+                    else
+                    {
+                        // Single-slot fallback
+                        row["lotItemId01"].Value = def.ItemId;
+                        row["lotItemCategory01"].Value = def.Category;
+                        row["lotItemNum01"].Value = def.Count;
+                        row["lotItemBasePoint01"].Value = def.Weight;
+                    }
+
+                    // ─────────────────────────────────────────────
+                    // FLAGS
+                    // ─────────────────────────────────────────────
                     if (def.OnceOnlyFlag >= 0)
                         row["getItemFlagId"].Value = def.OnceOnlyFlag;
+
+                    // ─────────────────────────────────────────────
+                    // LUCK / RARITY
+                    // ─────────────────────────────────────────────
+                    for (int i = 1; i <= 8; i++)
+                    {
+                        row[$"enableLuck{i:00}"].Value = def.EnableLuck ? (ushort)1 : (ushort)0;
+                    }
+
+                    row["lotItem_Rarity"].Value = def.Rarity;
                 });
             });
         });
     }
 
     /// <summary>
-    /// Add a SpEffectParam row so it can be referenced by <see cref="ItemDef.SpEffectId"/>
-    /// or applied via EMEVD's <c>Set SpEffect</c> instruction.
+    /// Creates or clones a row in <c>SpEffectParam</c>.
+    ///
+    /// SpEffects define gameplay effects such as:
+    /// - healing / damage over time
+    /// - stat buffs and debuffs
+    /// - status buildup
+    /// - special behavior triggers
+    ///
+    /// The method clones an existing donor row (usually a safe vanilla effect)
+    /// and applies the values defined in <see cref="SpEffectDef"/>.
     /// </summary>
-    /// <param name="paramdefBnd">DS1 paramdefbnd bytes.</param>
-    /// <param name="def">SpEffect definition.</param>
+    /// <param name="paramdefBnd">
+    /// DS1 paramdefbnd archive bytes containing SpEffectParam definitions.
+    /// </param>
+    /// <param name="def">
+    /// SpEffect definition describing the effect to create.
+    /// </param>
     public void DefineSpEffect(byte[] paramdefBnd, SpEffectDef def)
     {
         EditParams(paramdefBnd, repo =>
         {
             repo.Edit("SpEffectParam", p =>
             {
-                if (p[def.Id] != null) return; // idempotent
-                ParamRepository.AddClone(p, def.DonorId, def.Id, $"sp_{def.Id}", row =>
+                if (p[def.Id] != null)
                 {
-                    // DSR field names — verified against the shipped
-                    // SpEffectParam paramdef. They differ from later From
-                    // Soft titles (no "Recover"/"AtkPower"/"DefRate"
-                    // shortcuts; "Diffence" is misspelled in vanilla).
+                    Console.WriteLine($"[DEBUG] Row {def.Id} already exists in SpEffectParam. Skipping (Idempotent).");
+                    return; // idempotent
+                }
+
+                int donorId = def.DonorId;
+                if (p[donorId] == null)
+                {
+                    // Fall back to first available row rather than hard-failing —
+                    // same approach DefineLot uses. Specific donor IDs (e.g. 110)
+                    // may not exist in every DSR installation.
+                    donorId = p.Rows[0].ID;
+                    Console.WriteLine($"[WARN] Donor ID {def.DonorId} not found in SpEffectParam. Falling back to row {donorId}.");
+                }
+
+                Console.WriteLine($"[DEBUG] Cloning Donor {donorId} to new ID {def.Id}...");
+
+                ParamRepository.AddClone(p, donorId, def.Id, $"sp_{def.Id}", row =>
+                {
+                    // ── core timing ─────────────────────────────────────────────
                     row["effectEndurance"].Value = def.Duration;
 
-                    if (def.HpRecoverPoint      != 0) row["changeHpPoint"].Value      = def.HpRecoverPoint;
-                    if (def.HpRecoverRate       != 0) row["hpRecoverRate"].Value      = def.HpRecoverRate;
-                    if (def.StaminaRecoverPoint != 0) row["changeStaminaPoint"].Value = def.StaminaRecoverPoint;
+                    // ── healing effects ────────────────────────────────────────
+                    if (def.HpRecoverPoint != 0)
+                        row["changeHpPoint"].Value = def.HpRecoverPoint;
 
-                    if (def.MaxHpRate           != 1f) row["maxHpRate"].Value              = def.MaxHpRate;
-                    if (def.PhysAtkPowerRate    != 1f) row["physicsAttackPowerRate"].Value = def.PhysAtkPowerRate;
-                    if (def.MagicAtkPowerRate   != 1f) row["magicAttackPowerRate"].Value   = def.MagicAtkPowerRate;
-                    if (def.FireAtkPowerRate    != 1f) row["fireAttackPowerRate"].Value    = def.FireAtkPowerRate;
-                    if (def.ThunderAtkPowerRate != 1f) row["thunderAttackPowerRate"].Value = def.ThunderAtkPowerRate;
-                    if (def.PhysDefRate         != 1f) row["physicsDiffenceRate"].Value    = def.PhysDefRate;
-                    if (def.MagicDefRate        != 1f) row["magicDiffenceRate"].Value      = def.MagicDefRate;
-                    if (def.FireDefRate         != 1f) row["fireDiffenceRate"].Value       = def.FireDefRate;
-                    if (def.ThunderDefRate      != 1f) row["thunderDiffenceRate"].Value    = def.ThunderDefRate;
+                    if (def.HpRecoverRate != 0)
+                        row["hpRecoverRate"].Value = def.HpRecoverRate;
+
+                    if (def.StaminaRecoverPoint != 0)
+                        row["changeStaminaPoint"].Value = def.StaminaRecoverPoint;
+
+                    // ── stat multipliers ───────────────────────────────────────
+                    if (def.MaxHpRate != 1f)
+                        row["maxHpRate"].Value = def.MaxHpRate;
+
+                    if (def.PhysAtkPowerRate != 1f)
+                        row["physicsAttackPowerRate"].Value = def.PhysAtkPowerRate;
+
+                    if (def.MagicAtkPowerRate != 1f)
+                        row["magicAttackPowerRate"].Value = def.MagicAtkPowerRate;
+
+                    if (def.FireAtkPowerRate != 1f)
+                        row["fireAttackPowerRate"].Value = def.FireAtkPowerRate;
+
+                    if (def.ThunderAtkPowerRate != 1f)
+                        row["thunderAttackPowerRate"].Value = def.ThunderAtkPowerRate;
+
+                    if (def.PhysDefRate != 1f)
+                        row["physicsDiffenceRate"].Value = def.PhysDefRate;
+
+                    if (def.MagicDefRate != 1f)
+                        row["magicDiffenceRate"].Value = def.MagicDefRate;
+
+                    if (def.FireDefRate != 1f)
+                        row["fireDiffenceRate"].Value = def.FireDefRate;
+
+                    if (def.ThunderDefRate != 1f)
+                        row["thunderDiffenceRate"].Value = def.ThunderDefRate;
 
                     def.Configure?.Invoke(row);
+                    Console.WriteLine($"[DEBUG] Row {def.Id} configuration complete.");
                 });
             });
         });
@@ -314,14 +456,38 @@ public sealed class GamePatch
     public bool EditParams(byte[] paramdefBnd, Action<ParamRepository> edit)
     {
         string path = Resolve("param/GameParam/GameParam.parambnd.dcx");
-        if (!File.Exists(path)) { Log("GameParam.parambnd not found"); return false; }
-        _backup(path);
-        byte[] dec = DCX.Decompress(path, out DCX.Type type);
-        BND3 bnd = BND3.Read(dec);
-        var repo = new ParamRepository(bnd, ParamRepository.LoadDefs(paramdefBnd),
-            (paramName, rowId) => Record(path, $"PARAM:{paramName}:{rowId}"));
-        edit(repo);
-        File.WriteAllBytes(path, DCX.Compress(bnd.Write(), type));
-        return true;
+        Console.WriteLine($"[DEBUG] Attempting to open: {path}");
+
+        if (!File.Exists(path))
+        {
+            Console.WriteLine($"[ERROR] GameParam.parambnd not found at: {Path.GetFullPath(path)}");
+            return false;
+        }
+
+        try
+        {
+            _backup(path);
+            byte[] dec = DCX.Decompress(path, out DCX.Type type);
+            Console.WriteLine($"[DEBUG] DCX decompressed. Type: {type} | Size: {dec.Length} bytes");
+
+            BND3 bnd = BND3.Read(dec);
+            Console.WriteLine($"[DEBUG] BND3 loaded. File count: {bnd.Files.Count}");
+
+            var repo = new ParamRepository(bnd, ParamRepository.LoadDefs(paramdefBnd),
+                (paramName, rowId) => Console.WriteLine($"[DEBUG] Record change: {paramName} ID {rowId}"));
+
+            edit(repo);
+
+            byte[] finalBytes = DCX.Compress(bnd.Write(), type);
+            File.WriteAllBytes(path, finalBytes);
+            Console.WriteLine($"[SUCCESS] Saved GameParam.parambnd.dcx to disk.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[CRITICAL ERROR] Failed to edit params: {ex.Message}");
+            Console.WriteLine(ex.StackTrace);
+            return false;
+        }
     }
 }

@@ -5,65 +5,201 @@ namespace DS1Mod.Modding;
 
 // ── ItemDef ───────────────────────────────────────────────────────────────────
 
-/// <summary>
-/// Everything needed to define a new goods item in one place.
-/// Pass to <see cref="GamePatch.DefineGoods"/>.
-/// </summary>
 public sealed class ItemDef
 {
-    /// <summary>EquipParamGoods row ID. Pick something unused (e.g. 8000+).</summary>
+    /// <summary>
+    /// EquipParamGoods row ID. Must be unique and unused (commonly 8000+ for mods).
+    /// This is the actual item entry in the game database.
+    /// </summary>
     public int Id { get; set; }
 
-    /// <summary>Existing goods row to clone as the base (copies all fields).</summary>
+    /// <summary>
+    /// Base row to clone from (copies all underlying DS1 item behaviour).
+    /// Example: Estus Flask (384) for healing consumables.
+    /// </summary>
     public int DonorId { get; set; } = 384;
 
-    public string Name        { get; set; } = "Unnamed Item";
-    public string Description { get; set; } = "";
-    public string LongDesc    { get; set; } = "";
+    /// <summary>Display name shown in inventory.</summary>
+    public string Name { get; set; } = "Unnamed Item";
 
-    /// <summary>Stack size. Default 1 (key-item style).</summary>
-    public ushort MaxCount { get; set; } = 1;
+    /// <summary>Short inventory description (first line).</summary>
+    public string Description { get; set; } = "";
+
+    /// <summary>Full lore description shown in detailed view.</summary>
+    public string LongDesc { get; set; } = "";
 
     /// <summary>
-    /// SpEffectParam row ID to trigger when the item is used.
-    /// When set, <see cref="GamePatch.DefineGoods"/> automatically sets
-    /// <c>goodsType = 0</c> (consumable) and <c>refId_default</c> to this ID.
-    /// Define the SpEffect row first via <see cref="GamePatch.DefineSpEffect"/>.
-    /// Use -1 (default) for key items with no on-use effect.
+    /// Maximum stack size.
+    /// 1 = key item style, higher values = consumables (Estus-like, throwables, etc.)
+    /// </summary>
+    public ushort MaxCount { get; set; } = 1;
+
+    // ─────────────────────────────────────────────────────────────
+    // CORE GAMEPLAY BEHAVIOUR
+    // ─────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// SpEffect triggered on use.
+    /// If set, item behaves like a consumable trigger.
+    /// -1 = no effect (key item style or scripted behavior)
     /// </summary>
     public int SpEffectId { get; set; } = -1;
 
     /// <summary>
-    /// Called after cloning donor row — use to set additional PARAM fields.
+    /// Explicit goods type override.
+    /// Controls classification in DS1 systems.
+    /// 0 = Consumable (quick-use eligible)
+    /// 1 = Event (usually NOT quick-use)
+    /// 2 = Material (non-usable)
+    /// 3 = Soul
+    /// </summary>
+    public byte? GoodsType { get; set; } = null;
+
+    /// <summary>
+    /// Whether item can be equipped into quick-use slots (D-pad cycling).
+    /// NOTE: DS1 also applies hidden filters (use animation + type + behavior).
+    /// </summary>
+    public bool AllowQuickUse { get; set; } = true;
+
+    /// <summary>
+    /// Whether item is consumable (removed on use).
+    /// Required for Estus-style / healing items.
+    /// </summary>
+    public bool IsConsume { get; set; } = true;
+
+    /// <summary>
+    /// Whether item can be stored in bottomless box.
+    /// </summary>
+    public bool IsDeposit { get; set; } = true;
+
+    /// <summary>
+    /// Whether item can be dropped into the world.
+    /// </summary>
+    public bool IsDrop { get; set; } = true;
+
+    // ─────────────────────────────────────────────────────────────
+    // UI / INPUT BEHAVIOUR
+    // ─────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Animation used when item is consumed.
+    /// Critical for quick-use eligibility.
+    /// Example: Drink, Throw, Repair, etc.
+    /// </summary>
+    public byte? UseAnim { get; set; } = null;
+
+    /// <summary>
+    /// Menu behaviour when item is used.
+    /// 0 = none
+    /// 1 = Yes/No prompt
+    /// 11 = warp selection etc.
+    /// </summary>
+    public byte? OpenMenuType { get; set; } = null;
+
+    /// <summary>
+    /// Behavior ID for special scripted actions.
+    /// Used for non-SpEffect item logic.
+    /// </summary>
+    public int BehaviorId { get; set; } = 0;
+
+    // ─────────────────────────────────────────────────────────────
+    // ADVANCED / ENGINE EDGE CASES
+    // ─────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Callback after cloning donor row.
+    /// Use for raw PARAM overrides not exposed in this abstraction.
     /// </summary>
     public Action<PARAM.Row>? Configure { get; set; }
+
+    /// <summary>
+    /// Internal sorting ID for inventory ordering.
+    /// </summary>
+    public int SortId { get; set; } = 0;
+
+    /// <summary>
+    /// Icon ID used in inventory UI.
+    /// </summary>
+    public ushort IconId { get; set; }
+
+    /// <summary>
+    /// Model ID used for world representation.
+    /// </summary>
+    public ushort ModelId { get; set; }
+
+    /// <summary>
+    /// Maximum number of this item player can hold.
+    /// </summary>
+    public short MaxHold { get; set; } = 999;
 }
 
 // ── LotDef ────────────────────────────────────────────────────────────────────
 
 /// <summary>
-/// A single-item ItemLotParam row definition.
-/// Pass to <see cref="GamePatch.DefineLot"/>.
+/// DS1 ItemLotParam definition (supports multi-slot drops).
 /// </summary>
 public sealed class LotDef
 {
     /// <summary>ItemLotParam row ID. Must be unique.</summary>
     public int LotId { get; set; }
 
-    /// <summary>EquipParamGoods / weapon / etc. ID to drop.</summary>
+    /// <summary>
+    /// Primary item ID to drop (Goods / Weapon / Armor / Ring).
+    /// Used for slot 01 unless multi-slot is configured.
+    /// </summary>
     public int ItemId { get; set; }
 
-    /// <summary><see cref="LotCategory"/> bitfield.</summary>
+    /// <summary>
+    /// Item category bitmask (IMPORTANT: DS1 uses bitfield values).
+    /// Examples:
+    /// Goods = 1073741824
+    /// Weapons = 0
+    /// Armor = 268435456
+    /// Rings = 536870912
+    /// </summary>
     public int Category { get; set; } = LotCategory.Goods;
 
-    /// <summary>How many to give. Default 1.</summary>
+    /// <summary>How many items to give per successful roll.</summary>
     public byte Count { get; set; } = 1;
 
     /// <summary>
-    /// Flag ID that marks this lot as "already collected" — set to make the
-    /// drop once-only. Use -1 for infinite.
+    /// If >= 0, sets a flag after item acquisition (prevents re-drop).
+    /// -1 = repeatable drop.
     /// </summary>
     public int OnceOnlyFlag { get; set; } = -1;
+
+    /// <summary>
+    /// Drop weight (higher = more likely slot selection).
+    /// Default matches vanilla baseline.
+    /// </summary>
+    public ushort Weight { get; set; } = 100;
+
+    /// <summary>
+    /// Whether item is affected by Item Discovery / Luck stat.
+    /// </summary>
+    public bool EnableLuck { get; set; } = true;
+
+    /// <summary>
+    /// Optional rarity SFX tier (0–3 typical in DS1).
+    /// </summary>
+    public byte Rarity { get; set; } = 0;
+
+    /// <summary>
+    /// Optional multi-slot support (1–8 entries).
+    /// If null, only slot 01 is used.
+    /// </summary>
+    public List<LotEntry>? Entries { get; set; }
+}
+
+/// <summary>
+/// Represents a single slot inside an ItemLotParam row.
+/// </summary>
+public sealed class LotEntry
+{
+    public int ItemId { get; set; }
+    public int Category { get; set; }
+    public byte Count { get; set; } = 1;
+    public ushort Weight { get; set; } = 100;
 }
 
 // ── MsbEditor ─────────────────────────────────────────────────────────────────

@@ -27,8 +27,24 @@ public sealed class ParamRepository
     public static Dictionary<string, PARAMDEF> LoadDefs(byte[] paramdefBnd)
     {
         var defs = new Dictionary<string, PARAMDEF>();
-        foreach (BinderFile f in BND3.Read(paramdefBnd).Files)
-            try { PARAMDEF d = PARAMDEF.Read(f.Bytes); defs[d.ParamType] = d; } catch { /* skip non-defs */ }
+        try
+        {
+            var bnd = BND3.Read(paramdefBnd);
+            foreach (BinderFile f in bnd.Files)
+            {
+                try
+                {
+                    PARAMDEF d = PARAMDEF.Read(f.Bytes);
+                    defs[d.ParamType] = d;
+                }
+                catch { /* Skip manifest/non-def files */ }
+            }
+            Console.WriteLine($"[DEBUG] Loaded {defs.Count} ParamDefs from provided BND.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] Failed to load ParamDefs: {ex.Message}");
+        }
         return defs;
     }
 
@@ -39,15 +55,45 @@ public sealed class ParamRepository
     /// </summary>
     public bool Edit(string paramName, Action<PARAM> edit)
     {
+        bool foundFile = false;
         foreach (BinderFile f in _bnd.Files)
         {
-            if (Binders.BaseName(f.Name) != paramName) continue;
-            PARAM p = PARAM.Read(f.Bytes);
-            if (!_defs.TryGetValue(p.ParamType, out PARAMDEF? def)) return false;
-            p.ApplyParamdef(def);
-            edit(p);
-            f.Bytes = p.Write();
-            return true;
+            // DS1 filenames are often "SpEffectParam.param" or long paths
+            string internalName = Path.GetFileNameWithoutExtension(f.Name);
+
+            if (!internalName.Equals(paramName, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            foundFile = true;
+            Console.WriteLine($"[DEBUG] Located Param file: {f.Name}");
+
+            try
+            {
+                PARAM p = PARAM.Read(f.Bytes);
+                Console.WriteLine($"[DEBUG] Param Type: {p.ParamType} | Row Count: {p.Rows.Count}");
+
+                if (!_defs.TryGetValue(p.ParamType, out PARAMDEF? def))
+                {
+                    Console.WriteLine($"[ERROR] No ParamDef found for Type: '{p.ParamType}'. Check your paramdefBnd!");
+                    return false;
+                }
+
+                p.ApplyParamdef(def);
+                edit(p);
+                f.Bytes = p.Write();
+                Console.WriteLine($"[DEBUG] Applied changes and wrote PARAM back to binder file.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed during PARAM processing: {ex.Message}");
+                return false;
+            }
+        }
+
+        if (!foundFile)
+        {
+            Console.WriteLine($"[ERROR] Could not find any binder file matching name: {paramName}");
         }
         return false;
     }

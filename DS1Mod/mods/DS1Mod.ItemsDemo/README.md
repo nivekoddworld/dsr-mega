@@ -220,8 +220,8 @@ Creates a `SpEffectParam` row by cloning a donor row and overwriting named field
 ```csharp
 g.DefineSpEffect(paramdefs, new SpEffectDef
 {
-    Id             = 9100,   // unique row id (use 9000+ for mods)
-    DonorId        = 7000,   // clone from this existing row
+    Id             = 9000,   // unique row id (use 9000+ for mods)
+    DonorId        = 110,    // clone from this existing row (benign vanilla effect)
     Duration       = 0f,     // 0 = instant; >0 = seconds
     HpRecoverPoint = 400,    // flat HP restored on application
 
@@ -241,25 +241,27 @@ Creates an `EquipParamGoods` row and writes name/description strings to every
 locale's `item.msgbnd.dcx`. Idempotent — safe to call on every launch.
 
 ```csharp
-// Consumable (SpEffectId set → auto-wires goodsType=0 + refId_default)
+// Consumable (SpEffectId set → auto-wires goodsType=0 + refCategory=1)
 g.DefineGoods(paramdefs, new ItemDef
 {
-    Id          = 8100,
-    DonorId     = 384,         // Estus Flask as base
-    SpEffectId  = 9100,        // wires goodsType=consumable automatically
-    Name        = "Goofy Draught",
-    Description = "Restores 400 HP.",
-    LongDesc    = "A longer description shown in the inventory.",
-    MaxCount    = 5,
+    Id            = 8100,
+    DonorId       = 384,         // Estus Flask as base
+    SpEffectId    = 9000,        // wires goodsType=consumable automatically
+    Name          = "Goofy Draught",
+    Description   = "Restores 400 HP.",
+    LongDesc      = "A longer description shown in the inventory.",
+    MaxCount      = 5,
+    AllowQuickUse = true,        // enables D-pad cycling
 });
 
-// Key item (no use effect — set goodsType=4 via Configure)
+// Key item (no use effect)
 g.DefineGoods(paramdefs, new ItemDef
 {
-    Id        = 8101,
-    Name      = "Stone Trinket",
-    MaxCount  = 1,
-    Configure = row => row["goodsType"].Value = (byte)4,
+    Id           = 8101,
+    Name         = "Stone Trinket",
+    MaxCount     = 1,
+    GoodsType    = 1,           // Event-type key item
+    AllowQuickUse = false,
 });
 ```
 
@@ -326,7 +328,7 @@ an event flag pulse. Required for both the in-game EMEVD response and the C#
 ```csharp
 g.DefineItemTrigger(
     mapId:         "m18_01_00_00",
-    spEffectId:    9100,
+    spEffectId:    9000,
     triggerFlagId: 11819400);
 // eventId defaults to triggerFlagId; pass explicitly to override:
 // g.DefineItemTrigger(..., eventId: 11819450);
@@ -348,7 +350,7 @@ flag pulses ON.
 ```csharp
 public override void OnLoad(IModContext ctx)
 {
-    ctx.Hooks.RegisterItemUsed(goodsId: 8100, triggerFlagId: 11819400);
+    ctx.Hooks.RegisterItemUsed(goodsId: 8100, triggerFlagId: 11819400);  // DraughtUseFlag
     ctx.Hooks.ItemUsed += OnItemUsed;
 }
 
@@ -389,7 +391,7 @@ ctx.Hooks.ItemUsed += id => Console.WriteLine($"used goods id {id}");
 | Range | Purpose |
 |---|---|
 | `8100–8101` | `EquipParamGoods` rows (Goofy Draught, Stone Trinket) |
-| `9100` | `SpEffectParam` row (Goofy Draught effect) |
+| `9000` | `SpEffectParam` row (Goofy Draught effect) |
 | `8600–8601` | `ItemLotParam` rows (infinite draught lot, once-only trinket lot) |
 | `11819400` | EMEVD event + event flag — DraughtUseFlag / item trigger |
 | `11819401` | Event flag — TrinketGetFlag (once-only obtained) |

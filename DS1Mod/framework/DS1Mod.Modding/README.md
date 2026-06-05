@@ -410,13 +410,27 @@ safe to call on every launch.
 ### 2 — Create a lot row so it can be awarded
 
 ```csharp
+// Once-only drop with rarity glow
 g.DefineLot(embeddedParamdefBytes, new LotDef
 {
-    LotId         = 8500,
-    ItemId        = 8000,          // EquipParamGoods ID from step 1
-    Category      = LotCategory.Goods,
-    Count         = 1,
-    OnceOnlyFlag  = 11819100,      // event flag → won't drop twice
+    LotId        = 8500,
+    ItemId       = 8000,          // EquipParamGoods ID from step 1
+    Category     = LotCategory.Goods,
+    Count        = 1,
+    OnceOnlyFlag = 11819100,      // event flag → won't drop twice
+    Rarity       = 3,             // glow tier (0–3)
+    EnableLuck   = true,          // affected by Item Discovery
+});
+
+// Multi-slot lot (up to 8 different items per roll)
+g.DefineLot(embeddedParamdefBytes, new LotDef
+{
+    LotId   = 8501,
+    Entries = new List<LotEntry>
+    {
+        new() { ItemId = 8000, Category = LotCategory.Goods, Count = 1, Weight = 70 },
+        new() { ItemId = 8001, Category = LotCategory.Goods, Count = 2, Weight = 30 },
+    },
 });
 ```
 
@@ -458,10 +472,11 @@ g.DefineSpEffect(paramdefs, new SpEffectDef
 
 g.DefineGoods(paramdefs, new ItemDef
 {
-    Id          = 8000,
-    SpEffectId  = 9000,            // wires goodsType=consumable + refId_default automatically
-    Name        = "Goofy Draught",
-    MaxCount    = 5,
+    Id            = 8000,
+    SpEffectId    = 9000,       // wires goodsType=consumable + refCategory=1 automatically
+    Name          = "Goofy Draught",
+    MaxCount      = 5,
+    AllowQuickUse = true,       // enable D-pad cycling
 });
 ```
 

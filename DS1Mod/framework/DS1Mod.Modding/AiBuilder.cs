@@ -35,13 +35,21 @@ public sealed class SubGoalQueue
 {
     internal readonly List<string> Lines = new();
 
-    /// <summary>Approach a target to within <paramref name="dist"/>.</summary>
+    /// <summary>
+    /// Approach a target to within <paramref name="distMeters"/> world-units.
+    /// <para>IMPORTANT: pass a positive float (e.g. 8.0) — the DS1 engine
+    /// interprets the distance argument of GOAL_COMMON_ApproachTarget as a
+    /// literal world-unit radius, not a DIST_* sentinel. Passing a DIST_*
+    /// constant (-1/-2/-3…) would make the demon try to reach a negative
+    /// distance, which never terminates.</para>
+    /// </summary>
     public SubGoalQueue ApproachTarget(Target target = Target.Enemy0,
-        Dist dist = Dist.Middle, int cancelTime = 10)
+        float distMeters = 8f, int cancelTime = 10, bool walk = false)
     {
+        string walkStr = walk ? "true" : "false";
         Lines.Add(
             $"    goal:AddSubGoal(GOAL_COMMON_ApproachTarget, {cancelTime}," +
-            $" {LuaTarget(target)}, {LuaDist(dist)}, TARGET_SELF, false, -1)");
+            $" {LuaTarget(target)}, {distMeters.ToString("0.0##", System.Globalization.CultureInfo.InvariantCulture)}, TARGET_SELF, {walkStr}, -1)");
         return this;
     }
 
@@ -151,13 +159,16 @@ public sealed class SubGoalQueue
         return this;
     }
 
-    /// <summary>Back away from target.</summary>
+    /// <summary>
+    /// Back away from target until at least <paramref name="distMeters"/> world-units away.
+    /// <para>IMPORTANT: pass a positive float — same reason as <see cref="ApproachTarget"/>.</para>
+    /// </summary>
     public SubGoalQueue LeaveTarget(Target target = Target.Enemy0,
-        Dist dist = Dist.Far, int cancelTime = 8)
+        float distMeters = 10f, int cancelTime = 8)
     {
         Lines.Add(
             $"    goal:AddSubGoal(GOAL_COMMON_LeaveTarget, {cancelTime}," +
-            $" {LuaTarget(target)}, {LuaDist(dist)}, TARGET_SELF, false, -1)");
+            $" {LuaTarget(target)}, {distMeters.ToString("0.0##", System.Globalization.CultureInfo.InvariantCulture)}, TARGET_ENE_0, true, -1)");
         return this;
     }
 
