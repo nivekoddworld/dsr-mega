@@ -3,6 +3,7 @@ using DS1Mod.Core;
 using DS1Mod.Core.ImGui;
 using DS1Mod.Modding;
 using DS1Mod.SDK;
+using DS1MegaRando.Data.Enemies;
 using SoulsFormats;
 
 namespace DS1Mod.ItemsDemo;
@@ -67,7 +68,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
     private const int    DemonDeadFlag = 16;            // Vanilla flag: Asylum Demon killed
 
     // AI
-    private const string NpcFileId = WellKnownEntities.AsylumDemonAiFileId;  // Asylum Demon AI file
+    private const string NpcFileId = "223200";  // Asylum Demon AI file (see BossIds.AsylumDemon)
     private const string LuaId     = "MiniGreaterDemon223200"; // must match vanilla goal name prefix
 
     // ── Allocated IDs (assigned at patch time from IPatchContext) ────────────

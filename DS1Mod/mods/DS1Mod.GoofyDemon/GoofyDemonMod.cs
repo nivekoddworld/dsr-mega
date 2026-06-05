@@ -2,6 +2,7 @@ using System.Text;
 using DS1Mod.Core;
 using DS1Mod.Modding;
 using DS1Mod.SDK;
+using DS1MegaRando.Data.Enemies;
 using SoulsFormats;
 
 namespace DS1Mod.GoofyDemon;
@@ -30,8 +31,8 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
     // ── Map & AI swap ──
     private const string Map         = IdSpaces.Asylum;
     private const string LuaBnd      = "m18_01_00_00.luabnd.dcx";
-    private const string EntryLeaf   = WellKnownEntities.AsylumDemonAiFileId + "_battle.lua";
-    private const string ResourceLua = WellKnownEntities.AsylumDemonAiFileId + "_battle.luac";
+    private const string EntryLeaf   = "223200_battle.lua";  // Asylum Demon AI (see BossIds.AsylumDemon)
+    private const string ResourceLua = "223200_battle.luac";
 
     // ── Allocated IDs (assigned at patch time from IPatchContext) ────────────
 

@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text;
 using DS1Mod.Core;
 using DS1Mod.SDK;
+using DS1MegaRando.Data.Enemies;
 using SoulsFormats;
 
 namespace DS1Mod.AsylumSlam;
@@ -27,8 +28,8 @@ public sealed class AsylumSlamMod : ModBase, IGamePatcher
     public override string Author  => "DS1MegaRando";
 
     private const string LuaBnd      = "m18_01_00_00.luabnd.dcx";
-    private const string EntryLeaf   = WellKnownEntities.AsylumDemonAiFileId + "_battle.lua";
-    private const string ResourceLua = WellKnownEntities.AsylumDemonAiFileId + "_battle.luac";
+    private const string EntryLeaf   = "223200_battle.lua";  // Asylum Demon AI (see BossIds.AsylumDemon)
+    private const string ResourceLua = "223200_battle.luac";
 
     public void Patch(IPatchContext ctx)
     {

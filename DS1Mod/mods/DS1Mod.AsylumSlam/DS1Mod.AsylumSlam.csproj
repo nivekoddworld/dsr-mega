@@ -11,6 +11,8 @@
   <ItemGroup>
     <!-- SDK gives us ModBase + pulls in Core transitively -->
     <ProjectReference Include="..\..\framework\DS1Mod.SDK\DS1Mod.SDK.csproj" />
+    <!-- Access to BossIds constants for well-known entities -->
+    <ProjectReference Include="..\..\..\src\DS1MegaRando.Data\DS1MegaRando.Data.csproj" />
     <!-- SoulsFormats for reading/repacking the luabnd.dcx archive -->
     <ProjectReference Include="..\..\..\lib\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
   </ItemGroup>

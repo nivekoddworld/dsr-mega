@@ -12,6 +12,7 @@
     <ProjectReference Include="..\..\framework\DS1Mod.SDK\DS1Mod.SDK.csproj" />
     <ProjectReference Include="..\..\framework\DS1Mod.Core\DS1Mod.Core.csproj" />
     <ProjectReference Include="..\..\framework\DS1Mod.Modding\DS1Mod.Modding.csproj" />
+    <ProjectReference Include="..\..\..\src\DS1MegaRando.Data\DS1MegaRando.Data.csproj" />
     <ProjectReference Include="..\..\..\lib\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
   </ItemGroup>
 
