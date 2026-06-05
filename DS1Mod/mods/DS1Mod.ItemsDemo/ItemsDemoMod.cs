@@ -468,29 +468,19 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         //                    SidewayMove, LeaveTarget, WaitRandom, Raw
         //
         // Replace 223200_battle.lua (the Asylum Demon's entire battle AI)
-        // with a small state machine:
+        // with a weighted 70/30 act table:
         //
-        //   1. Player not in the arena (region 1812990) — wait, no acts.
-        //      Without this gate the AI would tick every few seconds even
-        //      while the player is in the starting cell, setting mood
-        //      flags and trying to ApproachTarget a phantom Enemy0.
+        //   Act 0 (70 %) — approach + overhead slam (anim 3008) + wait.
+        //                  Sets mood flag 0 so C# / checklist can track it.
+        //   Act 1 (30 %) — spin step + sidestep + back off + random wait.
+        //                  Sets mood flag 1.
         //
-        //   2. Normal combat — weighted 70/30 pick between a slam act
-        //      and an evasion act. Each branch flips the mood flag pair
-        //      so the in-game checklist (and any C# code watching those
-        //      flags) sees the current act.
-        //
-        // The previous version also queued a NonspinningAttack 3020
-        // wake-up subgoal on first arena entry, but vanilla EMEVD already
-        // plays the boss entrance animation before our AI ticks. The
-        // redundant wake-up subgoal blocked Activate (cancelTime 10s of
-        // an animation the engine ignored), so the AI never reached the
-        // combat phase — demon "jumped down and stood idle". Dropped.
-        //
-        // Mixing AiBuilder's typed SubGoal helpers (ApproachTarget /
-        // Attack / SpinStep / SidewayMove / LeaveTarget / WaitRandom /
-        // Wait) with Raw() lines for the Lua control flow keeps the
-        // bodies readable while still expressing real conditional logic.
+        // Each act is emitted as a separate function (MiniGreaterDemon223200_Act01
+        // etc.) and selected via Common_Battle_Activate — matching the
+        // pattern vanilla DS1 battle scripts use. This is critical: the
+        // OnActivate / inline-if-else approach caused the demon to freeze
+        // because DSR's goal system re-calls Activate after each act; the
+        // Common_Battle_Activate path handles that correctly.
         //
         // NOTE: This patches 223200_battle.lua in m18_01_00_00.luabnd.dcx.
         // GoofyDemon writes the same entry; loading both mods produces a
@@ -499,27 +489,19 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         // ════════════════════════════════════════════════════════════════════
         g.EditAi(Map, NpcFileId, ai => ai
             .Goal("Battle", goal => goal
-                .OnActivate(q => q
-                    // ── (1) Player not in the arena — idle until they arrive ──
-                    .Raw("if not ai:IsInsideTargetRegion(TARGET_ENE_0, 1812990) then")
-                    .Wait(cancelTime: 2)
-                    .Raw("    return")
-                    .Raw("end")
-
-                    // ── (2) Combat — weighted random act + mood flag ──
-                    .Raw("for _i = 0, 1 do ai:SetEventFlag(" + FlagAiMood0 + " + _i, false) end")
-                    .Raw("if ai:GetRandam_Int(1, 100) <= 70 then")
-                    .Raw("    ai:SetEventFlag(" + FlagAiMood0 + ", true)") // mood 0 = stomp
+                .Act(70, q => q
+                    // mood 0 = stomp
+                    .SetActiveFlagInRange(FlagAiMood0, 2, 0)
                     .ApproachTarget(Target.Enemy0, Dist.Middle, cancelTime: 12)
-                    .Attack(animId: 3008, cancelTime: 8)                   // overhead slam
-                    .Wait(cancelTime: 2)
-                    .Raw("else")
-                    .Raw("    ai:SetEventFlag(" + FlagAiMood1 + ", true)") // mood 1 = spin+leave
+                    .Attack(animId: 3008, cancelTime: 8)
+                    .Wait(cancelTime: 2))
+                .Act(30, q => q
+                    // mood 1 = spin+leave
+                    .SetActiveFlagInRange(FlagAiMood0, 2, 1)
                     .SpinStep(cancelTime: 5)
                     .SidewayMove(Target.Enemy0, direction: 0, cancelTime: 3)
                     .LeaveTarget(Target.Enemy0, Dist.Far, cancelTime: 8)
-                    .WaitRandom(minTime: 1.0f, maxTime: 3.0f)
-                    .Raw("end"))
+                    .WaitRandom(minTime: 1.0f, maxTime: 3.0f))
 
                 // ── OnInterrupt: always allow pre-emption ─────────────────
                 .OnInterrupt(_ => true)),
