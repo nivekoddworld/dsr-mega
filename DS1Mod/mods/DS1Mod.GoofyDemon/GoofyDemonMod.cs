@@ -129,12 +129,12 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
 
             for (int i = 0; i < MoodHud.Length; i++)
                 e.DefineEvent(MoodEventBase + i, EMEVD.Event.RestBehaviorType.Restart,
-                    Instr.IfEventFlag(true,  MoodFlagBase + i),
+                    Instr.IfEventFlag(FlagState.On,  MoodFlagBase + i),
                     Instr.DisplayMessage(MoodMsgBase + i),
-                    Instr.IfEventFlag(false, MoodFlagBase + i));
+                    Instr.IfEventFlag(FlagState.Off, MoodFlagBase + i));
 
             e.DefineEvent(DignityEvent, EMEVD.Event.RestBehaviorType.Default,
-                Instr.IfEventFlag(true, DemonDeadFlag),
+                Instr.IfEventFlag(FlagState.On, DemonDeadFlag),
                 Instr.AwardItemLot(DignityLotId));
         });
 

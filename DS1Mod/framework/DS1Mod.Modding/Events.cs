@@ -3,6 +3,14 @@ using ArgType = SoulsFormats.EMEVD.Instruction.ArgType;
 
 namespace DS1Mod.Modding;
 
+// ── Enums ─────────────────────────────────────────────────────────────────────
+
+public enum FlagState : byte { Off = 0, On = 1 }
+public enum LifeState  : byte { Dead = 0, Alive = 1 }
+public enum EnabledState : byte { Disabled = 0, Enabled = 1 }
+
+// ── Instr factory ─────────────────────────────────────────────────────────────
+
 /// <summary>
 /// Factory + matchers for EMEVD instructions, so you write
 /// <c>Instr.DisplayMessage(123)</c> instead of remembering bank/id/arg-widths.
@@ -13,20 +21,52 @@ public static class Instr
     /// <summary>Any instruction by bank/id with explicit args (widths inferred from the boxed types).</summary>
     public static EMEVD.Instruction Raw(int bank, int id, params object[] args) => new(bank, id, args.ToList());
 
-    // ── control flow ──
+    // ── control flow ──────────────────────────────────────────────────────────
+
     /// <summary>2000:0 — start an event from the constructor.</summary>
     public static EMEVD.Instruction InitializeEvent(long eventId, int slot = 0) =>
         new(2000, 0, new List<object> { slot, (uint)eventId, (uint)0 });
 
-    /// <summary>3:0 — wait/condition on an event flag. group 0 = MAIN (blocking).</summary>
-    public static EMEVD.Instruction IfEventFlag(bool on, int flagId, sbyte conditionGroup = 0) =>
-        new(3, 0, new List<object> { conditionGroup, (byte)(on ? 1 : 0), (byte)0, flagId });
+    /// <summary>1000:4 — unconditional end (EndType 0) or restart (EndType 1).</summary>
+    public static EMEVD.Instruction EndUnconditionally(byte endType = 0) =>
+        new(1000, 4, new List<object> { endType });
+
+    // ── conditions (condGroup 0 = MAIN, blocks the event until true) ──────────
+
+    /// <summary>3:0 — block until an event flag reaches <paramref name="state"/>.</summary>
+    public static EMEVD.Instruction IfEventFlag(FlagState state, int flagId, sbyte condGroup = 0) =>
+        new(3, 0, new List<object> { condGroup, (byte)state, (byte)0, flagId });
+
+    /// <summary>4:0 — block until a character is dead or alive.</summary>
+    public static EMEVD.Instruction IfCharacterDeadAlive(LifeState state, int entityId, sbyte condGroup = 0) =>
+        new(4, 0, new List<object> { condGroup, entityId, (byte)state });
+
+    /// <summary>4:2 — block until entity HP ratio meets a comparison (type: 0=&lt;, 1=&lt;=, 2==, 3=&gt;=, 4=&gt;).</summary>
+    public static EMEVD.Instruction IfHpRatio(int entityId, sbyte compType, float ratio, sbyte condGroup = 0) =>
+        new(4, 2, new List<object> { condGroup, entityId, compType, ratio });
+
+    /// <summary>3:2 — block until entity is inside (desired=1) or outside (desired=0) an area.</summary>
+    public static EMEVD.Instruction IfInsideArea(int entityId, int areaEntityId, byte desired = 1, sbyte condGroup = 0) =>
+        new(3, 2, new List<object> { condGroup, desired, entityId, areaEntityId });
+
+    /// <summary>3:4 — block until player has (desired=1) or lacks (desired=0) an item.</summary>
+    public static EMEVD.Instruction IfPlayerHasItem(int itemType, int itemId, byte desired = 1, sbyte condGroup = 0) =>
+        new(3, 4, new List<object> { condGroup, itemType, itemId, desired });
+
+    // ── event flags ───────────────────────────────────────────────────────────
 
     /// <summary>2003:2 — set an event flag on/off.</summary>
-    public static EMEVD.Instruction SetEventFlag(int flagId, bool on) =>
-        new(2003, 2, new List<object> { flagId, (byte)(on ? 1 : 0) });
+    public static EMEVD.Instruction SetEventFlag(int flagId, FlagState state) =>
+        new(2003, 2, new List<object> { flagId, (byte)state });
 
-    // ── actions ──
+    // ── items ─────────────────────────────────────────────────────────────────
+
+    /// <summary>2003:4 — give the player an item lot (respects the lot's getItemFlagId for once-only).</summary>
+    public static EMEVD.Instruction AwardItemLot(int itemLotId) =>
+        new(2003, 4, new List<object> { itemLotId });
+
+    // ── display ───────────────────────────────────────────────────────────────
+
     /// <summary>2007:4 — pop a centered on-screen message (custom text via Event_text FMG).</summary>
     public static EMEVD.Instruction DisplayMessage(int messageId, byte screenLocation = 0) =>
         new(2007, 4, new List<object> { messageId, screenLocation });
@@ -35,19 +75,58 @@ public static class Instr
     public static EMEVD.Instruction DisplayStatusMessage(int messageId, bool pad = false) =>
         new(2007, 3, new List<object> { messageId, (byte)(pad ? 1 : 0) });
 
-    /// <summary>2007:2 — the big banner. <paramref name="bannerType"/> is a fixed preset (1=Victory, 2=You Died, …).</summary>
+    /// <summary>2007:2 — the big banner. <paramref name="bannerType"/> is a fixed preset (1=Victory, 2=You Died…).</summary>
     public static EMEVD.Instruction DisplayBanner(byte bannerType) =>
         new(2007, 2, new List<object> { bannerType });
 
-    /// <summary>2003:4 — give the player an item lot (respects the lot's getItemFlagId for once-only).</summary>
-    public static EMEVD.Instruction AwardItemLot(int itemLotId) =>
-        new(2003, 4, new List<object> { itemLotId });
+    // ── character ─────────────────────────────────────────────────────────────
 
     /// <summary>2003:18 — force-play an animation on a character.</summary>
     public static EMEVD.Instruction ForceAnimation(int entityId, int animationId,
         bool loop = false, bool waitForCompletion = false, bool ignoreTransition = false) =>
         new(2003, 18, new List<object> { entityId, animationId,
             (byte)(loop ? 1 : 0), (byte)(waitForCompletion ? 1 : 0), (byte)(ignoreTransition ? 1 : 0) });
+
+    /// <summary>2004:5 — enable or disable a character (visibility + collision).</summary>
+    public static EMEVD.Instruction SetCharacterEnabled(int entityId, EnabledState state) =>
+        new(2004, 5, new List<object> { entityId, (byte)state });
+
+    /// <summary>2004:4 — force character death.</summary>
+    public static EMEVD.Instruction KillCharacter(int entityId, bool awardSouls = false) =>
+        new(2004, 4, new List<object> { entityId, (byte)(awardSouls ? 1 : 0) });
+
+    /// <summary>2004:1 — enable or disable a character's AI.</summary>
+    public static EMEVD.Instruction SetCharacterAI(int entityId, EnabledState state) =>
+        new(2004, 1, new List<object> { entityId, (byte)state });
+
+    /// <summary>2004:13 — set a character's home point to a region entity.</summary>
+    public static EMEVD.Instruction SetCharacterHome(int entityId, int regionEntityId) =>
+        new(2004, 13, new List<object> { entityId, regionEntityId });
+
+    /// <summary>2004:12 — make a character immortal (unkillable) or mortal.</summary>
+    public static EMEVD.Instruction SetCharacterImmortal(int entityId, EnabledState state) =>
+        new(2004, 12, new List<object> { entityId, (byte)state });
+
+    /// <summary>2004:15 — make a character invincible (no damage taken) or vincible.</summary>
+    public static EMEVD.Instruction SetCharacterInvincible(int entityId, EnabledState state) =>
+        new(2004, 15, new List<object> { entityId, (byte)state });
+
+    /// <summary>2004:41 — short warp: teleport character to a destination entity (warpType=0 for point).</summary>
+    public static EMEVD.Instruction WarpCharacter(int entityId, int destEntityId, byte warpType = 0) =>
+        new(2004, 41, new List<object> { entityId, warpType, destEntityId, (int)-1 });
+
+    // ── boss ──────────────────────────────────────────────────────────────────
+
+    /// <summary>2003:11 — show/hide the boss HP bar. nameId is an NPC Name FMG id.</summary>
+    public static EMEVD.Instruction DisplayBossHealthBar(int entityId, EnabledState state,
+        int slot = 0, short nameId = 0) =>
+        new(2003, 11, new List<object> { (sbyte)state, entityId, (short)slot, nameId });
+
+    /// <summary>2003:12 — trigger the boss-death sequence (plays music, drops souls…).</summary>
+    public static EMEVD.Instruction HandleBossDefeat(int entityId) =>
+        new(2003, 12, new List<object> { entityId });
+
+    // ── sfx / sound ───────────────────────────────────────────────────────────
 
     /// <summary>2006:3 — spawn a one-shot SFX at an entity's dummypoly.</summary>
     public static EMEVD.Instruction SpawnOneshotSfx(int entityType, int entityId, int dummypolyId, int sfxId) =>
@@ -62,7 +141,8 @@ public static class Instr
         int dummypolyId, float decayStart, float decayEnd) =>
         new(2008, 2, new List<object> { vibrationId, entityType, entityId, dummypolyId, decayStart, decayEnd });
 
-    // ── matchers (for InsertAfter / idempotency) ──
+    // ── matchers (for InsertAfter / idempotency) ──────────────────────────────
+
     public static Func<EMEVD.Instruction, bool> IsForceAnimation(int entityId, int animationId) => i =>
         i.Bank == 2003 && i.ID == 18 && ArgAt(i, 0, ArgType.Int32, ArgType.Int32) == entityId
                                      && ArgAt(i, 1, ArgType.Int32, ArgType.Int32) == animationId;
@@ -73,7 +153,8 @@ public static class Instr
     internal static long InitTargetId(EMEVD.Instruction i) =>
         ArgAtL(i, 1, ArgType.Int32, ArgType.UInt32, ArgType.UInt32);
 
-    // ── arg decode helpers ──
+    // ── arg decode helpers ────────────────────────────────────────────────────
+
     private static int ArgAt(EMEVD.Instruction i, int idx, params ArgType[] layout)
     {
         try { return Convert.ToInt32(i.UnpackArgs(layout)[idx]); } catch { return int.MinValue; }
@@ -83,6 +164,215 @@ public static class Instr
         try { return Convert.ToInt64(i.UnpackArgs(layout)[idx]); } catch { return long.MinValue; }
     }
 }
+
+// ── EventBuilder ──────────────────────────────────────────────────────────────
+
+/// <summary>
+/// Fluent builder for a single EMEVD event body. Use via
+/// <see cref="EmevdEditor.DefineEvent(long, EMEVD.Event.RestBehaviorType, Action{EventBuilder}, bool, int)"/>.
+///
+/// <para>Each method appends one or more instructions and returns <c>this</c> for chaining.
+/// Call <see cref="End"/> or <see cref="Restart"/> to terminate the event.
+/// Use <see cref="Raw"/> for anything not yet covered by a named method.</para>
+///
+/// <para>Phase 1 limitation: condition groups are not allocated automatically.
+/// Each <c>When*</c> call targets the MAIN group (condGroup 0), which blocks the
+/// event until the condition is true — suitable for simple linear sequences.
+/// Complex AND/OR branches require Phase 2's condition allocator.</para>
+/// </summary>
+public sealed class EventBuilder
+{
+    private readonly List<EMEVD.Instruction> _instrs = new();
+
+    internal IEnumerable<EMEVD.Instruction> Build() => _instrs;
+
+    // ── low-level escape hatch ────────────────────────────────────────────────
+
+    /// <summary>Append any instruction by bank/id/args directly.</summary>
+    public EventBuilder Raw(int bank, int id, params object[] args)
+    {
+        _instrs.Add(Instr.Raw(bank, id, args));
+        return this;
+    }
+
+    // ── event termination ─────────────────────────────────────────────────────
+
+    /// <summary>Append an unconditional End instruction (event runs once and stops).</summary>
+    public EventBuilder End()
+    {
+        _instrs.Add(Instr.EndUnconditionally(endType: 0));
+        return this;
+    }
+
+    /// <summary>Append an unconditional Restart instruction (event loops).</summary>
+    public EventBuilder Restart()
+    {
+        _instrs.Add(Instr.EndUnconditionally(endType: 1));
+        return this;
+    }
+
+    // ── conditions (MAIN group — blocking waits) ──────────────────────────────
+
+    /// <summary>Block until an event flag reaches <paramref name="state"/>.</summary>
+    public EventBuilder WhenFlag(int flagId, FlagState state)
+    {
+        _instrs.Add(Instr.IfEventFlag(state, flagId));
+        return this;
+    }
+
+    /// <summary>Block until a character is dead.</summary>
+    public EventBuilder WhenDead(int entityId)
+    {
+        _instrs.Add(Instr.IfCharacterDeadAlive(LifeState.Dead, entityId));
+        return this;
+    }
+
+    /// <summary>Block until a character is alive.</summary>
+    public EventBuilder WhenAlive(int entityId)
+    {
+        _instrs.Add(Instr.IfCharacterDeadAlive(LifeState.Alive, entityId));
+        return this;
+    }
+
+    /// <summary>Block until entity HP ratio drops below <paramref name="ratio"/> (0.0–1.0).</summary>
+    public EventBuilder WhenHpBelow(int entityId, float ratio)
+    {
+        _instrs.Add(Instr.IfHpRatio(entityId, compType: 0, ratio)); // 0 = less-than
+        return this;
+    }
+
+    /// <summary>Block until entity is inside an area region.</summary>
+    public EventBuilder WhenInsideArea(int entityId, int areaEntityId)
+    {
+        _instrs.Add(Instr.IfInsideArea(entityId, areaEntityId, desired: 1));
+        return this;
+    }
+
+    /// <summary>Block until entity leaves an area region.</summary>
+    public EventBuilder WhenOutsideArea(int entityId, int areaEntityId)
+    {
+        _instrs.Add(Instr.IfInsideArea(entityId, areaEntityId, desired: 0));
+        return this;
+    }
+
+    // ── actions: flags ────────────────────────────────────────────────────────
+
+    /// <summary>Set an event flag on or off.</summary>
+    public EventBuilder SetFlag(int flagId, FlagState state)
+    {
+        _instrs.Add(Instr.SetEventFlag(flagId, state));
+        return this;
+    }
+
+    // ── actions: items ────────────────────────────────────────────────────────
+
+    /// <summary>Award an item lot to the player (once-only if the lot has a getItemFlagId).</summary>
+    public EventBuilder AwardItemLot(int itemLotId)
+    {
+        _instrs.Add(Instr.AwardItemLot(itemLotId));
+        return this;
+    }
+
+    // ── actions: display ──────────────────────────────────────────────────────
+
+    /// <summary>Show a centered on-screen message (text from Event_text FMG).</summary>
+    public EventBuilder DisplayMessage(int messageId, byte screenLocation = 0)
+    {
+        _instrs.Add(Instr.DisplayMessage(messageId, screenLocation));
+        return this;
+    }
+
+    /// <summary>Show a status/explanation text box (text from Event_text FMG).</summary>
+    public EventBuilder DisplayStatusMessage(int messageId)
+    {
+        _instrs.Add(Instr.DisplayStatusMessage(messageId));
+        return this;
+    }
+
+    /// <summary>Show a big banner with a fixed preset (1=Victory Achieved, 2=You Died…).</summary>
+    public EventBuilder DisplayBanner(byte bannerType)
+    {
+        _instrs.Add(Instr.DisplayBanner(bannerType));
+        return this;
+    }
+
+    /// <summary>Show or hide the boss HP bar.</summary>
+    public EventBuilder DisplayBossHealthBar(int entityId, EnabledState state, int slot = 0, short nameId = 0)
+    {
+        _instrs.Add(Instr.DisplayBossHealthBar(entityId, state, slot, nameId));
+        return this;
+    }
+
+    // ── actions: character ────────────────────────────────────────────────────
+
+    /// <summary>Force-play an animation on a character.</summary>
+    public EventBuilder ForceAnimation(int entityId, int animId,
+        bool loop = false, bool wait = false, bool ignoreTransition = false)
+    {
+        _instrs.Add(Instr.ForceAnimation(entityId, animId, loop, wait, ignoreTransition));
+        return this;
+    }
+
+    /// <summary>Enable or disable a character (visibility + collision).</summary>
+    public EventBuilder SetCharacterEnabled(int entityId, EnabledState state)
+    {
+        _instrs.Add(Instr.SetCharacterEnabled(entityId, state));
+        return this;
+    }
+
+    /// <summary>Force character death.</summary>
+    public EventBuilder KillCharacter(int entityId, bool awardSouls = false)
+    {
+        _instrs.Add(Instr.KillCharacter(entityId, awardSouls));
+        return this;
+    }
+
+    /// <summary>Enable or disable a character's AI.</summary>
+    public EventBuilder SetCharacterAI(int entityId, EnabledState state)
+    {
+        _instrs.Add(Instr.SetCharacterAI(entityId, state));
+        return this;
+    }
+
+    /// <summary>Set a character's home point to a region entity.</summary>
+    public EventBuilder SetCharacterHome(int entityId, int regionEntityId)
+    {
+        _instrs.Add(Instr.SetCharacterHome(entityId, regionEntityId));
+        return this;
+    }
+
+    /// <summary>Make a character immortal (unkillable) or mortal.</summary>
+    public EventBuilder SetCharacterImmortal(int entityId, EnabledState state)
+    {
+        _instrs.Add(Instr.SetCharacterImmortal(entityId, state));
+        return this;
+    }
+
+    /// <summary>Make a character invincible (no damage) or vincible.</summary>
+    public EventBuilder SetCharacterInvincible(int entityId, EnabledState state)
+    {
+        _instrs.Add(Instr.SetCharacterInvincible(entityId, state));
+        return this;
+    }
+
+    /// <summary>Teleport a character to a destination entity.</summary>
+    public EventBuilder WarpCharacter(int entityId, int destEntityId)
+    {
+        _instrs.Add(Instr.WarpCharacter(entityId, destEntityId));
+        return this;
+    }
+
+    // ── actions: boss ─────────────────────────────────────────────────────────
+
+    /// <summary>Trigger the boss-death sequence (music, soul award…).</summary>
+    public EventBuilder HandleBossDefeat(int entityId)
+    {
+        _instrs.Add(Instr.HandleBossDefeat(entityId));
+        return this;
+    }
+}
+
+// ── EmevdEditor ───────────────────────────────────────────────────────────────
 
 /// <summary>
 /// High-level edits over an EMEVD, with the gotchas baked in. All operations are
@@ -103,6 +393,25 @@ public sealed class EmevdEditor
     public EMEVD.Event? Event(long id) => Evd.Events.FirstOrDefault(e => e.ID == id);
 
     /// <summary>
+    /// Define (or replace) an event using a fluent <see cref="EventBuilder"/> and,
+    /// by default, register it at the top of the constructor.
+    ///
+    /// <code>
+    /// emevd.DefineEvent(11819100, RestBehavior.Default, ev => ev
+    ///     .WhenFlag(16, FlagState.On)
+    ///     .AwardItemLot(8500)
+    ///     .End());
+    /// </code>
+    /// </summary>
+    public EMEVD.Event DefineEvent(long id, EMEVD.Event.RestBehaviorType rest,
+        Action<EventBuilder> build, bool register = true, int slot = 0)
+    {
+        var builder = new EventBuilder();
+        build(builder);
+        return DefineEvent(id, rest, builder.Build(), register, slot);
+    }
+
+    /// <summary>
     /// Define (or replace) an event and, by default, register it. Registration
     /// goes at the TOP of the constructor — event 0 has multiplayer SKIPs and an
     /// END IF partway through, so a registration appended at the end can be
@@ -121,7 +430,7 @@ public sealed class EmevdEditor
         return ev;
     }
 
-    /// <summary>Convenience overload: <c>DefineEvent(id, rest, register, instr, instr, …)</c>.</summary>
+    /// <summary>Convenience overload: <c>DefineEvent(id, rest, instr, instr, …)</c>.</summary>
     public EMEVD.Event DefineEvent(long id, EMEVD.Event.RestBehaviorType rest, params EMEVD.Instruction[] body) =>
         DefineEvent(id, rest, body, register: true);
 
