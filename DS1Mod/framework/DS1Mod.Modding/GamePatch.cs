@@ -349,68 +349,60 @@ public sealed class GamePatch
         {
             repo.Edit("SpEffectParam", p =>
             {
+                // Helper that applies all SpEffectDef fields to an existing or newly cloned row.
+                static void ApplyDef(PARAM.Row row, SpEffectDef def)
+                {
+                    row["effectEndurance"].Value = def.Duration;
+
+                    if (def.HpRecoverPoint != 0)
+                        row["changeHpPoint"].Value = def.HpRecoverPoint;
+                    if (def.HpRecoverRate != 0)
+                        row["hpRecoverRate"].Value = def.HpRecoverRate;
+                    if (def.StaminaRecoverPoint != 0)
+                        row["changeStaminaPoint"].Value = def.StaminaRecoverPoint;
+
+                    if (def.MaxHpRate != 1f)
+                        row["maxHpRate"].Value = def.MaxHpRate;
+                    if (def.PhysAtkPowerRate != 1f)
+                        row["physicsAttackPowerRate"].Value = def.PhysAtkPowerRate;
+                    if (def.MagicAtkPowerRate != 1f)
+                        row["magicAttackPowerRate"].Value = def.MagicAtkPowerRate;
+                    if (def.FireAtkPowerRate != 1f)
+                        row["fireAttackPowerRate"].Value = def.FireAtkPowerRate;
+                    if (def.ThunderAtkPowerRate != 1f)
+                        row["thunderAttackPowerRate"].Value = def.ThunderAtkPowerRate;
+                    if (def.PhysDefRate != 1f)
+                        row["physicsDiffenceRate"].Value = def.PhysDefRate;
+                    if (def.MagicDefRate != 1f)
+                        row["magicDiffenceRate"].Value = def.MagicDefRate;
+                    if (def.FireDefRate != 1f)
+                        row["fireDiffenceRate"].Value = def.FireDefRate;
+                    if (def.ThunderDefRate != 1f)
+                        row["thunderDiffenceRate"].Value = def.ThunderDefRate;
+
+                    def.Configure?.Invoke(row);
+                }
+
                 if (p[def.Id] != null)
                 {
-                    Console.WriteLine($"[DEBUG] Row {def.Id} already exists in SpEffectParam. Skipping (Idempotent).");
-                    return; // idempotent
+                    // Row already exists — update it in-place so that parameter changes
+                    // take effect on redeploy without requiring a vanilla restore.
+                    Console.WriteLine($"[DEBUG] Row {def.Id} exists in SpEffectParam — updating fields.");
+                    ApplyDef(p[def.Id]!, def);
+                    return;
                 }
 
                 int donorId = def.DonorId;
                 if (p[donorId] == null)
                 {
-                    // Fall back to first available row rather than hard-failing —
-                    // same approach DefineLot uses. Specific donor IDs (e.g. 110)
-                    // may not exist in every DSR installation.
                     donorId = p.Rows[0].ID;
                     Console.WriteLine($"[WARN] Donor ID {def.DonorId} not found in SpEffectParam. Falling back to row {donorId}.");
                 }
 
                 Console.WriteLine($"[DEBUG] Cloning Donor {donorId} to new ID {def.Id}...");
-
                 ParamRepository.AddClone(p, donorId, def.Id, $"sp_{def.Id}", row =>
                 {
-                    // ── core timing ─────────────────────────────────────────────
-                    row["effectEndurance"].Value = def.Duration;
-
-                    // ── healing effects ────────────────────────────────────────
-                    if (def.HpRecoverPoint != 0)
-                        row["changeHpPoint"].Value = def.HpRecoverPoint;
-
-                    if (def.HpRecoverRate != 0)
-                        row["hpRecoverRate"].Value = def.HpRecoverRate;
-
-                    if (def.StaminaRecoverPoint != 0)
-                        row["changeStaminaPoint"].Value = def.StaminaRecoverPoint;
-
-                    // ── stat multipliers ───────────────────────────────────────
-                    if (def.MaxHpRate != 1f)
-                        row["maxHpRate"].Value = def.MaxHpRate;
-
-                    if (def.PhysAtkPowerRate != 1f)
-                        row["physicsAttackPowerRate"].Value = def.PhysAtkPowerRate;
-
-                    if (def.MagicAtkPowerRate != 1f)
-                        row["magicAttackPowerRate"].Value = def.MagicAtkPowerRate;
-
-                    if (def.FireAtkPowerRate != 1f)
-                        row["fireAttackPowerRate"].Value = def.FireAtkPowerRate;
-
-                    if (def.ThunderAtkPowerRate != 1f)
-                        row["thunderAttackPowerRate"].Value = def.ThunderAtkPowerRate;
-
-                    if (def.PhysDefRate != 1f)
-                        row["physicsDiffenceRate"].Value = def.PhysDefRate;
-
-                    if (def.MagicDefRate != 1f)
-                        row["magicDiffenceRate"].Value = def.MagicDefRate;
-
-                    if (def.FireDefRate != 1f)
-                        row["fireDiffenceRate"].Value = def.FireDefRate;
-
-                    if (def.ThunderDefRate != 1f)
-                        row["thunderDiffenceRate"].Value = def.ThunderDefRate;
-
-                    def.Configure?.Invoke(row);
+                    ApplyDef(row, def);
                     Console.WriteLine($"[DEBUG] Row {def.Id} configuration complete.");
                 });
             });
