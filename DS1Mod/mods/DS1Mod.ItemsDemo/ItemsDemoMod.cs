@@ -124,7 +124,14 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
     private volatile bool _rtAiMood0;            // AI chose act 0 (SetActiveFlagInRange)
     private volatile bool _rtAiMood1;            // AI chose act 1
 
-    private bool _windowOpen = true;
+    // live debug state — written by OnTick, read by OnGui
+    private volatile bool _dbgSpEffectActive;    // SpEffect 9000 currently on player
+    private volatile bool _dbgDraughtFlagLive;   // DraughtUseFlag currently ON
+    private volatile bool _dbgInGame;
+    private volatile int  _dbgPlayerHp;
+    private volatile int  _dbgPlayerMaxHp;
+    private bool _windowOpen   = true;
+    private bool _debugOpen    = false;
 
     // ═════════════════════════════════════════════════════════════════════════
     // IGamePatcher
@@ -582,55 +589,157 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
         if (_ctx is null) return;
         var r = _ctx.Reader;
 
-        // Poll runtime checklist items via event flags each tick.
+        // Checklist items (latch ON, never reset).
         if (!_rtTrinketCollected) _rtTrinketCollected = r.GetEventFlag(TrinketGetFlag);
         if (!_rtMidFightReward)   _rtMidFightReward   = r.GetEventFlag(FlagMidFightReward);
         if (!_rtBossDead)         _rtBossDead         = r.GetEventFlag(DemonDeadFlag);
         if (!_rtAiMood0)          _rtAiMood0          = r.GetEventFlag(FlagAiMood0);
         if (!_rtAiMood1)          _rtAiMood1          = r.GetEventFlag(FlagAiMood1);
+
+        // Live debug state — always updated each tick for the debug panel.
+        _dbgInGame          = true;
+        _dbgDraughtFlagLive = r.GetEventFlag(DraughtUseFlag);
+        _dbgSpEffectActive  = _dbgDraughtFlagLive; // EMEVD mirrors SpEffect → this flag
+
+        var stats = r.GetPlayerStats();
+        if (stats is not null)
+        {
+            _dbgPlayerHp    = stats.CurrentHp;
+            _dbgPlayerMaxHp = stats.MaxHp;
+        }
     }
 
     // ── IGuiMod ───────────────────────────────────────────────────────────────
 
     public void OnGui()
     {
-        if (!_windowOpen) return;
+        // ── Main checklist ────────────────────────────────────────────────────
 
-        DS1ImGui.SetNextWindowPos(10, 10, ImGuiCond.FirstUseEver);
-        DS1ImGui.SetNextWindowSize(340, 0, ImGuiCond.FirstUseEver);
-        DS1ImGui.SetNextWindowBgAlpha(0.82f);
-
-        if (!DS1ImGui.Begin("DS1Mod API Test Checklist", ref _windowOpen))
+        if (_windowOpen)
         {
+            DS1ImGui.SetNextWindowPos(10, 10, ImGuiCond.FirstUseEver);
+            DS1ImGui.SetNextWindowSize(380, 0, ImGuiCond.FirstUseEver);
+            DS1ImGui.SetNextWindowBgAlpha(0.82f);
+
+            if (DS1ImGui.Begin("DS1Mod API Test Checklist", ref _windowOpen))
+            {
+                int ticked = CountTicked();
+                int total  = TotalChecks();
+                DS1ImGui.Text($"Progress: {ticked} / {total}");
+                DS1ImGui.Separator();
+
+                DS1ImGui.Text("  Patch-time");
+                DrawCheck("Conflict detection (GamePatch from IPatchContext)", _patchConflictDetection);
+                DrawCheck($"DefineSpEffect — SpEffectParam {DraughtSpEffect}", _patchSpEffect);
+                DrawCheck($"DefineGoods — Draught {DraughtGoodsId} + Trinket {TrinketGoodsId}", _patchGoods);
+                DrawCheck($"DefineLot — {DraughtLotId} (inf) + {TrinketLotId} (once)",          _patchLots);
+                DrawCheck("EditMsb / PlaceTreasure — Stone Trinket pickup",    _patchMsb);
+                DrawCheck($"DefineItemTrigger — SpEffect {DraughtSpEffect} → flag {DraughtUseFlag}", _patchItemTrigger);
+                DrawCheck("EditEmevd / EventBuilder — 5 events",               _patchEmevd);
+                DrawCheck("EditAi / AiBuilder — 223200_battle.lua compiled",   _patchAi);
+
+                DS1ImGui.Spacing();
+                DS1ImGui.Text("  Runtime — do these in-game:");
+                DrawCheck("hooks.ItemUsed — use the Goofy Draught",            _rtDraughtUsed);
+                DrawCheck("DefineLot once-only — collect Stone Trinket",       _rtTrinketCollected);
+                DrawCheck("WhenHpBelow — demon HP < 50 %% (draught reward)",    _rtMidFightReward);
+                DrawCheck("WhenDead — Asylum Demon killed",                     _rtBossDead);
+                DrawCheck("SetActiveFlagInRange — AI mood 0 (stomp)",          _rtAiMood0);
+                DrawCheck("SetActiveFlagInRange — AI mood 1 (spin+leave)",     _rtAiMood1);
+
+                DS1ImGui.Spacing();
+                DS1ImGui.Separator();
+                DS1ImGui.Checkbox("Debug Info", ref _debugOpen);
+            }
             DS1ImGui.End();
-            return;
         }
 
-        int ticked = CountTicked();
-        int total  = TotalChecks();
-        DS1ImGui.Text($"Progress: {ticked} / {total}");
-        DS1ImGui.Separator();
+        // ── Debug panel ───────────────────────────────────────────────────────
 
-        DS1ImGui.Text("  Patch-time");
-        DrawCheck("Conflict detection (GamePatch from IPatchContext)", _patchConflictDetection);
-        DrawCheck("DefineSpEffect — SpEffectParam 9100",               _patchSpEffect);
-        DrawCheck("DefineGoods — Goofy Draught + Stone Trinket",       _patchGoods);
-        DrawCheck("DefineLot — infinite + once-only",                  _patchLots);
-        DrawCheck("EditMsb / PlaceTreasure — Stone Trinket pickup",    _patchMsb);
-        DrawCheck("DefineItemTrigger — SpEffect→flag bridge",          _patchItemTrigger);
-        DrawCheck("EditEmevd / EventBuilder — 5 events",               _patchEmevd);
-        DrawCheck("EditAi / AiBuilder — 223200_battle.lua compiled",   _patchAi);
+        if (_debugOpen)
+        {
+            DS1ImGui.SetNextWindowPos(10, 340, ImGuiCond.FirstUseEver);
+            DS1ImGui.SetNextWindowSize(420, 0, ImGuiCond.FirstUseEver);
+            DS1ImGui.SetNextWindowBgAlpha(0.88f);
 
-        DS1ImGui.Spacing();
-        DS1ImGui.Text("  Runtime — do these in-game:");
-        DrawCheck("hooks.ItemUsed — use the Goofy Draught",            _rtDraughtUsed);
-        DrawCheck("DefineLot once-only — collect Stone Trinket",       _rtTrinketCollected);
-        DrawCheck("WhenHpBelow — demon HP < 50 %% (draught reward)",    _rtMidFightReward);
-        DrawCheck("WhenDead — Asylum Demon killed",                     _rtBossDead);
-        DrawCheck("SetActiveFlagInRange — AI mood 0 (stomp)",          _rtAiMood0);
-        DrawCheck("SetActiveFlagInRange — AI mood 1 (spin+leave)",     _rtAiMood1);
+            bool open = true;
+            if (DS1ImGui.Begin("ItemsDemo Debug", ref open))
+            {
+                if (!open) _debugOpen = false;
 
-        DS1ImGui.End();
+                // ── Player state ─────────────────────────────────────────────
+                DS1ImGui.Text("Player");
+                DS1ImGui.Separator();
+                if (_dbgInGame)
+                {
+                    DS1ImGui.Text($"  HP:          {_dbgPlayerHp} / {_dbgPlayerMaxHp}");
+                    DrawFlagRow("  SpEffect →flag (DraughtUseFlag)", DraughtUseFlag, _dbgDraughtFlagLive);
+                }
+                else
+                {
+                    DS1ImGui.PushStyleColor(ImGuiCol.Text, 1f, 0.6f, 0.1f, 1f);
+                    DS1ImGui.Text("  Not in-game (EventPump paused)");
+                    DS1ImGui.PopStyleColor();
+                }
+
+                // ── Allocated IDs ────────────────────────────────────────────
+                DS1ImGui.Spacing();
+                DS1ImGui.Text("Allocated IDs");
+                DS1ImGui.Separator();
+                DS1ImGui.Text($"  SpEffect:      {DraughtSpEffect}");
+                DS1ImGui.Text($"  Draught goods: {DraughtGoodsId}   lot: {DraughtLotId}");
+                DS1ImGui.Text($"  Trinket goods: {TrinketGoodsId}   lot: {TrinketLotId}");
+                DS1ImGui.Text($"  TrinketEntity: {TrinketEntityId}");
+
+                // ── Event flags ──────────────────────────────────────────────
+                DS1ImGui.Spacing();
+                DS1ImGui.Text("Event Flags  (live read every 500 ms)");
+                DS1ImGui.Separator();
+                DrawFlagRow($"  DraughtUseFlag    [{DraughtUseFlag}]", DraughtUseFlag,        _dbgDraughtFlagLive);
+                DrawFlagRow($"  TrinketGetFlag    [{TrinketGetFlag}]", TrinketGetFlag,         _rtTrinketCollected);
+                DrawFlagRow($"  FlagUsedDraught   [{FlagUsedDraught}]", FlagUsedDraught,       _ctx?.Reader.GetEventFlag(FlagUsedDraught) ?? false);
+                DrawFlagRow($"  FlagAiMood0       [{FlagAiMood0}]", FlagAiMood0,               _rtAiMood0);
+                DrawFlagRow($"  FlagAiMood1       [{FlagAiMood1}]", FlagAiMood1,               _rtAiMood1);
+                DrawFlagRow($"  FlagMidFightRew.  [{FlagMidFightReward}]", FlagMidFightReward, _rtMidFightReward);
+                DrawFlagRow($"  DemonDeadFlag     [{DemonDeadFlag}]", DemonDeadFlag,           _rtBossDead);
+
+                // ── EMEVD event IDs ──────────────────────────────────────────
+                DS1ImGui.Spacing();
+                DS1ImGui.Text("EMEVD Event IDs");
+                DS1ImGui.Separator();
+                DS1ImGui.Text($"  EvtItemTrigger:  {EvtItemTrigger}");
+                DS1ImGui.Text($"  EvtUseResponse:  {EvtUseResponse}");
+                DS1ImGui.Text($"  EvtAwardTrinket: {EvtAwardTrinket}");
+                DS1ImGui.Text($"  EvtDemonControl: {EvtDemonControl}");
+                DS1ImGui.Text($"  EvtRawEscape:    {EvtRawEscape}");
+                DS1ImGui.Text($"  EvtHideTrinket:  {EvtHideTrinket}");
+
+                // ── FMG message IDs ──────────────────────────────────────────
+                DS1ImGui.Spacing();
+                DS1ImGui.Text("FMG Message IDs");
+                DS1ImGui.Separator();
+                DS1ImGui.Text($"  MsgDraughtUsed:  {MsgDraughtUsed}");
+                DS1ImGui.Text($"  MsgTrinketFound: {MsgTrinketFound}");
+            }
+            DS1ImGui.End();
+        }
+    }
+
+    private static void DrawFlagRow(string label, int flagId, bool live)
+    {
+        _ = flagId; // shown in label already
+        if (live)
+        {
+            DS1ImGui.PushStyleColor(ImGuiCol.Text, 0.2f, 0.9f, 0.2f, 1f);
+            DS1ImGui.Text($"{label}  ON");
+            DS1ImGui.PopStyleColor();
+        }
+        else
+        {
+            DS1ImGui.PushStyleColor(ImGuiCol.Text, 0.55f, 0.55f, 0.55f, 1f);
+            DS1ImGui.Text($"{label}  off");
+            DS1ImGui.PopStyleColor();
+        }
     }
 
     private static void DrawCheck(string label, bool ticked)
