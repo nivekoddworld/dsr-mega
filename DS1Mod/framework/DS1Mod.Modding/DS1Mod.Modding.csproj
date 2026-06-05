@@ -9,6 +9,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\DS1Mod.Core\DS1Mod.Core.csproj" />
-    <ProjectReference Include="..\..\..\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
+    <ProjectReference Include="..\..\..\lib\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
   </ItemGroup>
 </Project>
