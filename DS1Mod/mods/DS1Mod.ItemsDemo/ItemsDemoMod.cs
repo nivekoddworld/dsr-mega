@@ -356,6 +356,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
             // the AND group to never satisfy in practice.
             // ════════════════════════════════════════════════════════════════
             emevd.DefineEvent(EvtAwardTrinket, EMEVD.Event.RestBehaviorType.Default, ev => ev
+                .WhenDead(DemonEntity)             // skip award if already dead (prevents re-award on save/reload)
                 .WhenHpBelow(DemonEntity, 0.5f)   // block until demon HP < 50%
                 .AwardItemLot(DraughtLotId)        // award 3x Goofy Draught
                 .DisplayMessage(MsgTrinketFound)

@@ -355,15 +355,19 @@ public sealed class GamePatch
                     return; // idempotent
                 }
 
-                if (p[def.DonorId] == null)
+                int donorId = def.DonorId;
+                if (p[donorId] == null)
                 {
-                    Console.WriteLine($"[ERROR] Donor ID {def.DonorId} not found in SpEffectParam. Cannot clone.");
-                    return;
+                    // Fall back to first available row rather than hard-failing —
+                    // same approach DefineLot uses. Specific donor IDs (e.g. 110)
+                    // may not exist in every DSR installation.
+                    donorId = p.Rows[0].ID;
+                    Console.WriteLine($"[WARN] Donor ID {def.DonorId} not found in SpEffectParam. Falling back to row {donorId}.");
                 }
 
-                Console.WriteLine($"[DEBUG] Cloning Donor {def.DonorId} to new ID {def.Id}...");
+                Console.WriteLine($"[DEBUG] Cloning Donor {donorId} to new ID {def.Id}...");
 
-                ParamRepository.AddClone(p, def.DonorId, def.Id, $"sp_{def.Id}", row =>
+                ParamRepository.AddClone(p, donorId, def.Id, $"sp_{def.Id}", row =>
                 {
                     // ── core timing ─────────────────────────────────────────────
                     row["effectEndurance"].Value = def.Duration;
