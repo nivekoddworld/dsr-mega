@@ -61,10 +61,12 @@ if errorlevel 1 ( echo [FAIL] dotnet build & set /a ERRORS+=1 )
 :: ── 3. Publish DS1Mod.Host → publish\framework\ ───────────────────────────
 echo.
 echo [3/9] Publishing DS1Mod.Host...
+dotnet restore "%REPO%DS1Mod\framework\DS1Mod.Host\DS1Mod.Host.csproj" --nologo
+if errorlevel 1 ( echo [FAIL] dotnet restore DS1Mod.Host & set /a ERRORS+=1 )
 if exist "%PUB_FRAMEWORK%" rd /s /q "%PUB_FRAMEWORK%"
 mkdir "%PUB_FRAMEWORK%"
 dotnet publish "%REPO%DS1Mod\framework\DS1Mod.Host\DS1Mod.Host.csproj" ^
-    -c Release --no-build --nologo ^
+    -c Release --nologo ^
     -o "%PUB_FRAMEWORK%"
 if errorlevel 1 ( echo [FAIL] dotnet publish DS1Mod.Host & set /a ERRORS+=1 )
 
@@ -160,7 +162,7 @@ if exist "!HP_DLL!" (
     echo        [WARN] DS1Mod.HpLogger.dll not found at expected path — skipping.
 )
 
-set "IMGUI_DIR=%REPO%DS1Mod\DS1Mod.ImGuiDemo\bin\Release\net8.0-windows"
+set "IMGUI_DIR=%REPO%DS1Mod\mods\DS1Mod.ImGuiDemo\bin\Release\net8.0-windows"
 set "IMGUI_DLL=%IMGUI_DIR%\DS1Mod.ImGuiDemo.dll"
 if exist "!IMGUI_DLL!" (
     copy /Y "!IMGUI_DLL!" "%PUB_BUNDLED%\DS1Mod.ImGuiDemo.dll" >nul
@@ -171,6 +173,19 @@ if exist "!IMGUI_DLL!" (
     )
 ) else (
     echo        [WARN] DS1Mod.ImGuiDemo.dll not found at expected path — skipping.
+)
+
+set "ITEMS_DIR=%REPO%DS1Mod\mods\DS1Mod.ItemsDemo\bin\Release\net8.0-windows"
+set "ITEMS_DLL=%ITEMS_DIR%\DS1Mod.ItemsDemo.dll"
+if exist "!ITEMS_DLL!" (
+    copy /Y "!ITEMS_DLL!" "%PUB_BUNDLED%\DS1Mod.ItemsDemo.dll" >nul
+    echo        + DS1Mod.ItemsDemo.dll
+    if exist "!ITEMS_DIR!\DS1Mod.ItemsDemo.deps.json" (
+        copy /Y "!ITEMS_DIR!\DS1Mod.ItemsDemo.deps.json" "%PUB_BUNDLED%\DS1Mod.ItemsDemo.deps.json" >nul
+        echo        + DS1Mod.ItemsDemo.deps.json
+    )
+) else (
+    echo        [WARN] DS1Mod.ItemsDemo.dll not found at expected path — skipping.
 )
 
 :: ── 7. Run tests ──────────────────────────────────────────────────────────
