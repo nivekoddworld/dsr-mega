@@ -172,8 +172,12 @@ public sealed class GamePatch
                 if (p[def.Id] != null) return; // idempotent
                 ParamRepository.AddClone(p, def.DonorId, def.Id, def.Name, row =>
                 {
-                    row["maxNum"].Value        = def.MaxCount;
-                    row["refId_default"].Value = def.SpEffectId >= 0 ? def.SpEffectId : def.Id;
+                    row["maxNum"].Value = def.MaxCount;
+                    // DSR's EquipParamGoods uses "refId" (singular). The
+                    // "_default" suffix is from a later From Soft title's
+                    // paramdef and doesn't exist in DSR — looking it up
+                    // throws "Sequence contains no matching element".
+                    row["refId"].Value  = def.SpEffectId >= 0 ? def.SpEffectId : def.Id;
                     if (def.SpEffectId >= 0)
                         row["goodsType"].Value = (byte)0; // consumable
                     def.Configure?.Invoke(row);
@@ -240,21 +244,25 @@ public sealed class GamePatch
                 if (p[def.Id] != null) return; // idempotent
                 ParamRepository.AddClone(p, def.DonorId, def.Id, $"sp_{def.Id}", row =>
                 {
+                    // DSR field names — verified against the shipped
+                    // SpEffectParam paramdef. They differ from later From
+                    // Soft titles (no "Recover"/"AtkPower"/"DefRate"
+                    // shortcuts; "Diffence" is misspelled in vanilla).
                     row["effectEndurance"].Value = def.Duration;
 
-                    if (def.HpRecoverPoint   != 0) row["hpRecoverPoint"].Value   = def.HpRecoverPoint;
-                    if (def.HpRecoverRate    != 0) row["hpRecoverRate"].Value    = def.HpRecoverRate;
-                    if (def.StaminaRecoverPoint != 0) row["staminaRecoverPoint"].Value = def.StaminaRecoverPoint;
+                    if (def.HpRecoverPoint      != 0) row["changeHpPoint"].Value      = def.HpRecoverPoint;
+                    if (def.HpRecoverRate       != 0) row["hpRecoverRate"].Value      = def.HpRecoverRate;
+                    if (def.StaminaRecoverPoint != 0) row["changeStaminaPoint"].Value = def.StaminaRecoverPoint;
 
-                    if (def.MaxHpRate         != 1f) row["maxHpRate"].Value         = def.MaxHpRate;
-                    if (def.PhysAtkPowerRate  != 1f) row["physAtkPowerRate"].Value  = def.PhysAtkPowerRate;
-                    if (def.MagicAtkPowerRate != 1f) row["magicAtkPowerRate"].Value = def.MagicAtkPowerRate;
-                    if (def.FireAtkPowerRate  != 1f) row["fireAtkPowerRate"].Value  = def.FireAtkPowerRate;
-                    if (def.ThunderAtkPowerRate != 1f) row["thunderAtkPowerRate"].Value = def.ThunderAtkPowerRate;
-                    if (def.PhysDefRate       != 1f) row["physDefRate"].Value       = def.PhysDefRate;
-                    if (def.MagicDefRate      != 1f) row["magicDefRate"].Value      = def.MagicDefRate;
-                    if (def.FireDefRate       != 1f) row["fireDefRate"].Value       = def.FireDefRate;
-                    if (def.ThunderDefRate    != 1f) row["thunderDefRate"].Value    = def.ThunderDefRate;
+                    if (def.MaxHpRate           != 1f) row["maxHpRate"].Value              = def.MaxHpRate;
+                    if (def.PhysAtkPowerRate    != 1f) row["physicsAttackPowerRate"].Value = def.PhysAtkPowerRate;
+                    if (def.MagicAtkPowerRate   != 1f) row["magicAttackPowerRate"].Value   = def.MagicAtkPowerRate;
+                    if (def.FireAtkPowerRate    != 1f) row["fireAttackPowerRate"].Value    = def.FireAtkPowerRate;
+                    if (def.ThunderAtkPowerRate != 1f) row["thunderAttackPowerRate"].Value = def.ThunderAtkPowerRate;
+                    if (def.PhysDefRate         != 1f) row["physicsDiffenceRate"].Value    = def.PhysDefRate;
+                    if (def.MagicDefRate        != 1f) row["magicDiffenceRate"].Value      = def.MagicDefRate;
+                    if (def.FireDefRate         != 1f) row["fireDiffenceRate"].Value       = def.FireDefRate;
+                    if (def.ThunderDefRate      != 1f) row["thunderDiffenceRate"].Value    = def.ThunderDefRate;
 
                     def.Configure?.Invoke(row);
                 });
