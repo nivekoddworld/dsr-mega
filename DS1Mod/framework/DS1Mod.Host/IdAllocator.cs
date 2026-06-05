@@ -11,13 +11,22 @@ namespace DS1Mod.Host;
 internal sealed class IdAllocator
 {
     // Schema for allocations.json
+    private sealed record AllocationClaim
+    {
+        [JsonPropertyName("start")]
+        public int Start { get; set; }
+
+        [JsonPropertyName("end")]
+        public int End { get; set; }
+    }
+
     private sealed record AllocationSpace
     {
         [JsonPropertyName("base")]
         public int Base { get; set; }
 
         [JsonPropertyName("claimed")]
-        public Dictionary<string, List<(int Start, int End)>> Claimed { get; set; } = new();
+        public Dictionary<string, List<AllocationClaim>> Claimed { get; set; } = new();
     }
 
     private sealed record AllocationsRoot
@@ -150,25 +159,25 @@ internal sealed class IdAllocator
 
             // Find the next available slot (after all allocations in this space)
             int nextStart = allocationSpace.Base;
-            foreach (var (start, end) in modClaims)
+            foreach (var claim in modClaims)
             {
-                if (end >= nextStart)
-                    nextStart = end + 1;
+                if (claim.End >= nextStart)
+                    nextStart = claim.End + 1;
             }
 
             // Also check claims from other mods
             foreach (var (_, otherModClaims) in allocationSpace.Claimed)
             {
                 if (otherModClaims == modClaims) continue;  // Skip self
-                foreach (var (start, end) in otherModClaims)
+                foreach (var claim in otherModClaims)
                 {
-                    if (end >= nextStart)
-                        nextStart = end + 1;
+                    if (claim.End >= nextStart)
+                        nextStart = claim.End + 1;
                 }
             }
 
             int nextEnd = nextStart + count - 1;
-            modClaims.Add((nextStart, nextEnd));
+            modClaims.Add(new AllocationClaim { Start = nextStart, End = nextEnd });
             Save();
 
             Console.WriteLine(
