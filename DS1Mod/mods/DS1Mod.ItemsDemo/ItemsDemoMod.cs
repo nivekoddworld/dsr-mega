@@ -70,41 +70,28 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
     private const string NpcFileId = "223200";   // Asylum Demon AI file
     private const string LuaId     = "MiniGreaterDemon223200"; // must match vanilla goal name prefix
 
-    // Goods
-    private const int DraughtGoodsId = 8100;     // consumable, uses SpEffect
-    private const int TrinketGoodsId = 8101;     // key item, no use effect
+    // ── Allocated IDs (assigned at patch time from IPatchContext) ────────────
 
-    // SpEffect
-    private const int DraughtSpEffect = 9100;
-
-    // Lots
-    private const int DraughtLotId  = 8600;      // infinite — no once-only flag
-    private const int TrinketLotId  = 8601;      // once-only ground pickup
-
-    // Event flags  (m18_01 section 9 allocated range)
-    private const int DraughtUseFlag   = 11819400; // pulses ON while SpEffect active
-    private const int TrinketGetFlag   = 11819401; // set once when trinket is obtained
-    private const int FlagUsedDraught  = 11819402; // permanent "used at least once"
-    private const int FlagAiMood0      = 11819403; // AI mood flag base (mood 0 = stomp)
-    private const int FlagAiMood1      = 11819404; // AI mood flag (mood 1 = spin+leave)
-    // 11819405–11819410 reserved for future use
-
-    // EMEVD event IDs
-    private const int EvtItemTrigger   = 11819400; // DefineItemTrigger writes this id
-    private const int EvtUseResponse   = 11819405; // in-game display on draught use
-    private const int EvtAwardTrinket  = 11819406; // EMEVD AND-group demo: award on hp+area
-    private const int EvtBossIntro     = 11819407; // EMEVD OR-group + boss-bar demo
-    private const int EvtDemonControl  = 11819408; // char enable/disable/AI/immortal demo
-    private const int EvtRawEscape     = 11819409; // Raw() escape hatch demo
-    private const int EvtHideTrinket   = 11819411; // hide the ground o0500 after pickup
-
-    // MSB entity IDs
-    private const int TrinketEntityId  = 1811999; // unused range in m18_01 — bound to our o0500
-
-    // FMG message IDs (Event_text)
-    private const int MsgDraughtUsed   = 6900760;
-    private const int MsgTrinketFound  = 6900761;
-    private const int MsgDemonWarning  = 6900762;
+    private int DraughtGoodsId;
+    private int TrinketGoodsId;
+    private int DraughtSpEffect;
+    private int DraughtLotId;
+    private int TrinketLotId;
+    private int DraughtUseFlag;
+    private int TrinketGetFlag;
+    private int FlagUsedDraught;
+    private int FlagAiMood0;
+    private int FlagAiMood1;
+    private int EvtItemTrigger;
+    private int EvtUseResponse;
+    private int EvtAwardTrinket;
+    private int EvtBossIntro;
+    private int EvtDemonControl;
+    private int EvtRawEscape;
+    private int EvtHideTrinket;
+    private int TrinketEntityId;
+    private int MsgDraughtUsed;
+    private int MsgTrinketFound;
 
     // World position — ledge near Asylum start
     private static readonly Vector3 TrinketPos = new(-13.744f, 190.249f, 11.696f);
@@ -143,24 +130,51 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
 
     public void Patch(IPatchContext ctx)
     {
-        // ════════════════════════════════════════════════════════════════════
-        // API: Conflict detection
-        //
-        // Constructing GamePatch from an IPatchContext (not the low-level
-        // overload) wires _recordEdit automatically. Every write operation
-        // (EditParams, EditEmevd, EditBnd3, EditMsb, EditAi) calls
-        // ctx.RecordEdit(filePath, selector) internally — mod authors never
-        // call it directly.
-        //
-        // The host (PatchContext.cs) logs a warning when two loaded mods
-        // record the same (filePath, selector) pair, e.g.:
-        //   [CONFLICT] DS1Mod.GoofyDemon and DS1Mod.ItemsDemo both wrote
-        //              script/m18_01_00_00.luabnd.dcx :: BND3:script/...
-        //
-        // To see this warning, install both GoofyDemon and ItemsDemo.
-        // ════════════════════════════════════════════════════════════════════
-        var g = new GamePatch(ctx);  // wires conflict detection via IPatchContext
+        var g = new GamePatch(ctx);
         byte[] paramdefs = GetEmbeddedResource("paramdef.paramdefbnd.dcx");
+
+        // ════════════════════════════════════════════════════════════════════
+        // API: ID allocation
+        //
+        // Request contiguous blocks of IDs from the allocator. This guarantees:
+        // - No conflicts with other mods (allocation is centralized)
+        // - Deterministic IDs across runs (save-game compatibility)
+        // - Human-readable debug output (allocations.json shows who has what)
+        // ════════════════════════════════════════════════════════════════════
+
+        // PARAM rows (2 goods, 2 lots, 1 speffect)
+        DraughtGoodsId  = ctx.AllocateIds("EquipParamGoods", 2);
+        TrinketGoodsId  = DraughtGoodsId + 1;
+
+        DraughtLotId    = ctx.AllocateIds("ItemLotParam", 2);
+        TrinketLotId    = DraughtLotId + 1;
+
+        DraughtSpEffect = ctx.AllocateId("SpEffectParam");
+
+        // Event flags (m18_01 section 9): 5 flags for item/AI logic
+        DraughtUseFlag  = ctx.AllocateIds("EventFlags_m18_01", 5);
+        TrinketGetFlag  = DraughtUseFlag + 1;
+        FlagUsedDraught = DraughtUseFlag + 2;
+        FlagAiMood0     = DraughtUseFlag + 3;
+        FlagAiMood1     = DraughtUseFlag + 4;
+
+        // EMEVD events (m18_01): 7 events
+        EvtItemTrigger  = ctx.AllocateIds("EmevdEvents_m18_01", 7);
+        EvtUseResponse  = EvtItemTrigger + 1;
+        EvtAwardTrinket = EvtItemTrigger + 2;
+        EvtBossIntro    = EvtItemTrigger + 3;
+        EvtDemonControl = EvtItemTrigger + 4;
+        EvtRawEscape    = EvtItemTrigger + 5;
+        EvtHideTrinket  = EvtItemTrigger + 6;
+
+        // MSB entity IDs (m18_01): 1 entity for trinket pickup
+        TrinketEntityId = ctx.AllocateId("MsbEntities_m18_01");
+
+        // FMG message IDs (event text): 3 messages
+        int msgBase     = ctx.AllocateIds("EventText", 3);
+        MsgDraughtUsed  = msgBase;
+        MsgTrinketFound = msgBase + 1;
+        int MsgDemonWarning = msgBase + 2;
 
         PatchSpEffects(g, paramdefs);
         PatchGoods(g, paramdefs);

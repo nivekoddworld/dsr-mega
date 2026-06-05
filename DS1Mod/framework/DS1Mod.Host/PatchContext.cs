@@ -11,15 +11,21 @@ internal sealed class PatchContext : IPatchContext
     private static readonly Dictionary<string, string> _globalEdits = new(StringComparer.OrdinalIgnoreCase);
 
     private string _currentMod = "(unknown)";
+    private readonly IdAllocator _allocator;
 
     public PatchContext(string gameDir, string modsDir)
     {
         GameDir = gameDir;
         ModsDir = modsDir;
+        _allocator = new IdAllocator(gameDir);
     }
 
     /// <summary>Call before each patcher runs so conflict messages name the right mod.</summary>
-    public void SetCurrentMod(string modName) => _currentMod = modName;
+    public void SetCurrentMod(string modName)
+    {
+        _currentMod = modName;
+        _allocator.SetCurrentMod(modName);
+    }
 
     public void BackupFile(string filePath)
     {
@@ -50,4 +56,6 @@ internal sealed class PatchContext : IPatchContext
             _globalEdits[key] = _currentMod;
         }
     }
+
+    public int AllocateIds(string space, int count) => _allocator.AllocateIds(space, count);
 }

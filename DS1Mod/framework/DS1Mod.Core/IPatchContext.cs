@@ -27,4 +27,22 @@ public interface IPatchContext
     /// custom <see cref="IPatchContext"/> implementations don't break.
     /// </summary>
     void RecordEdit(string filePath, string selector) { }
+
+    /// <summary>
+    /// Request a contiguous block of IDs for this mod in the given ID space.
+    /// Returns a guaranteed-unique start ID; subsequent IDs are Start+1, Start+2, etc.
+    /// Allocation is persistent (same mod always gets same IDs across runs) to
+    /// maintain save-game compatibility. Default implementation throws so existing
+    /// custom implementations get early feedback.
+    /// </summary>
+    /// <param name="space">ID space name (e.g. "EquipParamGoods", "EventFlags_m18_01")</param>
+    /// <param name="count">Number of consecutive IDs to allocate (≥1)</param>
+    /// <returns>Start ID for this mod's allocation</returns>
+    int AllocateIds(string space, int count)
+        => throw new NotImplementedException(
+            $"IPatchContext.AllocateIds not implemented. " +
+            $"Upgrade to the host that supports ID allocation.");
+
+    /// <summary>Request a single ID in the given space.</summary>
+    int AllocateId(string space) => AllocateIds(space, 1);
 }

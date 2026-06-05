@@ -32,23 +32,27 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
     private const string EntryLeaf   = "223200_battle.lua";
     private const string ResourceLua = "223200_battle.luac";
 
-    // ── mood broadcast (must match goofy_demon.lua) ──
-    private const int MoodFlagBase  = 11815700;   // AI sets one of these per cycle (section 5 — actually allocated)
-    private const int MoodMsgBase   = 6900700;    // FMG ids for the HUD text
-    private const int MoodEventBase = 11819000;   // new EMEVD watcher events
+    // ── Allocated IDs (assigned at patch time from IPatchContext) ────────────
 
-    // ── fart entrance ──
-    private const int FartMsgId   = 6900690;
+    // Mood broadcast (10 flags + 10 messages + 10 events = 1 & 10 ranges)
+    private int MoodFlagBase;
+    private int MoodMsgBase;
+    private int MoodEventBase;
+
+    // Fart entrance
+    private int FartMsgId;
+
+    // "Demon's Dignity (lost)" trinket
+    private int DignityGoodsId;
+    private int DignityLotId;
+    private int DignityGetFlag;
+    private long DignityEvent;
+
+    // Constants (no allocation needed)
     private const int EntranceEvt = 11810310;
     private const int DemonEntity = 1810800;
     private const int JumpAnim    = 9060;
-
-    // ── "Demon's Dignity (lost)" trinket, dropped when the demon dies ──
-    private const int  DignityGoodsId = 8000;
-    private const int  DignityLotId    = 8500;
-    private const int  DignityGetFlag  = 50009000;   // dedicated "item obtained" range
-    private const int  DemonDeadFlag   = 16;         // Asylum Demon kill flag
-    private const long DignityEvent    = 11819100;
+    private const int DemonDeadFlag = 16;
     private const string DignityName = "Demon's Dignity (lost)";
     private const string DignityDesc = "All that remains of a demon's self-respect.";
     private const string DignityLong = "The dignity of the Asylum Demon, irretrievably lost the day he chose "
@@ -82,7 +86,29 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         _logPath = SafeLog(ctx.ModsDir);
-        var g = new GamePatch(ctx.GameDir, ctx.BackupFile, Log);
+
+        // ════════════════════════════════════════════════════════════════════
+        // API: ID allocation
+        // Request contiguous blocks of IDs to guarantee no conflicts with
+        // other mods. Allocations are persistent (same mod always gets same
+        // IDs) for save-game compatibility.
+        // ════════════════════════════════════════════════════════════════════
+
+        // Mood system: 10 flags + 10 messages + 10 events
+        MoodFlagBase  = ctx.AllocateIds("EventFlags_m18_01", 10);
+        MoodMsgBase   = ctx.AllocateIds("EventText", 10);
+        MoodEventBase = ctx.AllocateIds("EmevdEvents_m18_01", 10);
+
+        // Fart message (1 FMG entry)
+        FartMsgId     = ctx.AllocateId("EventText");
+
+        // Dignity trinket: 1 goods + 1 lot + 1 once-only flag + 1 event
+        DignityGoodsId = ctx.AllocateId("EquipParamGoods");
+        DignityLotId   = ctx.AllocateId("ItemLotParam");
+        DignityGetFlag = ctx.AllocateId("ItemObtainedFlags");
+        DignityEvent   = ctx.AllocateIds("EmevdEvents_m18_01", 1);
+
+        var g = new GamePatch(ctx);
 
         // 1) AI swap — drop our compiled bytecode into the luabnd.
         byte[] lua = ReadEmbedded(ResourceLua);
