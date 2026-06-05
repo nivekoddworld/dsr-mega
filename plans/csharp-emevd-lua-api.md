@@ -4,7 +4,7 @@ Eliminate the need to write raw Lua or raw `new Instruction(bank, id, args)` cal
 Everything a mod author needs — event scripting and AI scripting — should be expressible
 in idiomatic C# with full IntelliSense, type-safety, and no Lua files in the mod project.
 
-**Status: unstarted**  
+**Status: Phase 1 + Phase 2 complete (named instructions + EventBuilder + condition allocator)**  
 **Depends on:** DS1Mod.Modding (Phase 1 is additive to existing `EmevdEditor`)
 
 ---

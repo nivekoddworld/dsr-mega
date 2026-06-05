@@ -126,6 +126,14 @@ public static class Instr
     public static EMEVD.Instruction HandleBossDefeat(int entityId) =>
         new(2003, 12, new List<object> { entityId });
 
+    // ── condition groups ──────────────────────────────────────────────────────
+
+    /// <summary>0:0 — check a sub-condition group into a result group (AND/OR composition).
+    /// <para>resultGroup=0 is MAIN (blocks the event). desired=1 means "wait until true".</para>
+    /// <para>targetGroup positive = AND group, negative = OR group.</para></summary>
+    public static EMEVD.Instruction IfConditionGroup(sbyte resultGroup, byte desired, sbyte targetGroup) =>
+        new(0, 0, new List<object> { resultGroup, desired, targetGroup });
+
     // ── sfx / sound ───────────────────────────────────────────────────────────
 
     /// <summary>2006:3 — spawn a one-shot SFX at an entity's dummypoly.</summary>
@@ -165,6 +173,50 @@ public static class Instr
     }
 }
 
+// ── SubConditionBuilder ───────────────────────────────────────────────────────
+
+/// <summary>
+/// Builder for one AND or OR condition group, used inside
+/// <see cref="EventBuilder.WhenAllOf"/> / <see cref="EventBuilder.WhenAnyOf"/>.
+/// Conditions written here are assigned to the allocated sub-group rather than MAIN.
+/// </summary>
+public sealed class SubConditionBuilder
+{
+    private readonly List<EMEVD.Instruction> _parent;
+    private readonly sbyte _group;
+
+    internal SubConditionBuilder(List<EMEVD.Instruction> parent, sbyte group)
+    {
+        _parent = parent;
+        _group  = group;
+    }
+
+    public SubConditionBuilder Flag(int flagId, FlagState state)
+    { _parent.Add(Instr.IfEventFlag(state, flagId, _group)); return this; }
+
+    public SubConditionBuilder Dead(int entityId)
+    { _parent.Add(Instr.IfCharacterDeadAlive(LifeState.Dead, entityId, _group)); return this; }
+
+    public SubConditionBuilder Alive(int entityId)
+    { _parent.Add(Instr.IfCharacterDeadAlive(LifeState.Alive, entityId, _group)); return this; }
+
+    public SubConditionBuilder HpBelow(int entityId, float ratio)
+    { _parent.Add(Instr.IfHpRatio(entityId, compType: 0, ratio, _group)); return this; }
+
+    public SubConditionBuilder InsideArea(int entityId, int areaEntityId)
+    { _parent.Add(Instr.IfInsideArea(entityId, areaEntityId, desired: 1, _group)); return this; }
+
+    public SubConditionBuilder OutsideArea(int entityId, int areaEntityId)
+    { _parent.Add(Instr.IfInsideArea(entityId, areaEntityId, desired: 0, _group)); return this; }
+
+    public SubConditionBuilder HasItem(int itemType, int itemId)
+    { _parent.Add(Instr.IfPlayerHasItem(itemType, itemId, desired: 1, _group)); return this; }
+
+    /// <summary>Append any sub-condition by bank/id/args directly.</summary>
+    public SubConditionBuilder Raw(int bank, int id, params object[] args)
+    { _parent.Add(Instr.Raw(bank, id, args)); return this; }
+}
+
 // ── EventBuilder ──────────────────────────────────────────────────────────────
 
 /// <summary>
@@ -183,6 +235,8 @@ public static class Instr
 public sealed class EventBuilder
 {
     private readonly List<EMEVD.Instruction> _instrs = new();
+    private int _nextAndGroup = 1;   // AND groups: 1–7
+    private int _nextOrGroup  = -1;  // OR  groups: -1 to -7
 
     internal IEnumerable<EMEVD.Instruction> Build() => _instrs;
 
@@ -252,6 +306,39 @@ public sealed class EventBuilder
     public EventBuilder WhenOutsideArea(int entityId, int areaEntityId)
     {
         _instrs.Add(Instr.IfInsideArea(entityId, areaEntityId, desired: 0));
+        return this;
+    }
+
+    /// <summary>
+    /// Block until ALL of the supplied sub-conditions are true simultaneously (AND group).
+    /// <para>Example: wait until a flag is on AND a boss is dead:</para>
+    /// <code>
+    /// ev.WhenAllOf(and => and.Flag(16, FlagState.On).Dead(1010800))
+    /// </code>
+    /// DS1 supports up to 7 AND groups per event. Each call to <c>WhenAllOf</c>
+    /// allocates one; don't nest more than 7 in a single event.
+    /// </summary>
+    public EventBuilder WhenAllOf(Action<SubConditionBuilder> conds)
+    {
+        sbyte group = (sbyte)_nextAndGroup++;
+        conds(new SubConditionBuilder(_instrs, group));
+        _instrs.Add(Instr.IfConditionGroup(resultGroup: 0, desired: 1, targetGroup: group));
+        return this;
+    }
+
+    /// <summary>
+    /// Block until ANY of the supplied sub-conditions is true (OR group).
+    /// <para>Example: wait until either a flag is on OR the boss is dead:</para>
+    /// <code>
+    /// ev.WhenAnyOf(or => or.Flag(16, FlagState.On).Dead(1010800))
+    /// </code>
+    /// DS1 supports up to 7 OR groups per event.
+    /// </summary>
+    public EventBuilder WhenAnyOf(Action<SubConditionBuilder> conds)
+    {
+        sbyte group = (sbyte)_nextOrGroup--;
+        conds(new SubConditionBuilder(_instrs, group));
+        _instrs.Add(Instr.IfConditionGroup(resultGroup: 0, desired: 1, targetGroup: group));
         return this;
     }
 
