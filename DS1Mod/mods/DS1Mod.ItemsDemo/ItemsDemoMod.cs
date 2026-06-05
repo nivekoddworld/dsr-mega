@@ -435,52 +435,72 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
     private static void PatchAi(GamePatch g)
     {
         // ════════════════════════════════════════════════════════════════════
-        // API: EditAi / AiBuilder — Goal, Act (weighted), OnInterrupt, Helper
+        // API: EditAi / AiBuilder — Goal, OnActivate (deterministic), Helper,
+        //      OnInterrupt
         //      SubGoalQueue: ApproachTarget, Attack, SpinStep, Wait,
-        //                    SidewayMove, LeaveTarget, WaitRandom,
-        //                    SetEventFlag, SetActiveFlagInRange, Raw
+        //                    SidewayMove, LeaveTarget, WaitRandom, Raw
         //
-        // Give the Asylum Demon a 2-act weighted battle AI:
-        //   Act 1 (70 %): approach + slam attack
-        //   Act 2 (30 %): spin-step + sideways dodge + leave + wait
+        // Replace 223200_battle.lua (the Asylum Demon's entire battle AI)
+        // with a small state machine:
         //
-        // A Helper function ClearMoods is defined and called from each act to
-        // keep a pair of mood flags consistent. SetActiveFlagInRange clears the
-        // range and lights exactly one flag.
+        //   1. Player not in the arena (region 1812990) — wait, no acts.
+        //      Without this gate the AI would tick every few seconds even
+        //      while the player is in the starting cell, setting mood
+        //      flags and trying to ApproachTarget a phantom Enemy0.
+        //
+        //   2. First tick with player in the arena — play the wake-up
+        //      animation (NonspinningAttack 3020). Vanilla 223200_battle.lua
+        //      relied on this animation to transition the demon out of his
+        //      dormant pose; without it he stays frozen and invulnerable
+        //      and his HP never drops, so WhenAllOf(HpBelow 0.5) never
+        //      fires. ai:GetNumber/SetNumber stores the "already woken"
+        //      bit across Activate cycles.
+        //
+        //   3. Normal combat — weighted 70/30 pick between a slam act and
+        //      an evasion act. Each branch updates the mood flag pair
+        //      (one flag set, the other cleared) so the in-game checklist
+        //      and any C# code watching those flags sees the current act.
+        //
+        // Mixing AiBuilder's typed SubGoal helpers (ApproachTarget /
+        // Attack / SpinStep / SidewayMove / LeaveTarget / WaitRandom /
+        // Wait) with Raw() lines for the Lua control flow keeps the
+        // bodies readable while still expressing real conditional logic.
         //
         // NOTE: This patches 223200_battle.lua in m18_01_00_00.luabnd.dcx.
-        // GoofyDemon writes the same entry. Running both mods will produce a
-        // conflict warning in the host log — this is intentional, to demonstrate
-        // that the conflict detection system catches the overlap.
+        // GoofyDemon writes the same entry; loading both mods produces a
+        // conflict warning, intentionally, to demonstrate the cross-mod
+        // conflict detector.
         // ════════════════════════════════════════════════════════════════════
         g.EditAi(Map, NpcFileId, ai => ai
             .Goal("Battle", goal => goal
+                .OnActivate(q => q
+                    // ── (1) Player not in the arena — idle until they arrive ──
+                    .Raw("if not ai:IsInsideTargetRegion(TARGET_ENE_0, 1812990) then")
+                    .Wait(cancelTime: 2)
+                    .Raw("    return")
+                    .Raw("end")
 
-                // ── Helper ────────────────────────────────────────────────
-                // A named Lua helper emitted before the goal functions.
-                // Called from each act to synchronise the AI mood flags.
-                .Helper("ClearMoods",
-                    "for _i = 0, 1 do\n" +
-                    "    ai:SetEventFlag(" + FlagAiMood0 + " + _i, false)\n" +
-                    "end")
+                    // ── (2) Wake-up — first activation after entering arena ──
+                    .Raw("if ai:GetNumber(0) == 0 then")
+                    .Raw("    ai:SetNumber(0, 1)")
+                    .Raw("    goal:AddSubGoal(GOAL_COMMON_NonspinningAttack, 10, 3020, TARGET_ENE_0, DIST_Middle)")
+                    .Raw("    return")
+                    .Raw("end")
 
-                // ── Act 1 (70 %): approach and slam ───────────────────────
-                .Act(70, q => q
-                    .Raw("ClearMoods(ai, goal)")             // call the helper
-                    .SetActiveFlagInRange(FlagAiMood0, 2, 0) // mood=0 (stomp)
+                    // ── (3) Normal combat — weighted random act + mood flag ──
+                    .Raw("for _i = 0, 1 do ai:SetEventFlag(" + FlagAiMood0 + " + _i, false) end")
+                    .Raw("if ai:GetRandam_Int(1, 100) <= 70 then")
+                    .Raw("    ai:SetEventFlag(" + FlagAiMood0 + ", true)") // mood 0 = stomp
                     .ApproachTarget(Target.Enemy0, Dist.Middle, cancelTime: 12)
-                    .Attack(animId: 3008, cancelTime: 8)     // overhead slam
-                    .Wait(cancelTime: 2))
-
-                // ── Act 2 (30 %): spin-step + sidestep + leave + rest ─────
-                .Act(30, q => q
-                    .Raw("ClearMoods(ai, goal)")
-                    .SetActiveFlagInRange(FlagAiMood0, 2, 1) // mood=1 (spin)
+                    .Attack(animId: 3008, cancelTime: 8)                   // overhead slam
+                    .Wait(cancelTime: 2)
+                    .Raw("else")
+                    .Raw("    ai:SetEventFlag(" + FlagAiMood1 + ", true)") // mood 1 = spin+leave
                     .SpinStep(cancelTime: 5)
                     .SidewayMove(Target.Enemy0, direction: 0, cancelTime: 3)
                     .LeaveTarget(Target.Enemy0, Dist.Far, cancelTime: 8)
                     .WaitRandom(minTime: 1.0f, maxTime: 3.0f)
-                    .SetEventFlag(FlagAiMood0, on: false))
+                    .Raw("end"))
 
                 // ── OnInterrupt: always allow pre-emption ─────────────────
                 .OnInterrupt(_ => true)),
