@@ -92,6 +92,8 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
     private int TrinketEntityId;
     private int MsgDraughtUsed;
     private int MsgTrinketFound;
+    private int FlagMidFightReward;
+    private int FlagDemoNeverFires;
 
     // World position — ledge near Asylum start
     private static readonly Vector3 TrinketPos = new(-13.744f, 190.249f, 11.696f);
@@ -151,12 +153,14 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
 
         DraughtSpEffect = ctx.AllocateId(IdSpaces.SpEffectParam);
 
-        // Event flags (Asylum): 5 flags for item/AI logic
-        DraughtUseFlag  = ctx.AllocateIds(IdSpaces.EventFlags(Map), 5);
+        // Event flags (Asylum): 7 flags for item/AI logic + demo flags
+        DraughtUseFlag  = ctx.AllocateIds(IdSpaces.EventFlags(Map), 7);
         TrinketGetFlag  = DraughtUseFlag + 1;
         FlagUsedDraught = DraughtUseFlag + 2;
         FlagAiMood0     = DraughtUseFlag + 3;
         FlagAiMood1     = DraughtUseFlag + 4;
+        FlagMidFightReward = DraughtUseFlag + 5;
+        FlagDemoNeverFires = DraughtUseFlag + 6;
 
         // EMEVD events (Asylum): 7 events
         EvtItemTrigger  = ctx.AllocateIds(IdSpaces.EmevdEvents(Map), 7);
@@ -370,7 +374,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
                 .WhenHpBelow(DemonEntity, 0.5f)   // block until demon HP < 50%
                 .AwardItemLot(DraughtLotId)        // award 3x Goofy Draught
                 .DisplayStatusMessage(MsgTrinketFound)
-                .SetFlag(11819410, FlagState.On)   // "mid-fight reward given" flag
+                .SetFlag(FlagMidFightReward, FlagState.On)
                 .End());
 
             // ════════════════════════════════════════════════════════════════
@@ -425,7 +429,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
             // mod controls itself (e.g. set on a custom item use).
             // ════════════════════════════════════════════════════════════════
             emevd.DefineEvent(EvtDemonControl, EMEVD.Event.RestBehaviorType.Default, ev => ev
-                .WhenFlag(11815998, FlagState.On)        // section-5 flag we never set — truly never fires
+                .WhenFlag(FlagDemoNeverFires, FlagState.On)        // allocated flag we never set — truly never fires
                 .SetCharacterEnabled(DemonEntity, EnabledState.Enabled)
                 .SetCharacterAI(DemonEntity, EnabledState.Enabled)
                 .SetCharacterHome(DemonEntity, regionEntityId: 1810100)
@@ -574,7 +578,7 @@ public sealed class ItemsDemoMod : ModBase, IGamePatcher, IGuiMod
 
         // Poll runtime checklist items via event flags each tick.
         if (!_rtTrinketCollected) _rtTrinketCollected = r.GetEventFlag(TrinketGetFlag);
-        if (!_rtMidFightReward)   _rtMidFightReward   = r.GetEventFlag(11819410);
+        if (!_rtMidFightReward)   _rtMidFightReward   = r.GetEventFlag(FlagMidFightReward);
         if (!_rtBossDead)         _rtBossDead         = r.GetEventFlag(DemonDeadFlag);
         if (!_rtAiMood0)          _rtAiMood0          = r.GetEventFlag(FlagAiMood0);
         if (!_rtAiMood1)          _rtAiMood1          = r.GetEventFlag(FlagAiMood1);
