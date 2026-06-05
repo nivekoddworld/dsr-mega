@@ -118,11 +118,12 @@ for %%F in (!FILES_TO_REMOVE!) do (
     )
 )
 
-:: Remove tools folder (if empty)
+:: Remove tools folder and all contents
 if exist "!DSR_DIR!\tools" (
-    rd "!DSR_DIR!\tools" >nul 2>&1
+    rd /s /q "!DSR_DIR!\tools" >nul 2>&1
     if errorlevel 1 (
-        echo [WARN] Could not remove tools\ folder (may not be empty)
+        echo [FAIL] Could not remove tools\ folder
+        set /a ERRORS+=1
     ) else (
         echo [OK] Removed tools\ folder
     )
