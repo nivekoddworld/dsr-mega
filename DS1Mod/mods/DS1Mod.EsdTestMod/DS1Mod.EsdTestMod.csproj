@@ -6,6 +6,8 @@
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<!-- Copy NuGet dependencies to output (needed for ImGui.NET) -->
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
 
 	<ItemGroup>

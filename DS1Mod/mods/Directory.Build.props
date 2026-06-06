@@ -14,6 +14,8 @@
 		<Copy SourceFiles="$(OutDir)DS1Mod.Modding.dll" DestinationFolder="$(GameModsDirectory)" />
 		<Copy SourceFiles="$(OutDir)DS1Mod.Core.dll" DestinationFolder="$(GameModsDirectory)" />
 		<Copy SourceFiles="$(OutDir)DS1Mod.SDK.dll" DestinationFolder="$(GameModsDirectory)" />
+		<!-- Copy ImGui.NET if present (only needed by some mods) -->
+		<Copy SourceFiles="$(OutDir)ImGui.NET.dll" DestinationFolder="$(GameModsDirectory)" Condition="Exists('$(OutDir)ImGui.NET.dll')" />
 		<Message Text="✓ Done" Importance="high" />
 	</Target>
 
