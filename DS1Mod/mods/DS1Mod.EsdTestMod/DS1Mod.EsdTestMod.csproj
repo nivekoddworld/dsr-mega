@@ -6,21 +6,12 @@
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<!-- Copy NuGet dependencies to output (needed for ImGui.NET) -->
-		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="../../framework/DS1Mod.SDK/DS1Mod.SDK.csproj" />
 		<ProjectReference Include="../../framework/DS1Mod.Core/DS1Mod.Core.csproj" />
 		<ProjectReference Include="../../framework/DS1Mod.Modding/DS1Mod.Modding.csproj" />
-	</ItemGroup>
-
-	<!-- Note: ImGui.NET is needed here for advanced ImGui features (TextColored, Button, Tables, etc.)
-	     that aren't exposed by the minimal DS1ImGui wrapper. Other mods avoid this by using only
-	     the basic DS1ImGui methods (Text, Begin, End, SetNextWindow*, Separator). -->
-	<ItemGroup>
-		<PackageReference Include="ImGui.NET" Version="1.89.9.1" />
 	</ItemGroup>
 
 </Project>

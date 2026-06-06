@@ -6,7 +6,7 @@
 		<GameModsDirectory>$(GameDirectory)\mods</GameModsDirectory>
 	</PropertyGroup>
 
-	<!-- Copy mod DLL and dependencies to game mods folder after Release build -->
+	<!-- Copy mod DLL and framework dependencies to game mods folder after Release build -->
 	<Target Name="CopyModToGame" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
 		<Message Text="Copying $(TargetFileName) to game mods directory..." Importance="high" />
 		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameModsDirectory)" />
@@ -14,10 +14,6 @@
 		<Copy SourceFiles="$(OutDir)DS1Mod.Modding.dll" DestinationFolder="$(GameModsDirectory)" />
 		<Copy SourceFiles="$(OutDir)DS1Mod.Core.dll" DestinationFolder="$(GameModsDirectory)" />
 		<Copy SourceFiles="$(OutDir)DS1Mod.SDK.dll" DestinationFolder="$(GameModsDirectory)" />
-		<!-- Copy ImGui.NET if present (only needed by some mods) -->
-		<Copy SourceFiles="$(OutDir)ImGui.NET.dll" DestinationFolder="$(GameModsDirectory)" Condition="Exists('$(OutDir)ImGui.NET.dll')" />
-		<!-- Copy native cimgui DLL for ImGui.NET (x64 platform) -->
-		<Copy SourceFiles="$(OutDir)runtimes\win-x64\native\cimgui.dll" DestinationFolder="$(GameModsDirectory)" Condition="Exists('$(OutDir)runtimes\win-x64\native\cimgui.dll')" />
 		<Message Text="✓ Done" Importance="high" />
 	</Target>
 
