@@ -1,0 +1,20 @@
+<Project>
+
+	<!-- Game directory for mod deployment -->
+	<PropertyGroup>
+		<GameDirectory>Z:\SteamLibrary\steamapps\common\DARK SOULS REMASTERED</GameDirectory>
+		<GameModsDirectory>$(GameDirectory)\mods</GameModsDirectory>
+	</PropertyGroup>
+
+	<!-- Copy mod DLL and dependencies to game mods folder after Release build -->
+	<Target Name="CopyModToGame" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+		<Message Text="Copying $(TargetFileName) to game mods directory..." Importance="high" />
+		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameModsDirectory)" />
+		<Copy SourceFiles="$(OutDir)SoulsFormats.dll" DestinationFolder="$(GameModsDirectory)" />
+		<Copy SourceFiles="$(OutDir)DS1Mod.Modding.dll" DestinationFolder="$(GameModsDirectory)" />
+		<Copy SourceFiles="$(OutDir)DS1Mod.Core.dll" DestinationFolder="$(GameModsDirectory)" />
+		<Copy SourceFiles="$(OutDir)DS1Mod.SDK.dll" DestinationFolder="$(GameModsDirectory)" />
+		<Message Text="✓ Done" Importance="high" />
+	</Target>
+
+</Project>
