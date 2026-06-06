@@ -623,16 +623,23 @@ public sealed class GamePatch
     /// their Patch() phase; the framework accumulates changes and writes the result
     /// to disk before the game starts.
     ///
+    /// When the player selects this item, the game will transition to a state that
+    /// sets <paramref name="gateFlag"/> (or a mod-assigned flag). Mods can then listen
+    /// for this flag in EMEVD to trigger behavior (give items, warp, spawn effects, etc).
+    /// See reference/SoulsModding_Advanced_ESD_Tutorial.md for the complete pattern.
+    ///
     /// Menu item visibility is gated by <paramref name="gateFlag"/>: pass -1 to
     /// always show, or a flag ID to make it conditional.
     /// <code>
-    /// // Add a "Fast Travel" option visible only after flag 11815700 is set:
-    /// g.AddBonfireMenuItem(talkId: 15001200, gateFlag: 11815700);
+    /// int itemTriggerFlag = patchCtx.AllocateId("BonfireItems");
+    /// g.AddBonfireMenuItem(talkId: 15001200, gateFlag: -1);
+    /// // In EMEVD: listen for itemTriggerFlag, then give item/warp/execute behavior
     /// </code>
     /// </summary>
     /// <remarks>
     /// The bonfire ESD has a fixed state machine (group 1, state 4). This helper
     /// automatically allocates menu slot indices, starting after vanilla items (slot 5+).
+    /// When user selects the item, a transition occurs that can set a flag for EMEVD.
     /// </remarks>
     public bool AddBonfireMenuItem(int talkId, int gateFlag = -1)
     {
@@ -662,6 +669,10 @@ public sealed class GamePatch
     ///     talkId: 15001200);
     /// </code>
     /// </summary>
+    /// <remarks>
+    /// Like AddBonfireMenuItem, this sets up a menu item that can trigger EMEVD
+    /// behavior when selected. The condition controls when the menu item is visible.
+    /// </remarks>
     public bool AddBonfireMenuItemIf(byte[] condition, int talkId)
     {
         var esdObj = _ctx?.GetBonfireEsd();

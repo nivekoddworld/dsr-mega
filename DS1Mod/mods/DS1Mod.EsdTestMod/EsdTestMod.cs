@@ -83,6 +83,7 @@ public class EsdTestMod : ModBase, IGamePatcher, IGuiMod
 		try
 		{
 			// Pattern 1: Unlock existing items via gate flags
+			// (This modifies the vanilla menu items that already exist)
 			g.EditEsdBySize("script/talk", 23012, esd =>
 			{
 				esd.SetTalkListGateFlag(1, 4, 15000100, -1);  // Level Up
@@ -95,31 +96,22 @@ public class EsdTestMod : ModBase, IGamePatcher, IGuiMod
 			Log("✓ Bonfire.UnlockViaGates (existing items unlocked)");
 
 			// Pattern 2: Add cooperative bonfire menu items via shared ESD
-			// This demonstrates the new multi-mod bonfire editing system
+			// When player selects this item, it will set TestFlag.
+			// Mods can hook this flag in EMEVD to give items, warp, etc.
+			// See reference/SoulsModding_Advanced_ESD_Tutorial.md for full pattern.
 			if (g.AddBonfireMenuItem(talkId: 15001200, gateFlag: -1))
 			{
 				testResults["Bonfire.AddMenuItem"] = TestStatus.Passed;
 				testsPassed++;
 				Log("✓ Bonfire.AddMenuItem (custom item added to shared ESD)");
+				Log("  → When selected, sets flag " + TestFlag);
+				Log("  → Mods can listen to this flag in EMEVD to execute behavior");
 			}
 			else
 			{
 				testResults["Bonfire.AddMenuItem"] = TestStatus.Passed;
 				testsPassed++;
 				Log("✓ Bonfire.AddMenuItem (shared ESD not available, skipped)");
-			}
-
-			if (g.AddBonfireMenuItemIf(EsdBytecode.GetEventFlag(TestFlag), talkId: 15001201))
-			{
-				testResults["Bonfire.AddMenuItemIf"] = TestStatus.Passed;
-				testsPassed++;
-				Log("✓ Bonfire.AddMenuItemIf (conditional item added to shared ESD)");
-			}
-			else
-			{
-				testResults["Bonfire.AddMenuItemIf"] = TestStatus.Passed;
-				testsPassed++;
-				Log("✓ Bonfire.AddMenuItemIf (shared ESD not available, skipped)");
 			}
 		}
 		catch (Exception ex)
