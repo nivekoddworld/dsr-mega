@@ -43,7 +43,6 @@ public class EsdTestMod : ModBase, IGamePatcher, IGuiMod
 
 			// Real gameplay changes
 			PatchBonfireUI(g);
-			PatchActionESD(g);
 			TestTalkEsdBatching(g);
 
 			Log($"✓ All tests completed: {testsPassed} passed, {testsFailed} failed");
@@ -105,45 +104,7 @@ public class EsdTestMod : ModBase, IGamePatcher, IGuiMod
 		}
 	}
 
-	private void PatchActionESD(GamePatch g)
-	{
-		Log("Patching Action ESD with test changes...");
-
-		try
-		{
-			// Prevent backstabs while stunned (Fn3 = stun check)
-			g.EditActionEsd("c0000", esd =>
-			{
-				esd.InsertTransition(0, 0, 0,
-					ActionEsdBytecode.Not(ActionEsdBytecode.Fn3()),
-					index: 0);
-			});
-
-			testResults["ActionESD.PreventBackstabWhileStunned"] = TestStatus.Passed;
-			testsPassed++;
-			Log("✓ ActionESD.PreventBackstabWhileStunned");
-
-			// Prevent rolling while stunned (state 5 = roll state)
-			g.EditActionEsd("c0000", esd =>
-			{
-				esd.InsertTransition(0, 5, 0,
-					ActionEsdBytecode.Not(ActionEsdBytecode.Fn3()),
-					index: 0);
-			});
-
-			testResults["ActionESD.PreventRollWhileStunned"] = TestStatus.Passed;
-			testsPassed++;
-			Log("✓ ActionESD.PreventRollWhileStunned");
-		}
-		catch (Exception ex)
-		{
-			Log($"✗ Action ESD patching failed: {ex}");
-			testResults["ActionESD.Patching"] = TestStatus.Failed;
-			testsFailed++;
-		}
-	}
-
-	public void OnGui()
+public void OnGui()
 	{
 		DS1ImGui.SetNextWindowPos(20, 300, ImGuiCond.FirstUseEver);
 		DS1ImGui.SetNextWindowSize(450, 200, ImGuiCond.FirstUseEver);
@@ -164,7 +125,6 @@ public class EsdTestMod : ModBase, IGamePatcher, IGuiMod
 			DS1ImGui.Text("Gameplay Changes:");
 			DS1ImGui.Text("  ✓ Bonfire UI unlocked");
 			DS1ImGui.Text("  ✓ Custom menu items added");
-			DS1ImGui.Text("  ✓ Action ESD patched");
 
 			DS1ImGui.Separator();
 			DisplayGameplayState();
