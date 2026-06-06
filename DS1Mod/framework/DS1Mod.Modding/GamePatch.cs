@@ -107,6 +107,141 @@ public sealed class GamePatch
     }
 
     /// <summary>
+    /// Edit a named ESD state machine inside a <c>.esdbnd.dcx</c> archive.
+    ///
+    /// DSR talk scripts live at <c>script/talk/t{id}.talkesdbnd.dcx</c>.
+    /// Each archive contains one or more <c>.esd</c> files identified by name.
+    ///
+    /// <code>
+    /// g.EditEsd("script/talk/t200000.talkesdbnd.dcx", "200000.esd", esd =>
+    /// {
+    ///     esd.AddTransition(groupId: 7, fromState: 1, toState: 10,
+    ///         evaluator: EsdBytecode.Always());
+    /// });
+    /// </code>
+    /// </summary>
+    /// <param name="relPath">Path to the <c>.esdbnd.dcx</c> relative to the game directory.</param>
+    /// <param name="esdName">
+    /// Name of the <c>.esd</c> file inside the archive (case-insensitive suffix match, e.g.
+    /// <c>"200000.esd"</c>). Pass <c>null</c> to edit the first file in the bundle.
+    /// </param>
+    /// <param name="edit">Callback that receives an <see cref="EsdEditor"/> wrapping the parsed ESD.</param>
+    public bool EditEsd(string relPath, string? esdName, Action<EsdEditor> edit)
+    {
+        string path = Resolve(relPath);
+        if (!File.Exists(path)) { Log($"esd not found: {relPath}"); return false; }
+        _backup(path);
+        Record(path, $"ESD:{relPath}:{esdName ?? "*"}");
+
+        byte[] dec = DCX.Decompress(path, out DCX.Type type);
+        BND3 bnd = BND3.Read(dec);
+
+        BinderFile? file = esdName is null
+            ? bnd.Files.FirstOrDefault()
+            : bnd.Files.FirstOrDefault(f =>
+                f.Name.EndsWith(esdName, StringComparison.OrdinalIgnoreCase));
+
+        if (file is null)
+        {
+            Log($"esd entry '{esdName}' not found in {relPath}");
+            return false;
+        }
+
+        ESD esd = ESD.Read(file.Bytes);
+        edit(new EsdEditor(esd));
+        file.Bytes = esd.Write();
+
+        File.WriteAllBytes(path, DCX.Compress(bnd.Write(), type));
+        return true;
+    }
+
+    /// <summary>
+    /// Edit a player or enemy action ESD file: <c>chr/c0000.esd.dcx</c> (player)
+    /// or <c>chr/enemyCommon.esd.dcx</c> (all enemies).
+    ///
+    /// Action ESD controls all in-game animations and state transitions: idle, attack,
+    /// dodge, fall, sit at bonfire, cast spell, etc. Each state's conditions check
+    /// for input (attack button held, roll requested), timing (animation duration),
+    /// and world state (stamina, airborne, stunned) to decide the next action.
+    ///
+    /// <code>
+    /// // Make the player unable to attack while stunned:
+    /// g.EditActionEsd("c0000", esd =>
+    /// {
+    ///     var idleState = esd.GetOrAddState(groupId: 0, stateId: 0);
+    ///     idleState.Conditions.Insert(0, new ESD.Condition(0,
+    ///         ActionEsdBytecode.IsStunned()));
+    /// });
+    /// </code>
+    /// </summary>
+    /// <param name="esd">
+    /// Base filename without extension: <c>"c0000"</c> for player,
+    /// <c>"enemyCommon"</c> for all enemies. The method resolves to
+    /// <c>chr/{esd}.esd.dcx</c> automatically.
+    /// </param>
+    /// <param name="edit">Callback that receives an <see cref="ActionEsdEditor"/> wrapping the parsed ESD.</param>
+    public bool EditActionEsd(string esd, Action<ActionEsdEditor> edit)
+    {
+        string relPath = $"chr/{esd}.esd.dcx";
+        string path = Resolve(relPath);
+        if (!File.Exists(path)) { Log($"action esd not found: {relPath}"); return false; }
+        _backup(path);
+        Record(path, $"ActionESD:{relPath}");
+
+        byte[] dec = DCX.Decompress(path, out DCX.Type type);
+        ESD esdObj = ESD.Read(dec);
+        edit(new ActionEsdEditor(esdObj));
+        File.WriteAllBytes(path, DCX.Compress(esdObj.Write(), type));
+        return true;
+    }
+
+    /// <summary>
+    /// Edit every <c>.esd</c> entry whose raw byte length equals
+    /// <paramref name="vanillaSize"/> across all <c>.esdbnd.dcx</c> files found
+    /// recursively under <paramref name="relDir"/>.
+    /// Returns the number of ESD entries edited.
+    ///
+    /// This is the programmatic equivalent of the DS1 Mega Randomizer's bonfire
+    /// ESD patching, which detects all bonfire ESDs by their vanilla size (23012)
+    /// and applies uniform changes:
+    /// <code>
+    /// // Remove the event-flag gate from "Level Up" in every bonfire ESD:
+    /// g.EditEsdBySize("script/talk", vanillaSize: 23012, esd =>
+    ///     esd.SetTalkListGateFlag(groupId: 1, stateId: 4, talkId: 15000100, newGateFlag: -1));
+    /// </code>
+    /// </summary>
+    public int EditEsdBySize(string relDir, int vanillaSize, Action<EsdEditor> edit)
+    {
+        string dir = Resolve(relDir);
+        if (!Directory.Exists(dir)) { Log($"not found: {relDir}"); return 0; }
+
+        int count = 0;
+        foreach (string path in Directory.GetFiles(dir, "*.esdbnd.dcx", SearchOption.AllDirectories))
+        {
+            byte[] dec = DCX.Decompress(path, out DCX.Type type);
+            BND3 bnd = BND3.Read(dec);
+
+            bool changed = false;
+            foreach (BinderFile file in bnd.Files)
+            {
+                if (file.Bytes.Length != vanillaSize) continue;
+
+                _backup(path);
+                Record(path, $"ESD:{Path.GetRelativePath(GameDir, path)}:{Path.GetFileName(file.Name)}");
+                ESD esd = ESD.Read(file.Bytes);
+                edit(new EsdEditor(esd));
+                file.Bytes = esd.Write();
+                changed = true;
+                count++;
+            }
+
+            if (changed)
+                File.WriteAllBytes(path, DCX.Compress(bnd.Write(), type));
+        }
+        return count;
+    }
+
+    /// <summary>
     /// Compile and inject an NPC AI script using the <see cref="AiBuilder"/> C# DSL.
     /// <para>The builder emits Lua 5.0 source, compiles it with <see cref="Luac50"/>,
     /// and injects the bytecode into <c>script/&lt;mapId&gt;.luabnd.dcx</c>.</para>
