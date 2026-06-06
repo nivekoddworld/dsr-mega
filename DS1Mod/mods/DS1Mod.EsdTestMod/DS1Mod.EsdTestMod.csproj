@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<PlatformTarget>x64</PlatformTarget>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="ImGui.NET" Version="1.89.9.1" />
+		<ProjectReference Include="../../framework/DS1Mod.SDK/DS1Mod.SDK.csproj" />
+		<ProjectReference Include="../../framework/DS1Mod.Core/DS1Mod.Core.csproj" />
+		<ProjectReference Include="../../framework/DS1Mod.Modding/DS1Mod.Modding.csproj" />
+	</ItemGroup>
+
+</Project>

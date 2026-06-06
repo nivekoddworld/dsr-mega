@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Solution FileFormatVersion="1.00">
+	<Project Path="DS1Mod.AsylumSlam\DS1Mod.AsylumSlam.csproj" />
+	<Project Path="DS1Mod.ChaosMod\DS1Mod.ChaosMod.csproj" />
+	<Project Path="DS1Mod.DemoMod\DS1Mod.DemoMod.csproj" />
+	<Project Path="DS1Mod.DiscordRPC\DS1Mod.DiscordRPC.csproj" />
+	<Project Path="DS1Mod.EsdTestMod\DS1Mod.EsdTestMod.csproj" />
+	<Project Path="DS1Mod.FogLogger\DS1Mod.FogLogger.csproj" />
+	<Project Path="DS1Mod.GoofyDemon\DS1Mod.GoofyDemon.csproj" />
+	<Project Path="DS1Mod.HpLogger\DS1Mod.HpLogger.csproj" />
+	<Project Path="DS1Mod.ImGuiDemo\DS1Mod.ImGuiDemo.csproj" />
+	<Project Path="DS1Mod.ItemsDemo\DS1Mod.ItemsDemo.csproj" />
+</Solution>
