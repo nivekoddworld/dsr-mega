@@ -31,15 +31,9 @@ public sealed class EventPump : IDisposable
                 // fault. Skip the whole cycle until the world is actually loaded.
                 bool inGame = GameState.IsInGame();
 
-                // Diagnostics: surface the pointer chain so we can see whether
-                // IsInGame() is gated correctly (offsets/reads vs. genuine menu).
+                // Diagnostics: surface the pointer chain on state change only
                 if (inGame && !wasInGame)
-                    Console.WriteLine($"[EventPump] In-game — polling started. {GameState.Describe()}");
-                else if (!inGame && diagLogged < maxDiag && cycle % 6 == 0)
-                {
-                    Console.WriteLine($"[EventPump] Not in-game (polling paused). {GameState.Describe()}");
-                    diagLogged++;
-                }
+                    Console.WriteLine($"[EventPump] In-game — polling started.");
                 wasInGame = inGame;
 
                 if (inGame)

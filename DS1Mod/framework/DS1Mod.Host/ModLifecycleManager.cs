@@ -27,6 +27,9 @@ internal sealed class ModLifecycleManager : IDisposable
 
     public void LoadMods(string gameDir, string modsDir)
     {
+        // Set console to UTF-8 to properly display em dashes and other Unicode characters
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+
         Console.WriteLine($"[DS1Mod.Host] Game dir: {gameDir}");
         Console.WriteLine($"[DS1Mod.Host] Mods dir: {modsDir}");
 
