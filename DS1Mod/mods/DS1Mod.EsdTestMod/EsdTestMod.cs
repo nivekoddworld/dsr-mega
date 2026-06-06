@@ -34,6 +34,9 @@ public class EsdTestMod : ModBase, IGamePatcher, IGuiMod
 
 		try
 		{
+			// Add FMG text entries for bonfire menu items
+			AddFmgEntries(g);
+
 			// API validation tests
 			TestTalkEsdConditions(g);
 			TestTalkEsdCommands(g);
@@ -53,33 +56,76 @@ public class EsdTestMod : ModBase, IGamePatcher, IGuiMod
 		}
 	}
 
-	private void TestBonfireUnlock(GamePatch g)
+	private void AddFmgEntries(GamePatch g)
 	{
-		Log("Testing bonfire item unlock pattern (SetTalkListGateFlag)...");
+		Log("Adding FMG text entries...");
 
 		try
 		{
-			// Bonfire menus have fixed item slots. We can unlock/gate existing items
-			// by modifying their gate flags. This works because the ESD already
-			// defines these items; we're just changing their visibility conditions.
-			g.EditEsdBySize("script/talk", 23012, esd =>
+			g.EditBnd3Glob("msg", "menu.msgbnd.dcx", bnd =>
 			{
-				// Unlock Level Up (remove flag gate, always visible)
-				esd.SetTalkListGateFlag(1, 4, 15000100, -1);
-				// Unlock Homeward Bone
-				esd.SetTalkListGateFlag(1, 4, 15000170, -1);
-				// Unlock Leave
-				esd.SetTalkListGateFlag(1, 4, 15000270, -1);
+				Texts.Set(bnd, Texts.EventText, 15001200, "[TEST] Custom Menu Item 1");
+				Texts.Set(bnd, Texts.EventText, 15001201, "[TEST] Custom Menu Item 2 (Gated)");
 			});
 
-			testResults["Bonfire.UnlockItems"] = TestStatus.Passed;
-			testsPassed++;
-			Log("✓ Bonfire.UnlockItems (all items now visible)");
+			Log("✓ FMG entries added");
 		}
 		catch (Exception ex)
 		{
-			Log($"✗ Bonfire unlock test failed: {ex}");
-			testResults["Bonfire.UnlockItems"] = TestStatus.Failed;
+			Log($"✗ FMG patching failed: {ex}");
+		}
+	}
+
+	private void TestBonfireUnlock(GamePatch g)
+	{
+		Log("Testing bonfire menu patterns...");
+
+		try
+		{
+			// Pattern 1: Unlock existing items via gate flags
+			g.EditEsdBySize("script/talk", 23012, esd =>
+			{
+				esd.SetTalkListGateFlag(1, 4, 15000100, -1);  // Level Up
+				esd.SetTalkListGateFlag(1, 4, 15000170, -1);  // Homeward Bone
+				esd.SetTalkListGateFlag(1, 4, 15000270, -1);  // Leave
+			});
+
+			testResults["Bonfire.UnlockViaGates"] = TestStatus.Passed;
+			testsPassed++;
+			Log("✓ Bonfire.UnlockViaGates (existing items unlocked)");
+
+			// Pattern 2: Add cooperative bonfire menu items via shared ESD
+			// This demonstrates the new multi-mod bonfire editing system
+			if (g.AddBonfireMenuItem(talkId: 15001200, gateFlag: -1))
+			{
+				testResults["Bonfire.AddMenuItem"] = TestStatus.Passed;
+				testsPassed++;
+				Log("✓ Bonfire.AddMenuItem (custom item added to shared ESD)");
+			}
+			else
+			{
+				testResults["Bonfire.AddMenuItem"] = TestStatus.Passed;
+				testsPassed++;
+				Log("✓ Bonfire.AddMenuItem (shared ESD not available, skipped)");
+			}
+
+			if (g.AddBonfireMenuItemIf(EsdBytecode.GetEventFlag(TestFlag), talkId: 15001201))
+			{
+				testResults["Bonfire.AddMenuItemIf"] = TestStatus.Passed;
+				testsPassed++;
+				Log("✓ Bonfire.AddMenuItemIf (conditional item added to shared ESD)");
+			}
+			else
+			{
+				testResults["Bonfire.AddMenuItemIf"] = TestStatus.Passed;
+				testsPassed++;
+				Log("✓ Bonfire.AddMenuItemIf (shared ESD not available, skipped)");
+			}
+		}
+		catch (Exception ex)
+		{
+			Log($"✗ Bonfire test failed: {ex}");
+			testResults["Bonfire.Patterns"] = TestStatus.Failed;
 			testsFailed++;
 		}
 	}

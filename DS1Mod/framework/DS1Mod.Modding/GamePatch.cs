@@ -24,6 +24,7 @@ public sealed class GamePatch
     private readonly Action<string> _backup;
     private readonly Action<string>? _log;
     private readonly Action<string, string>? _recordEdit;
+    private readonly IPatchContext? _ctx;
 
     /// <summary>
     /// Construct from an <see cref="IPatchContext"/>. Wires backup, logging, and
@@ -33,6 +34,7 @@ public sealed class GamePatch
         : this(ctx.GameDir, ctx.BackupFile, ctx.Log)
     {
         _recordEdit = ctx.RecordEdit;
+        _ctx = ctx;
     }
 
     /// <summary>
@@ -612,5 +614,68 @@ public sealed class GamePatch
             Console.WriteLine(ex.StackTrace);
             return false;
         }
+    }
+
+    // ── Bonfire menu helpers (cooperative multi-mod editing) ────────────────────
+
+    /// <summary>
+    /// Add a menu item to the shared bonfire ESD. All mods can call this during
+    /// their Patch() phase; the framework accumulates changes and writes the result
+    /// to disk before the game starts.
+    ///
+    /// Menu item visibility is gated by <paramref name="gateFlag"/>: pass -1 to
+    /// always show, or a flag ID to make it conditional.
+    /// <code>
+    /// // Add a "Fast Travel" option visible only after flag 11815700 is set:
+    /// g.AddBonfireMenuItem(talkId: 15001200, gateFlag: 11815700);
+    /// </code>
+    /// </summary>
+    /// <remarks>
+    /// The bonfire ESD has a fixed state machine (group 1, state 4). This helper
+    /// automatically allocates menu slot indices, starting after vanilla items (slot 5+).
+    /// </remarks>
+    public bool AddBonfireMenuItem(int talkId, int gateFlag = -1)
+    {
+        var esdObj = _ctx?.GetBonfireEsd();
+        if (esdObj is not EsdEditor esd) return false;
+
+        // Access the internal slot counter via reflection
+        var ctxType = _ctx!.GetType();
+        var slotField = ctxType.GetProperty("NextBonfireSlot");
+        if (slotField == null) return false;
+
+        int nextSlot = (int)slotField.GetValue(_ctx)!;
+        esd.AddEntryCommand(groupId: 1, stateId: 4,
+            TalkCmd.AddTalkListData(nextSlot, talkId, gateFlag));
+
+        slotField.SetValue(_ctx, nextSlot + 1);
+        return true;
+    }
+
+    /// <summary>
+    /// Add a conditional bonfire menu item (visible only when <paramref name="condition"/> passes).
+    /// Use this for complex visibility logic beyond simple flag gating.
+    /// <code>
+    /// // Show only when flag 11815700 is OFF:
+    /// g.AddBonfireMenuItemIf(
+    ///     EsdBytecode.Not(EsdBytecode.GetEventFlag(11815700)),
+    ///     talkId: 15001200);
+    /// </code>
+    /// </summary>
+    public bool AddBonfireMenuItemIf(byte[] condition, int talkId)
+    {
+        var esdObj = _ctx?.GetBonfireEsd();
+        if (esdObj is not EsdEditor esd) return false;
+
+        var ctxType = _ctx!.GetType();
+        var slotField = ctxType.GetProperty("NextBonfireSlot");
+        if (slotField == null) return false;
+
+        int nextSlot = (int)slotField.GetValue(_ctx)!;
+        esd.AddEntryCommand(groupId: 1, stateId: 4,
+            TalkCmd.AddTalkListDataIf(condition, nextSlot, talkId));
+
+        slotField.SetValue(_ctx, nextSlot + 1);
+        return true;
     }
 }

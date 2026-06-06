@@ -1,4 +1,6 @@
 using DS1Mod.Core;
+using DS1Mod.Modding;
+using SoulsFormats;
 
 namespace DS1Mod.Host;
 
@@ -12,6 +14,10 @@ internal sealed class PatchContext : IPatchContext
 
     private string _currentMod = "(unknown)";
     private readonly IdAllocator _allocator;
+
+    // Shared bonfire ESD that all mods can edit during the patch phase
+    internal EsdEditor? BonfireEsd { get; set; }
+    internal int NextBonfireSlot { get; set; } = 5;  // Vanilla items use 0-4
 
     public PatchContext(string gameDir, string modsDir)
     {
@@ -58,4 +64,6 @@ internal sealed class PatchContext : IPatchContext
     }
 
     public int AllocateIds(string space, int count) => _allocator.AllocateIds(space, count);
+
+    public EsdEditor? GetBonfireEsd() => BonfireEsd;
 }

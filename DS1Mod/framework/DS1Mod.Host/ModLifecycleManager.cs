@@ -1,7 +1,9 @@
 using System.Reflection;
 using DS1Mod.Core;
 using DS1Mod.Core.Memory;
+using DS1Mod.Modding;
 using DS1Mod.Rendering;
+using SoulsFormats;
 
 namespace DS1Mod.Host;
 
@@ -70,7 +72,9 @@ internal sealed class ModLifecycleManager : IDisposable
                 "(e.g. via ModBase), and references the deployed DS1Mod.SDK.");
         }
 
-        // ── Phase 2: run patchers (before any map file is loaded) ─────
+        // ── Phase 2: Load bonfire ESD + run patchers ──────────────────
+        LoadSharedBonfireEsd(patchCtx, gameDir);
+
         foreach (var (mod, _) in _mods)
         {
             if (mod is not IGamePatcher patcher) continue;
@@ -86,6 +90,8 @@ internal sealed class ModLifecycleManager : IDisposable
                     $"[DS1Mod.Host] Patch failed for {mod.Name}: {ex.Message}");
             }
         }
+
+        WriteSharedBonfireEsd(patchCtx, gameDir);
 
         // ── Phase 3: OnLoad ───────────────────────────────────────────
         foreach (var (mod, _) in _mods)
@@ -181,6 +187,83 @@ internal sealed class ModLifecycleManager : IDisposable
 
         _mods.Add(new LoadedMod(mod, alc));
         Console.WriteLine($"[DS1Mod.Host]   {file}: found mod '{mod.Name}'.");
+    }
+
+    private void LoadSharedBonfireEsd(PatchContext patchCtx, string gameDir)
+    {
+        try
+        {
+            const int VanillaBonfireEsdSize = 23012;
+            string talkDir = Path.Combine(gameDir, @"script\talk");
+
+            // Find and load a bonfire ESD from any talkesdbnd file
+            foreach (string bndPath in Directory.GetFiles(talkDir, "*.talkesdbnd.dcx"))
+            {
+                byte[] dec = DCX.Decompress(bndPath, out _);
+                BND3 bnd = BND3.Read(dec);
+
+                var bonfireEntry = bnd.Files.FirstOrDefault(f => f.Bytes.Length == VanillaBonfireEsdSize);
+                if (bonfireEntry != null)
+                {
+                    ESD esdObj = ESD.Read(bonfireEntry.Bytes);
+                    patchCtx.BonfireEsd = new EsdEditor(esdObj);
+                    Console.WriteLine($"[DS1Mod.Host] Loaded shared bonfire ESD from {Path.GetFileName(bndPath)}");
+                    return;
+                }
+            }
+
+            Console.WriteLine("[DS1Mod.Host] Warning: bonfire ESD not found — bonfire menu modifications will be skipped.");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[DS1Mod.Host] Error loading bonfire ESD: {ex.Message}");
+        }
+    }
+
+    private void WriteSharedBonfireEsd(PatchContext patchCtx, string gameDir)
+    {
+        if (patchCtx.BonfireEsd == null) return;
+
+        try
+        {
+            const int VanillaBonfireEsdSize = 23012;
+            string talkDir = Path.Combine(gameDir, @"script\talk");
+            byte[] modifiedEsdBytes = patchCtx.BonfireEsd.Esd.Write();
+
+            // Write to all bonfire ESDs (identified by vanilla size) in all talkesdbnd files
+            int filesModified = 0;
+            foreach (string bndPath in Directory.GetFiles(talkDir, "*.talkesdbnd.dcx"))
+            {
+                byte[] dec = DCX.Decompress(bndPath, out DCX.Type type);
+                BND3 bnd = BND3.Read(dec);
+
+                bool changed = false;
+                foreach (BinderFile file in bnd.Files)
+                {
+                    if (file.Bytes.Length == VanillaBonfireEsdSize)
+                    {
+                        file.Bytes = modifiedEsdBytes;
+                        changed = true;
+                    }
+                }
+
+                if (changed)
+                {
+                    string bakPath = bndPath + ".bak";
+                    if (!File.Exists(bakPath)) File.Copy(bndPath, bakPath);
+
+                    File.WriteAllBytes(bndPath, DCX.Compress(bnd.Write(), type));
+                    filesModified++;
+                }
+            }
+
+            if (filesModified > 0)
+                Console.WriteLine($"[DS1Mod.Host] Wrote accumulated bonfire ESD to {filesModified} file(s)");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[DS1Mod.Host] Error writing bonfire ESD: {ex.Message}");
+        }
     }
 
     public void Dispose()

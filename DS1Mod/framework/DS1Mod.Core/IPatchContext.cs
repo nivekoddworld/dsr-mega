@@ -9,6 +9,14 @@ public interface IPatchContext
     string ModsDir { get; }
 
     /// <summary>
+    /// Shared bonfire ESD editor that all mods can modify during the patch phase.
+    /// The framework accumulates all changes and writes the result to disk.
+    /// Returns null if the bonfire ESD could not be loaded.
+    /// Type: DS1Mod.Modding.EsdEditor (reference avoided due to circular dependency).
+    /// </summary>
+    object? GetBonfireEsd() => null;
+
+    /// <summary>
     /// Copies <paramref name="filePath"/> to <c>&lt;filePath&gt;.bak</c>
     /// if the backup does not already exist. Safe to call multiple times.
     /// </summary>
