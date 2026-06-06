@@ -9,6 +9,7 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <!-- Use our hand-written runtimeconfig.json (LatestMajor) instead of the auto-generated one -->
     <GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
+	<GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

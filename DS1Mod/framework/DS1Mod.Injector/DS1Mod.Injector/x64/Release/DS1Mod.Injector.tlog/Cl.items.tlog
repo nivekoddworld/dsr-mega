@@ -1,4 +1,12 @@
-Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\DS1Mod.Injector\dllmain.cpp;Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\DS1Mod.Injector\DS1Mod.Injector\x64\Release\dllmain.obj
-Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\DS1Mod.Injector\heapfix.cpp;Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\DS1Mod.Injector\DS1Mod.Injector\x64\Release\heapfix.obj
-Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\DS1Mod.Injector\dinput8_proxy.cpp;Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\DS1Mod.Injector\DS1Mod.Injector\x64\Release\dinput8_proxy.obj
-Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\DS1Mod.Injector\modloader.cpp;Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\DS1Mod.Injector\DS1Mod.Injector\x64\Release\modloader.obj
+Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\dllmain.cpp;Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\DS1Mod.Injector\x64\Release\dllmain.obj
+Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\heapfix.cpp;Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\DS1Mod.Injector\x64\Release\heapfix.obj
+Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\dinput8_proxy.cpp;Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\DS1Mod.Injector\x64\Release\dinput8_proxy.obj
+Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\modloader.cpp;Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\DS1Mod.Injector\x64\Release\modloader.obj
+Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\d3d_hook.cpp;Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\DS1Mod.Injector\x64\Release\d3d_hook.obj
+Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\imgui_capi.cpp;Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\DS1Mod.Injector\x64\Release\imgui_capi.obj
+Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\imgui\imgui.cpp;Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\DS1Mod.Injector\x64\Release\imgui.obj
+Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\imgui\imgui_draw.cpp;Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\DS1Mod.Injector\x64\Release\imgui_draw.obj
+Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\imgui\imgui_tables.cpp;Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\DS1Mod.Injector\x64\Release\imgui_tables.obj
+Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\imgui\imgui_widgets.cpp;Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\DS1Mod.Injector\x64\Release\imgui_widgets.obj
+Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\imgui\imgui_impl_dx11.cpp;Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\DS1Mod.Injector\x64\Release\imgui_impl_dx11.obj
+Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\imgui\imgui_impl_win32.cpp;Z:\Bonejam\VideoGameShop\dsr-mega\DS1Mod\framework\DS1Mod.Injector\DS1Mod.Injector\x64\Release\imgui_impl_win32.obj

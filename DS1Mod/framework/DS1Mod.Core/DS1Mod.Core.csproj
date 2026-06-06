@@ -6,5 +6,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>DS1Mod.Core</RootNamespace>
     <AssemblyName>DS1Mod.Core</AssemblyName>
+	<GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 </Project>
