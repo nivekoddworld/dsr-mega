@@ -43,7 +43,7 @@ if defined MSBUILD (
 
 echo.
 echo ============================================================
-echo  DS1 Mega Randomizer — Full Build
+echo  DS1 Mega Randomizer -- Full Build
 echo ============================================================
 echo.
 
@@ -262,14 +262,14 @@ echo ============================================================
 if !ERRORS! EQU 0 (
     echo  BUILD SUCCEEDED
     echo.
-    echo  publish\app\          — complete distributable ^(UI + framework + mods^)
-    echo    framework\          — dinput8.dll ^(with ImGui built-in^) + DS1Mod.Host/Core/SDK/Rendering
-    echo    bundled-mods\       — DS1Mod.DemoMod.dll, DS1Mod.ImGuiDemo.dll, ...
-    echo    DS1MegaRando.UI.exe — launch this
+    echo  publish\app\          -- complete distributable ^(UI + framework + mods^)
+    echo    framework\          -- dinput8.dll ^(with ImGui built-in^) + DS1Mod.Host/Core/SDK/Rendering
+    echo    bundled-mods\       -- DS1Mod.DemoMod.dll, DS1Mod.ImGuiDemo.dll, ...
+    echo    DS1MegaRando.UI.exe -- launch this
     echo.
     echo  Use the UI to deploy to the game:
-    echo    "Launch with Mod Framework" — copies framework\ to game dir
-    echo    Mods tab Install button     — copies a mod to game dir\mods\
+    echo    "Launch with Mod Framework" -- copies framework\ to game dir
+    echo    Mods tab Install button     -- copies a mod to game dir\mods\
 ) else (
     echo  BUILD FAILED  ^(!ERRORS! step^(s^) failed^)
     exit /b 1
