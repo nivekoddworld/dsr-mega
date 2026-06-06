@@ -76,7 +76,7 @@ Entry point: `DS1MegaRando.UI` → `MegaRandomizer.cs` orchestrates everything.
 Modders can use the ESD editing framework to build:
 
 1. **Dialog & progression mods** — unlock NPCs/shops conditionally, create branching conversations, gate questlines behind flags
-2. **Bonfire customization** — add/remove menu options, change respawn points, unlock services programmatically (see `PatchBonfireEsds` pattern in `GameFileWriter.cs`)
+2. **Bonfire menu gating** — unlock/lock existing bonfire menu items (Level Up, Homeward Bone, Leave) by modifying their flag gates. NOTE: The bonfire UI is hard-coded with a fixed menu layout; you cannot add entirely new menu items. See `SetTalkListGateFlag()` in `EsdEditor.cs` and `PatchBonfireEsds()` pattern in `GameFileWriter.cs` for the bulk-replace approach.
 3. **Boss AI rebalancing** — tune attack timing, combo routing, spell gating via action ESD state transitions
 4. **Player action mods** — gate rolling/attacking/casting behind stamina/stun conditions, modify animation durations, control cancellation windows
 5. **Randomizer integration** — gate randomized items/enemies behind custom dialog unlocks, replace binary blob patches with programmatic edits
@@ -121,11 +121,17 @@ ESD is FromSoft's graph-based state machine scripting used for NPC dialog, bonfi
 - `ShowShopMessage()` — wares/vendor message
 - `UpdateRespawnPoint(bonfireEntityId)` — set player bonfire warp target
 
-**Key use case**: Bonfire unlock pattern via `EsdEditor.SetTalkListGateFlag()` — programmatic equivalent of the randomizer's bonfire patch:
+**Key use case**: Bonfire menu gating via `EsdEditor.SetTalkListGateFlag()` — unlock/lock bonfire menu items (they are predefined in the ESD; you are only changing visibility flags):
 ```csharp
+// Unlock the Level Up menu item by removing its flag gate
 g.EditEsdBySize("script/talk", 23012, esd =>
-    esd.SetTalkListGateFlag(1, 4, 15000100, -1));  // Level Up
+    esd.SetTalkListGateFlag(1, 4, 15000100, -1));  // -1 = always visible
+
+// Or gate it behind a flag:
+g.EditEsdBySize("script/talk", 23012, esd =>
+    esd.SetTalkListGateFlag(1, 4, 15000100, 11810000));  // flag 11810000 must be ON
 ```
+Bonfire UI layout is fixed; adding entirely new menu items is not supported.
 
 ### Action ESD — Player & Enemy Animation States
 

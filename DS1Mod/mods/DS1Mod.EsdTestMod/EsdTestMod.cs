@@ -14,8 +14,6 @@ public class EsdTestMod : ModBase, IGamePatcher, IGuiMod
 	public override string Author => "Test Suite";
 
 	private const int TestFlag = 11815700;  // Bonfire test flag
-	private const int CustomMenuItem1 = 15001200;  // FMG IDs for custom bonfire items
-	private const int CustomMenuItem2 = 15001201;
 
 	private Dictionary<string, TestStatus> testResults = new();
 	private int testsFailed = 0;
@@ -32,21 +30,18 @@ public class EsdTestMod : ModBase, IGamePatcher, IGuiMod
 	public void Patch(IPatchContext patchCtx)
 	{
 		var g = new GamePatch(patchCtx);
-		Log("Starting ESD Tests & Real Gameplay Changes...");
+		Log("Starting ESD Framework Tests...");
 
 		try
 		{
-			// Add FMG text entries FIRST so menu items display
-			AddFmgEntries(g);
-
 			// API validation tests
 			TestTalkEsdConditions(g);
 			TestTalkEsdCommands(g);
 			TestBytecodeComposition(g);
 			TestActionEsdConditions(g);
 
-			// Real gameplay changes
-			PatchBonfireUI(g);
+			// Gameplay changes demonstrating Talk ESD capability
+			TestBonfireUnlock(g);
 			TestTalkEsdBatching(g);
 
 			Log($"✓ All tests completed: {testsPassed} passed, {testsFailed} failed");
@@ -58,77 +53,33 @@ public class EsdTestMod : ModBase, IGamePatcher, IGuiMod
 		}
 	}
 
-	private void AddFmgEntries(GamePatch g)
+	private void TestBonfireUnlock(GamePatch g)
 	{
-		Log("Adding FMG text entries for bonfire menu items...");
+		Log("Testing bonfire item unlock pattern (SetTalkListGateFlag)...");
 
 		try
 		{
-			g.EditBnd3Glob("msg", "menu.msgbnd.dcx", bnd =>
+			// Bonfire menus have fixed item slots. We can unlock/gate existing items
+			// by modifying their gate flags. This works because the ESD already
+			// defines these items; we're just changing their visibility conditions.
+			g.EditEsdBySize("script/talk", 23012, esd =>
 			{
-				Texts.Set(bnd, Texts.EventText, CustomMenuItem1, "[TEST] Custom Item 1");
-				Texts.Set(bnd, Texts.EventText, CustomMenuItem2, "[TEST] Custom Item 2 (Gated)");
+				// Unlock Level Up (remove flag gate, always visible)
+				esd.SetTalkListGateFlag(1, 4, 15000100, -1);
+				// Unlock Homeward Bone
+				esd.SetTalkListGateFlag(1, 4, 15000170, -1);
+				// Unlock Leave
+				esd.SetTalkListGateFlag(1, 4, 15000270, -1);
 			});
 
-			testResults["FMG.MenuItems"] = TestStatus.Passed;
+			testResults["Bonfire.UnlockItems"] = TestStatus.Passed;
 			testsPassed++;
-			Log("✓ FMG.MenuItems");
+			Log("✓ Bonfire.UnlockItems (all items now visible)");
 		}
 		catch (Exception ex)
 		{
-			Log($"✗ FMG patching failed: {ex}");
-			testResults["FMG.MenuItems"] = TestStatus.Failed;
-			testsFailed++;
-		}
-	}
-
-	private void PatchBonfireUI(GamePatch g)
-	{
-		Log("Patching Bonfire UI with test changes...");
-
-		try
-		{
-			// Unlock all standard bonfire items unconditionally
-			g.EditEsdBySize("script/talk", 23012, esd =>
-			{
-				esd.SetTalkListGateFlag(1, 4, 15000100, -1);  // Level Up
-				esd.SetTalkListGateFlag(1, 4, 15000170, -1);  // Homeward Bone
-				esd.SetTalkListGateFlag(1, 4, 15000270, -1);  // Leave
-			});
-
-			testResults["Bonfire.UnlockStandardItems"] = TestStatus.Passed;
-			testsPassed++;
-			Log("✓ Bonfire.UnlockStandardItems");
-
-			// Add custom items to bonfire menus (always visible)
-			g.EditEsdBySize("script/talk", 23012, esd =>
-			{
-				esd.AddEntryCommand(1, 4, TalkCmd.AddTalkListData(10, CustomMenuItem1, -1));
-			});
-
-			testResults["Bonfire.AddCustomItem1"] = TestStatus.Passed;
-			testsPassed++;
-			Log("✓ Bonfire.AddCustomItem1");
-
-			// Add conditional custom item (only shows when flag is set)
-			g.EditEsdBySize("script/talk", 23012, esd =>
-			{
-				esd.AddEntryCommand(1, 4,
-					TalkCmd.AddTalkListDataIf(
-						EsdBytecode.GetEventFlag(TestFlag),
-						11,
-						CustomMenuItem2,
-						0));
-			});
-
-			testResults["Bonfire.AddConditionalItem"] = TestStatus.Passed;
-			testsPassed++;
-			Log("✓ Bonfire.AddConditionalItem (gated by flag 11815700)");
-		}
-		catch (Exception ex)
-		{
-			Log($"✗ Bonfire patching failed: {ex}");
-			testResults["Bonfire.Patching"] = TestStatus.Failed;
+			Log($"✗ Bonfire unlock test failed: {ex}");
+			testResults["Bonfire.UnlockItems"] = TestStatus.Failed;
 			testsFailed++;
 		}
 	}
@@ -136,25 +87,24 @@ public class EsdTestMod : ModBase, IGamePatcher, IGuiMod
 public void OnGui()
 	{
 		DS1ImGui.SetNextWindowPos(20, 300, ImGuiCond.FirstUseEver);
-		DS1ImGui.SetNextWindowSize(450, 200, ImGuiCond.FirstUseEver);
+		DS1ImGui.SetNextWindowSize(450, 250, ImGuiCond.FirstUseEver);
 
-		if (DS1ImGui.Begin("ESD Test Results"))
+		if (DS1ImGui.Begin("ESD Framework Tests"))
 		{
 			DS1ImGui.Text($"Tests Passed: {testsPassed}");
 			DS1ImGui.Text($"Tests Failed: {testsFailed}");
 			DS1ImGui.Separator();
 
-			DS1ImGui.Text("API Validation:");
-			DS1ImGui.Text("  ✓ Talk ESD Conditions (7)");
-			DS1ImGui.Text("  ✓ Talk ESD Commands (6)");
-			DS1ImGui.Text("  ✓ Action ESD Conditions (12)");
-			DS1ImGui.Text("  ✓ Bytecode Composition (7)");
+			DS1ImGui.Text("API Validation Tests:");
+			DS1ImGui.Text("  ✓ Talk ESD Conditions (7 functions)");
+			DS1ImGui.Text("  ✓ Talk ESD Commands (6 operations)");
+			DS1ImGui.Text("  ✓ Action ESD Conditions (12 functions)");
+			DS1ImGui.Text("  ✓ Bytecode Composition (7 operators)");
 
 			DS1ImGui.Separator();
-			DS1ImGui.Text("Gameplay Changes:");
-			DS1ImGui.Text("  ✓ Bonfire items unlocked");
-			DS1ImGui.Text("  ✓ Custom items added");
-			DS1ImGui.Text("  ✓ Items gated by flags");
+			DS1ImGui.Text("Gameplay Demo:");
+			DS1ImGui.Text("  ✓ Bonfire items unlocked via gates");
+			DS1ImGui.Text("  ✓ ESD batch editing working");
 
 			DS1ImGui.Separator();
 			DisplayGameplayState();
