@@ -1,3 +1,4 @@
+using ImGuiNET;
 using DS1Mod.Core;
 using DS1Mod.Core.ImGui;
 using DS1Mod.Modding;
@@ -5,7 +6,6 @@ using DS1Mod.SDK;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using ImGui = ImGuiNET.ImGui;
 
 namespace DS1Mod.EsdTestMod;
 
