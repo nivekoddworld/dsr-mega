@@ -8,4 +8,5 @@
   <Project Path="mods/DS1Mod.AsylumSlam/DS1Mod.AsylumSlam.csproj" />
   <Project Path="mods/DS1Mod.GoofyDemon/DS1Mod.GoofyDemon.csproj" />
   <Project Path="mods/DS1Mod.ImGuiDemo/DS1Mod.ImGuiDemo.csproj" />
+  <Project Path="mods/DS1Mod.ChaosMod/DS1Mod.ChaosMod.csproj" />
 </Solution>
