@@ -10,10 +10,10 @@
 	<Target Name="CopyModToGame" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
 		<Message Text="Copying $(TargetFileName) to game mods directory..." Importance="high" />
 		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameModsDirectory)" />
-		<Copy SourceFiles="$(OutDir)SoulsFormats.dll" DestinationFolder="$(GameModsDirectory)" />
-		<Copy SourceFiles="$(OutDir)DS1Mod.Modding.dll" DestinationFolder="$(GameModsDirectory)" />
-		<Copy SourceFiles="$(OutDir)DS1Mod.Core.dll" DestinationFolder="$(GameModsDirectory)" />
-		<Copy SourceFiles="$(OutDir)DS1Mod.SDK.dll" DestinationFolder="$(GameModsDirectory)" />
+		<Copy SourceFiles="$(OutDir)SoulsFormats.dll"  DestinationFolder="$(GameModsDirectory)" Condition="Exists('$(OutDir)SoulsFormats.dll')" />
+		<Copy SourceFiles="$(OutDir)DS1Mod.Modding.dll" DestinationFolder="$(GameModsDirectory)" Condition="Exists('$(OutDir)DS1Mod.Modding.dll')" />
+		<Copy SourceFiles="$(OutDir)DS1Mod.Core.dll"   DestinationFolder="$(GameModsDirectory)" Condition="Exists('$(OutDir)DS1Mod.Core.dll')" />
+		<Copy SourceFiles="$(OutDir)DS1Mod.SDK.dll"    DestinationFolder="$(GameModsDirectory)" Condition="Exists('$(OutDir)DS1Mod.SDK.dll')" />
 		<Message Text="✓ Done" Importance="high" />
 	</Target>
 
