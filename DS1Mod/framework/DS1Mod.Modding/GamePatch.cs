@@ -82,7 +82,9 @@ public sealed class GamePatch
         foreach (string path in Directory.GetFiles(dir, fileName, SearchOption.AllDirectories))
         {
             _backup(path);
-            Record(path, $"BND3:{Path.GetRelativePath(GameDir, path)}");
+            // No Record() here — EditBnd3Glob targets shared files (msg, params) where
+            // multiple mods intentionally write to disjoint IDs. The ID allocator
+            // prevents real conflicts; file-level recording would produce false positives.
             byte[] dec = DCX.Decompress(path, out DCX.Type type);
             BND3 bnd = BND3.Read(dec);
             edit(bnd);
