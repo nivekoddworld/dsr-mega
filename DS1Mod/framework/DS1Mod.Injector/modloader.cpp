@@ -4,6 +4,7 @@
 #include <filesystem>
 #include "modloader.h"
 #include "d3d_hook.h"
+#include "dearxan.h"
 
 namespace fs = std::filesystem;
 
@@ -79,6 +80,36 @@ static int SafePfnLoad(load_asm_fn pfn, const wchar_t* dll, const wchar_t* type,
     }
 }
 
+// ── Arxan disabling ───────────────────────────────────────────────────────────
+// dearxan hooks DSR's entry point and fires the callback once the Arxan entry
+// point stubs have finished running (they do their own integrity checks at that
+// point, so all game code is verified-clean before we patch anything).
+// We signal g_arxanReady so the mod loader thread knows it's safe to proceed.
+static HANDLE g_arxanReady = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+
+void DisableArxan() {
+    Log(L"Installing Arxan hook (fires after entry point stubs run)...");
+    dearxan::neuter_arxan([](const dearxan::DearxanResult& r) {
+        if (r.status() == dearxan::DearxanStatus::DearxanSuccess) {
+            if (r.is_arxan_detected()) {
+                Log(L"[dearxan] Arxan detected and fully disabled");
+            } else {
+                Log(L"[dearxan] No Arxan detected in this build");
+            }
+        } else {
+            std::wstring msg = L"[dearxan] Error: ";
+            std::string err = r.error_msg();
+            msg += std::wstring(err.begin(), err.end());
+            Log(msg.c_str());
+        }
+        // Unblock the mod loader thread — Arxan is gone, safe to hook game code.
+        SetEvent(g_arxanReady);
+    });
+    // neuter_arxan returns immediately; the callback fires on the main thread
+    // when the entry point runs. Log that the hook is installed.
+    Log(L"[dearxan] Hook installed, waiting for entry point...");
+}
+
 // ── public ────────────────────────────────────────────────────────────────────
 
 bool InitModLoader(const wchar_t* gameDir) {
@@ -127,6 +158,16 @@ bool InitModLoader(const wchar_t* gameDir) {
     load_asm_fn pfn_load = nullptr;
     rc = pfn_delegate(ctx, HDT_LOAD_ASSEMBLY_AND_GET_FUNCTION_POINTER, (void**)&pfn_load);
     LogHR(L"hostfxr_get_delegate", rc);
+
+    // Wait for Arxan to be fully disabled before mods touch game memory.
+    // Timeout of 30s is generous — entry point normally runs within a second.
+    Log(L"Waiting for Arxan entry point callback...");
+    DWORD waitResult = WaitForSingleObject(g_arxanReady, 30000);
+    if (waitResult == WAIT_TIMEOUT) {
+        Log(L"⚠ Timed out waiting for Arxan callback — proceeding anyway");
+    } else {
+        Log(L"✓ Arxan disabled, proceeding with mod load");
+    }
 
     if (rc == 0 && pfn_load) {
         using entry_fn = int (*)(const wchar_t*, int);

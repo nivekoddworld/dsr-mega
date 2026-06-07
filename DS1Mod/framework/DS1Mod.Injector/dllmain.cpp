@@ -8,8 +8,6 @@ static DWORD g_mainThreadId = 0;
 
 static DWORD WINAPI WorkerThread(LPVOID)
 {
-    // Open log immediately so any crash during Sleep or HeapFix is visible.
-    LogInit();
     Log(L"WorkerThread started");
 
     Sleep(1000);
@@ -60,6 +58,17 @@ BOOL WINAPI DllMain(HMODULE hMod, DWORD reason, LPVOID)
         // can suspend it during the patch phase.
         g_mainThreadId = GetCurrentThreadId();
         DisableThreadLibraryCalls(hMod);
+
+        // Open log before anything else so DisableArxan() can write to it.
+        LogInit();
+
+        // Install the dearxan entry point hook NOW, before the main thread
+        // leaves DllMain and runs the game's entry point. This is the only
+        // window where we can intercept it. The hook fires asynchronously once
+        // Arxan's own stubs finish; InitModLoader waits on g_arxanReady before
+        // loading managed mods.
+        DisableArxan();
+
         CreateThread(nullptr, 0, WorkerThread, nullptr, 0, nullptr);
     }
     return TRUE;
