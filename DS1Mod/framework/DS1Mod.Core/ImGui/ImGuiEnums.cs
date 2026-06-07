@@ -96,3 +96,72 @@ public enum ImGuiCol : int
     NavWindowingDimBg      = 54,
     ModalWindowDimBg       = 55,
 }
+
+[Flags]
+public enum ImGuiTreeNodeFlags : int
+{
+    None             = 0,
+    Selected         = 1 << 0,
+    Framed           = 1 << 1,
+    AllowOverlap     = 1 << 2,
+    NoTreePushOnOpen = 1 << 3,
+    NoAutoOpenOnLog  = 1 << 4,
+    DefaultOpen      = 1 << 5,
+    OpenOnDoubleClick = 1 << 6,
+    OpenOnArrow      = 1 << 7,
+    Leaf             = 1 << 8,
+    Bullet           = 1 << 9,
+    CollapsingHeader = Framed | NoTreePushOnOpen | NoAutoOpenOnLog,
+}
+
+[Flags]
+public enum ImGuiTabBarFlags : int
+{
+    None                        = 0,
+    Reorderable                 = 1 << 0,
+    AutoSelectNewTabs           = 1 << 1,
+    TabListPopupButton          = 1 << 2,
+    NoCloseWithMiddleMouseButton = 1 << 3,
+    NoTabListScrollingButtons   = 1 << 4,
+    NoTooltip                   = 1 << 5,
+    FittingPolicyResizeDown     = 1 << 6,
+    FittingPolicyScroll         = 1 << 7,
+}
+
+[Flags]
+public enum ImGuiTabItemFlags : int
+{
+    None                          = 0,
+    UnsavedDocument               = 1 << 0,
+    SetSelected                   = 1 << 1,
+    NoCloseWithMiddleMouseButton  = 1 << 2,
+    NoPushId                      = 1 << 3,
+    NoTooltip                     = 1 << 4,
+    NoReorder                     = 1 << 5,
+    Leading                       = 1 << 6,
+    Trailing                      = 1 << 7,
+}
+
+[Flags]
+public enum ImGuiComboFlags : int
+{
+    None            = 0,
+    PopupAlignLeft  = 1 << 0,
+    HeightSmall     = 1 << 1,
+    HeightRegular   = 1 << 2,
+    HeightLarge     = 1 << 3,
+    HeightLargest   = 1 << 4,
+    NoArrowButton   = 1 << 5,
+    NoPreview       = 1 << 6,
+}
+
+[Flags]
+public enum ImGuiSelectableFlags : int
+{
+    None             = 0,
+    DontClosePopups  = 1 << 0,
+    SpanAllColumns   = 1 << 1,
+    AllowDoubleClick = 1 << 2,
+    Disabled         = 1 << 3,
+    AllowOverlap     = 1 << 4,
+}
