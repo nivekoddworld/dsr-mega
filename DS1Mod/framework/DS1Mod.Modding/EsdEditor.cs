@@ -155,6 +155,31 @@ public class EsdEditor
         return false;
     }
 
+    /// <summary>
+    /// Strips all custom bonfire menu additions from a previous patch run so that
+    /// mods can re-apply their changes idempotently — same pattern as DefineEvent
+    /// in the EMEVD editor. Called by the host before running mod patchers.
+    /// Removes: handler states (ID ≥ 1000), custom AddTalkListData entries
+    /// (slot ≥ firstCustomSlot) from State 4, and transitions from State 4
+    /// that target handler states.
+    /// </summary>
+    public void ResetCustomBonfireSlots(int firstCustomSlot = 13)
+    {
+        if (!Esd.StateGroups.TryGetValue(1, out var group)) return;
+
+        foreach (long k in group.Keys.Where(k => k >= 1000).ToList())
+            group.Remove(k);
+
+        if (!group.TryGetValue(4, out var state4)) return;
+
+        state4.EntryCommands.RemoveAll(cmd =>
+            cmd.CommandBank == 1 && cmd.CommandID == 19 &&
+            cmd.Arguments.Count >= 1 &&
+            DecodeIntArg(cmd.Arguments[0]) >= firstCustomSlot);
+
+        state4.Conditions.RemoveAll(c => c.TargetState >= 1000);
+    }
+
     // Decode a PushInt argument byte array back to its integer value.
     // Handles both compact single-byte form and 5-byte i32 form.
     private static int DecodeIntArg(byte[] arg)
@@ -521,20 +546,35 @@ public static class TalkCmd
         byte[] condition, int listIndex, int talkId, int unk = 0) =>
         new(5, 19, condition, EsdBytecode.PushInt(listIndex), EsdBytecode.PushInt(talkId), EsdBytecode.PushInt(unk));
 
+    // ── Talk list management ──────────────────────────────────────────────────
+
+    /// <summary>
+    /// B1:20 — Clear all entries from the talk list menu. Always 0 arguments
+    /// (verified: every one of 357 scanned DSR talk ESDs uses it bare). Vanilla
+    /// menus call this on entry to the menu-building state, immediately before
+    /// the run of <see cref="AddTalkListData"/> calls that repopulate it —
+    /// otherwise entries accumulate across re-entries to the same state.
+    /// <code>
+    /// esd.AddEntryCommand(1, menuState, TalkCmd.ClearTalkListData());
+    /// esd.AddEntryCommand(1, menuState, TalkCmd.AddTalkListData(1, 15000100));
+    /// </code>
+    /// </summary>
+    public static ESD.CommandCall ClearTalkListData() =>
+        new(1, 20);
+
     // ── Misc (Bank 1, DS1, confirmed presence in DSR talk ESDs) ─────────────
 
     /// <summary>
-    /// B1:10 — Show a shop/wares message. Commonly paired with states that
-    /// open vendor menus.
+    /// B1:10 — Show a shop/wares message. Takes <b>three</b> integer arguments
+    /// (verified: every one of 94 scanned occurrences across 357 DSR talk ESDs
+    /// has exactly 3 args, and vanilla bonfire menus always pass <c>(0, 0, 0)</c>
+    /// — matching the <c>ShowShopMessage(0, 0, 0)</c> call shown in the
+    /// soulsmodding advanced-ESD tutorial). The exact meaning of the three
+    /// values beyond the all-zero vanilla case is not yet reverse engineered;
+    /// stick to <c>(0, 0, 0)</c> unless you have a specific reason to vary them.
     /// </summary>
-    public static ESD.CommandCall ShowShopMessage() =>
-        new(1, 10);
-
-    /// <summary>
-    /// B1:101 — Update the player's respawn bonfire. Used in bonfire talk ESDs.
-    /// </summary>
-    public static ESD.CommandCall UpdateRespawnPoint(int bonfireEntityId) =>
-        new(1, 101, EsdBytecode.PushInt(bonfireEntityId));
+    public static ESD.CommandCall ShowShopMessage(int a = 0, int b = 0, int c = 0) =>
+        new(1, 10, EsdBytecode.PushInt(a), EsdBytecode.PushInt(b), EsdBytecode.PushInt(c));
 
     /// <summary>
     /// B1:11 raw — raw SetEventFlag with pre-encoded argument bytes.

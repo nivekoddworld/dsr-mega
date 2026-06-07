@@ -43,7 +43,18 @@ g.EditEsdBySize("script/talk", 23012, esd => { ... });
 
 **Verified condition functions**: `GetEventFlag()`, `GetMenuSelection()`, `GetDialogButtonResult()`, `IsGenericDialogOpen()`, `GetTimeInState()`, `DialogClosedWithButton()`, `SelectedItem()`
 
-**Verified commands**: `SetEventFlag()`, `OpenGenericDialog()`, `AddTalkListData()`, `AddTalkListDataIf()`, `ShowShopMessage()`, `UpdateRespawnPoint()`
+**Verified commands**: `SetEventFlag()`, `OpenGenericDialog()`, `AddTalkListData()`, `AddTalkListDataIf()`, `ClearTalkListData()`, `ShowShopMessage(a, b, c)`
+
+**Verification method**: Cross-checked Bank/CommandID and argument counts by
+loading and walking all 357 Talk ESDs across the DSR `talkesdbnd` corpus
+(`gamedata/.../script/talk/*.talkesdbnd.dcx` + FogMod's DS1R reference dump)
+with `SoulsFormats.ESD` and tabulating observed `(bank, commandId) → argCount`
+pairs. This caught two bugs: `ShowShopMessage` actually takes 3 int args (every
+one of 94 occurrences does; vanilla always passes `(0, 0, 0)`, matching the
+soulsmodding tutorial's `ShowShopMessage(0, 0, 0)`), and the previously-listed
+`UpdateRespawnPoint` (B1:101) does not exist anywhere in the corpus — it was
+removed. Setting the respawn bonfire is an EMEVD-level operation
+(`SetPlayerRespawnPoint`), not a Talk ESD command.
 
 **Key helper**: `SetTalkListGateFlag()` — unlock/lock bonfire menu items programmatically
 

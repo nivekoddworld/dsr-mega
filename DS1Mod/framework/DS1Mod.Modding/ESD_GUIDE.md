@@ -88,13 +88,20 @@ g.EditEsdBySize("script/talk", 23012, esd => { ... });
 
 | Command | Purpose |
 |---------|---------|
-| `SetEventFlag(flagId, on)` | Set flag ON (true) or OFF (false) |
+| `SetEventFlag(flagId, on)` | Set flag ON/OFF (3187 uses — most common command) |
 | `OpenGenericDialog(type, msgId, btnType, numBtns, unk)` | Show dialog box with text and buttons |
 | `AddTalkListData(listIdx, talkId, gateFlag=-1)` | Add menu item (gate=-1 always shows) |
 | `AddTalkListDataIf(condition, listIdx, talkId, unk)` | Add menu item only if condition passes |
-| `ShowShopMessage()` | Display "You can only carry X" message |
-| `UpdateRespawnPoint(bonfireEntityId)` | Set where player respawns |
-| `SetEventFlag(flagId, on)` | Set flag ON/OFF (3187 uses — most common command) |
+| `ClearTalkListData()` | Clear the menu list — call before repopulating with `AddTalkListData` |
+| `ShowShopMessage(a=0, b=0, c=0)` | Display the shop/wares message (vanilla always passes `(0, 0, 0)`) |
+
+> **Note on `UpdateRespawnPoint`**: an earlier revision of this guide listed a
+> `B1:101 UpdateRespawnPoint(bonfireEntityId)` Talk ESD command. Scanning all
+> 357 ESDs across every DSR map's `talkesdbnd` archives turned up zero uses of
+> Bank 1 command 101 — it does not exist in Talk ESD. Setting the player's
+> respawn bonfire is an **EMEVD**-level operation (`SetPlayerRespawnPoint`, as
+> shown in the soulsmodding advanced-ESD tutorial's warp-event example), not a
+> Talk ESD command. The API has been removed.
 
 ### State Structure
 
@@ -223,27 +230,37 @@ EsdBytecode.FromHex("4F 82 E5 9F D5 00 85 41 95 A1");
 
 ## Common Patterns
 
-### Bonfire: Add a New Menu Option
+### Bonfire: Add a New Menu Option (flag → EMEVD bridge)
+
+The bonfire UI has a fixed layout (see `AddBonfireMenuItem` / the "ESD Modding
+Patterns" section of `CLAUDE.md`), so new options are wired through a flag that
+EMEVD listens for — not through ESD-side warp/respawn commands (there is no
+such Talk ESD command; see the note on `UpdateRespawnPoint` above).
 
 ```csharp
 g.EditEsdBySize("script/talk", 23012, esd =>
 {
-    var menuState = esd.GetOrAddState(1, 4);
-    
-    // Add new item at index 16: "Teleport to Firelink"
-    menuState.AddEntryCommand(1, 4,
+    const long menuState = 4;
+    const long actionState = 100;
+    const int  flagOnSelect = 11810600; // EMEVD listens for this
+
+    // Add the new item at list index 16: "Teleport to Firelink"
+    esd.AddEntryCommand(1, menuState,
         TalkCmd.AddTalkListData(16, 15000300, gateFlag: -1));
-    
-    // Route to new state when selected
-    esd.AddTransition(1, 4, 100,
+
+    // Route to the action state when the player selects it
+    esd.AddTransition(1, menuState, actionState,
         EsdBytecode.SelectedItem(16));
-    
-    // State 100: teleport logic
-    var tpState = esd.GetOrAddState(1, 100);
-    tpState.AddEntryCommand(1, 100,
-        TalkCmd.UpdateRespawnPoint(4010000));  // Firelink bonfire entity
+
+    // Action state: set the flag and let EMEVD do the actual warp
+    esd.AddEntryCommand(1, actionState,
+        TalkCmd.SetEventFlag(flagOnSelect, on: true));
 });
 ```
+
+Then in EMEVD, listen for `flagOnSelect` and call `WarpPlayer` /
+`SetPlayerRespawnPoint` — see
+`reference/SoulsModding_Advanced_ESD_Tutorial.md` for the full event handler.
 
 ### Combat: Stagger Breaks Chain
 
