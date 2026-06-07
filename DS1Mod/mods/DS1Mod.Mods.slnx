@@ -8,6 +8,7 @@
 	<Project Path="DS1Mod.FogLogger\DS1Mod.FogLogger.csproj" />
 	<Project Path="DS1Mod.GoofyDemon\DS1Mod.GoofyDemon.csproj" />
 	<Project Path="DS1Mod.HpLogger\DS1Mod.HpLogger.csproj" />
+	<Project Path="DS1Mod.DebugMenu\DS1Mod.DebugMenu.csproj" />
 	<Project Path="DS1Mod.ImGuiDemo\DS1Mod.ImGuiDemo.csproj" />
 	<Project Path="DS1Mod.ItemsDemo\DS1Mod.ItemsDemo.csproj" />
 </Solution>

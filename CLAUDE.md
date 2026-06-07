@@ -37,7 +37,7 @@ Entry point: `DS1MegaRando.UI` → `MegaRandomizer.cs` orchestrates everything.
 
 | File | Role |
 |---|---|
-| `DS1Mod/framework/DS1Mod.Injector/modloader.cpp` | C++ DLL entry; applies heap fix, bootstraps .NET runtime via hostfxr |
+| `DS1Mod/framework/DS1Mod.Injector/modloader.cpp` | C++ DLL entry; disables Arxan DRM via dearxan FFI, applies heap fix, bootstraps .NET runtime via hostfxr |
 | `DS1Mod/framework/DS1Mod.Host/ModLifecycleManager.cs` | Scans `mods/`, loads each DLL into its own `AssemblyLoadContext`, drives the tick loop |
 | `DS1Mod/framework/DS1Mod.Core/GameMemory.cs` | Direct in-process pointer reads/writes (no ReadProcessMemory) |
 | `DS1Mod/framework/DS1Mod.Core/GamePointers.cs` | AOB scan to resolve DSR version-specific base pointers |
@@ -96,6 +96,8 @@ Modders can use the ESD editing framework to build:
 6. **Mods run inside the DSR process** — `GameMemory.Read<T>` is a direct pointer dereference. There is no inter-process overhead, but any unhandled exception in mod code will crash DSR. `ModLifecycleManager` wraps each mod call in try/catch.
 
 7. **GoofyDemon mood flags use m18_01 section-5 range (`11815700..09`)** — section 7 is not allocated by the game, which is why an earlier build showed no HUD text. Always use flags from an allocated section for EMEVD bridging.
+
+8. **Arxan DRM is disabled at game launch** — `modloader.cpp` calls `dearxan_neuter_arxan()` (FFI to dearxan crate) before game logic runs. This disables all Arxan integrity checks. Requires linking against `dearxan.lib` (pre-compiled or built from https://github.com/tremwil/dearxan). See `DS1Mod/framework/DS1Mod.Injector/ARXAN_SETUP.md` for build instructions.
 
 ## ESD (EZState) Editing Framework
 
