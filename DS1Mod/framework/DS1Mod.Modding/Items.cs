@@ -328,6 +328,58 @@ public sealed class MsbEditor
         return $"{model}_{next:D4}";
     }
 
+    /// <summary>
+    /// Place an NPC/enemy with a specific entity ID near <paramref name="position"/>.
+    /// Idempotent: removes any existing entry for that entity ID before re-adding.
+    /// The enemy starts enabled in the MSB; add a one-shot EMEVD init event to
+    /// disable it at map load if you want it hidden until triggered.
+    /// </summary>
+    public MsbEditor PlaceEnemy(int entityId, string modelName, int npcParamId, int thinkParamId,
+        Vector3 position, Vector3? rotation = null, string? collisionName = null)
+    {
+        _msb.Parts.Enemies.RemoveAll(e => e.EntityID == entityId);
+
+        if (!_msb.Models.Enemies.Any(m => m.Name == modelName))
+            _msb.Models.Enemies.Add(new MSB1.Model.Enemy { Name = modelName });
+
+        MSB1.Part.Enemy? donor = _msb.Parts.Enemies
+            .OrderBy(e => Vector3.DistanceSquared(e.Position, position))
+            .FirstOrDefault();
+
+        MSB1.Part.Enemy enemy = donor is not null
+            ? (MSB1.Part.Enemy)donor.DeepCopy()
+            : new MSB1.Part.Enemy();
+
+        enemy.Name         = NextEnemyIndex(modelName);
+        enemy.ModelName    = modelName;
+        enemy.Position     = position;
+        enemy.Rotation     = rotation ?? Vector3.Zero;
+        enemy.Scale        = Vector3.One;
+        enemy.EntityID     = entityId;
+        enemy.NPCParamID   = npcParamId;
+        enemy.ThinkParamID = thinkParamId;
+        enemy.TalkID       = -1;
+        enemy.InitAnimID   = -1;
+        if (collisionName is not null) enemy.CollisionName = collisionName;
+
+        _msb.Parts.Enemies.Add(enemy);
+        return this;
+    }
+
+    private string NextEnemyIndex(string modelName)
+    {
+        int next = _msb.Parts.Enemies
+            .Where(e => e.Name.StartsWith(modelName + "_"))
+            .Select(e =>
+            {
+                string suffix = e.Name[(modelName.Length + 1)..];
+                return int.TryParse(suffix, out int n) ? n : -1;
+            })
+            .DefaultIfEmpty(-1)
+            .Max() + 1;
+        return $"{modelName}_{next:D4}";
+    }
+
     private string FindNearestCollision(Vector3 pos)
     {
         // Prefer the actual nearest collision mesh by world position. This
