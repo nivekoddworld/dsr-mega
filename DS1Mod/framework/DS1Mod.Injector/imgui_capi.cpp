@@ -45,6 +45,8 @@ extern "C"
     }
     __declspec(dllexport) void igProgressBar(float fraction, float size_x, float size_y, const char* overlay)
         { ImGui::ProgressBar(fraction, {size_x,size_y}, overlay); }
+    __declspec(dllexport) uint8_t igButton(const char* label, float size_x, float size_y)
+        { return ImGui::Button(label, {size_x,size_y}) ? 1 : 0; }
 
     // Style
     __declspec(dllexport) void igPushStyleColor(int idx, float r, float g, float b, float a)
