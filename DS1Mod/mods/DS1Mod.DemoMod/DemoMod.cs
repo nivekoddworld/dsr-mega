@@ -216,6 +216,47 @@ public sealed class DemoMod : ModBase, IGamePatcher, IGuiMod
 
         DS1ImGui.Separator();
 
+        // ── Vftable hook section ───────────────────────────────────────
+        DS1ImGui.PushStyleColor(ImGuiCol.Text, 0.7f, 0.85f, 1f, 1f);
+        DS1ImGui.Text("SIGNATURE CAPTURE");
+        DS1ImGui.PopStyleColor();
+        DS1ImGui.Text("Swap vftable[0] for a stub that logs args from each call.");
+        DS1ImGui.Text("Then load a map / kill enemies / cross a fog gate.");
+
+        bool canHook = _probe is { Ok: true } && ChrInsFactoryHook.Current is not { Installed: true };
+        bool canUnhook = ChrInsFactoryHook.Current is { Installed: true };
+
+        if (canHook && DS1ImGui.Button("Install vftable hook"))
+        {
+            var (ok, msg) = ChrInsFactoryHook.Install(_probe!.VftableVA, _probe.FunctionVA);
+            _callStatus = msg;
+            Log("[Hook] Install: " + msg);
+        }
+        if (canUnhook && DS1ImGui.Button("Uninstall vftable hook"))
+        {
+            var (ok, msg) = ChrInsFactoryHook.Uninstall();
+            _callStatus = msg;
+            Log("[Hook] Uninstall: " + msg);
+        }
+
+        // Live capture display (read fresh every frame).
+        var snap = ChrInsFactoryHook.Read();
+        if (snap is not null)
+        {
+            DS1ImGui.Spacing();
+            DS1ImGui.Text($"calls observed : {snap.CallCount}");
+            DS1ImGui.Text($"this           : 0x{(ulong)snap.This:X}");
+            DS1ImGui.Text($"arg1 (RDX)     : 0x{(ulong)snap.Arg1:X}");
+            DS1ImGui.Text($"arg2 (R8)      : 0x{(ulong)snap.Arg2:X}");
+            DS1ImGui.Text($"arg3 (R9)      : 0x{(ulong)snap.Arg3:X}");
+            DS1ImGui.Text($"arg4 (stk+28)  : 0x{(ulong)snap.Arg4:X}");
+            DS1ImGui.Text($"arg5 (stk+30)  : 0x{(ulong)snap.Arg5:X}");
+            DS1ImGui.Text($"arg6 (stk+38)  : 0x{(ulong)snap.Arg6:X}");
+            DS1ImGui.Text($"arg7 (stk+40)  : 0x{(ulong)snap.Arg7:X}");
+        }
+
+        DS1ImGui.Separator();
+
         // ── Dangerous call section ─────────────────────────────────────
         DS1ImGui.PushStyleColor(ImGuiCol.Text, 1f, 0.7f, 0.3f, 1f);
         DS1ImGui.Text("DANGER ZONE");
