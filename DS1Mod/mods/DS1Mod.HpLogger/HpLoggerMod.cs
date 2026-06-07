@@ -1,21 +1,11 @@
 using DS1Mod.Core;
 using DS1Mod.SDK;
 
-namespace DS1Mod.HpLogger;
+namespace DS1Mod.Rando;
 
-/// <summary>
-/// A worked example of the <see cref="ModBase.OnTick"/> polling hook. The event
-/// pump calls OnTick ~twice a second while in-game; here we read the player's
-/// current HP each tick, log it only when it changes (with the delta), and keep
-/// the session's lowest HP. This is the "poll a current value and detect the
-/// change yourself" pattern — for one-shot reactions (death, boss kills) use the
-/// edge-triggered hooks instead.
-///
-/// Output goes to the console and &lt;modsDir&gt;/HpLogger.log.
-/// </summary>
 public sealed class HpLoggerMod : ModBase
 {
-    public override string Name    => "HP Logger";
+    public override string Name    => "Enemy Randomizer";
     public override string Version => "1.0.0";
     public override string Author  => "DS1MegaRando";
 

@@ -112,7 +112,7 @@ public class EsdTestMod : ModBase, IGamePatcher, IGuiMod
 
 			// Pattern 2: Add a "Spawn Rat" menu item.
 			// Selecting it sets _testFlag; EMEVD in Firelink watches that flag and enables the rat.
-			bool itemAdded = g.AddBonfireMenuItem(talkId: 15001200, gateFlag: -1, flagId: _testFlag);
+			bool itemAdded = g.AddBonfireMenuItem(talkId: 15001200, gateFlag: -1, flagId: 90);
 			Assert(itemAdded, "Bonfire.AddMenuItem (spawn rat)");
 			testResults["Bonfire.AddMenuItem"] = TestStatus.Passed;
 			testsPassed++;
