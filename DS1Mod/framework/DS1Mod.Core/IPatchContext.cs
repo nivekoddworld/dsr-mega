@@ -53,4 +53,13 @@ public interface IPatchContext
 
     /// <summary>Request a single ID in the given space.</summary>
     int AllocateId(string space) => AllocateIds(space, 1);
+
+    /// <summary>
+    /// Allocates the next available bonfire menu slot index. Vanilla items occupy
+    /// slots 0–4; custom items start at slot 5 and increment with each call.
+    /// </summary>
+    int AllocateBonfireSlot()
+        => throw new NotImplementedException(
+            $"IPatchContext.AllocateBonfireSlot not implemented. " +
+            $"Upgrade to the host that supports bonfire menu editing.");
 }

@@ -218,7 +218,7 @@ public sealed class GamePatch
         if (!Directory.Exists(dir)) { Log($"not found: {relDir}"); return 0; }
 
         int count = 0;
-        foreach (string path in Directory.GetFiles(dir, "*.esdbnd.dcx", SearchOption.AllDirectories))
+        foreach (string path in Directory.GetFiles(dir, "*esdbnd.dcx", SearchOption.AllDirectories))
         {
             byte[] dec = DCX.Decompress(path, out DCX.Type type);
             BND3 bnd = BND3.Read(dec);
@@ -619,6 +619,28 @@ public sealed class GamePatch
     // ── Bonfire menu helpers (cooperative multi-mod editing) ────────────────────
 
     /// <summary>
+    /// Edit the shared bonfire ESD directly. Changes are accumulated in-memory and
+    /// written to all bonfire ESD entries at the end of the patch phase, alongside
+    /// any <see cref="AddBonfireMenuItem"/> additions.
+    ///
+    /// Use this instead of <see cref="EditEsdBySize"/> for bonfire-related changes
+    /// (gate flags, etc.) so all edits go through the same write path.
+    /// <code>
+    /// g.EditBonfireEsd(esd => {
+    ///     esd.SetTalkListGateFlag(1, 4, 15000100, -1);  // Level Up always visible
+    /// });
+    /// </code>
+    /// </summary>
+    /// <returns>True if the shared bonfire ESD is available, false if skipped.</returns>
+    public bool EditBonfireEsd(Action<EsdEditor> edit)
+    {
+        var esdObj = _ctx?.GetBonfireEsd();
+        if (esdObj is not EsdEditor esd) return false;
+        edit(esd);
+        return true;
+    }
+
+    /// <summary>
     /// Add a menu item to the shared bonfire ESD. All mods can call this during
     /// their Patch() phase; the framework accumulates changes and writes the result
     /// to disk before the game starts.
@@ -638,24 +660,34 @@ public sealed class GamePatch
     /// </summary>
     /// <remarks>
     /// The bonfire ESD has a fixed state machine (group 1, state 4). This helper
-    /// automatically allocates menu slot indices, starting after vanilla items (slot 5+).
-    /// When user selects the item, a transition occurs that can set a flag for EMEVD.
+    /// automatically allocates menu slot indices starting after vanilla items (slot 13+).
+    /// When the player selects the item: if <paramref name="flagId"/> is provided,
+    /// the ESD sets that flag (EMEVD can listen for it); then the menu closes.
     /// </remarks>
-    public bool AddBonfireMenuItem(int talkId, int gateFlag = -1)
+    public bool AddBonfireMenuItem(int talkId, int gateFlag = -1, int flagId = -1)
     {
         var esdObj = _ctx?.GetBonfireEsd();
         if (esdObj is not EsdEditor esd) return false;
 
-        // Access the internal slot counter via reflection
-        var ctxType = _ctx!.GetType();
-        var slotField = ctxType.GetProperty("NextBonfireSlot");
-        if (slotField == null) return false;
+        int slot = _ctx!.AllocateBonfireSlot();
+        // Handler state ID: 1000 + slot avoids all vanilla states (max ~68)
+        long handlerState = 1000 + slot;
 
-        int nextSlot = (int)slotField.GetValue(_ctx)!;
+        // Display: add the menu item to state 4's entry commands
         esd.AddEntryCommand(groupId: 1, stateId: 4,
-            TalkCmd.AddTalkListData(nextSlot, talkId, gateFlag));
+            TalkCmd.AddTalkListData(slot, talkId, gateFlag));
 
-        slotField.SetValue(_ctx, nextSlot + 1);
+        // Handler state: optionally set the flag, then exit the menu (→ state 21)
+        if (flagId >= 0)
+            esd.AddEntryCommand(groupId: 1, stateId: handlerState,
+                TalkCmd.SetEventFlag(flagId, true));
+        esd.AddTransition(groupId: 1, fromState: handlerState, toState: 21,
+            evaluator: EsdBytecode.Always());
+
+        // Routing: when this item is selected, go to the handler state
+        esd.AddTransition(groupId: 1, fromState: 4, toState: handlerState,
+            evaluator: EsdBytecode.Eq(EsdBytecode.GetMenuSelection(), EsdBytecode.PushInt(slot)));
+
         return true;
     }
 
@@ -678,15 +710,9 @@ public sealed class GamePatch
         var esdObj = _ctx?.GetBonfireEsd();
         if (esdObj is not EsdEditor esd) return false;
 
-        var ctxType = _ctx!.GetType();
-        var slotField = ctxType.GetProperty("NextBonfireSlot");
-        if (slotField == null) return false;
-
-        int nextSlot = (int)slotField.GetValue(_ctx)!;
+        int slot = _ctx!.AllocateBonfireSlot();
         esd.AddEntryCommand(groupId: 1, stateId: 4,
-            TalkCmd.AddTalkListDataIf(condition, nextSlot, talkId));
-
-        slotField.SetValue(_ctx, nextSlot + 1);
+            TalkCmd.AddTalkListDataIf(condition, slot, talkId));
         return true;
     }
 }
