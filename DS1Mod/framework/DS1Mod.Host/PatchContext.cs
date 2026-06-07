@@ -17,7 +17,8 @@ internal sealed class PatchContext : IPatchContext
 
     // Shared bonfire ESD that all mods can edit during the patch phase
     internal EsdEditor? BonfireEsd { get; set; }
-    internal int NextBonfireSlot { get; set; } = 5;  // Vanilla items use 0-4
+    internal int BonfireEsdSize { get; set; }          // Detected size of bonfire ESD entries on disk
+    internal int NextBonfireSlot { get; set; } = 13;  // Vanilla items use slots 1-12
 
     public PatchContext(string gameDir, string modsDir)
     {
@@ -65,5 +66,11 @@ internal sealed class PatchContext : IPatchContext
 
     public int AllocateIds(string space, int count) => _allocator.AllocateIds(space, count);
 
+    public int AllocateBonfireSlot() => NextBonfireSlot++;
+
     public EsdEditor? GetBonfireEsd() => BonfireEsd;
+
+    // Explicit implementation so IPatchContext callers (typed as the interface)
+    // get the real EsdEditor object rather than the default null.
+    object? IPatchContext.GetBonfireEsd() => BonfireEsd;
 }

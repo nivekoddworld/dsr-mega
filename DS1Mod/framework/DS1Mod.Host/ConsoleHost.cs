@@ -26,7 +26,13 @@ internal static class ConsoleHost
 
     private static bool _initialized;
 
-    public static void Initialize(string title)
+    /// <param name="logFilePath">
+    /// If provided, every line written to the console (by the host or any mod)
+    /// is also appended to this file. The console window disappears when the
+    /// game closes, so this is the only durable record of what mods logged —
+    /// useful for tooling that needs to verify a run after the fact.
+    /// </param>
+    public static void Initialize(string title, string? logFilePath = null)
     {
         if (_initialized) return;
         _initialized = true;
@@ -41,11 +47,33 @@ internal static class ConsoleHost
             // invalid, so Console.Out silently no-ops until we re-bind it to a
             // freshly opened CONOUT$.
             FileStream? conOut = OpenConsoleStream();
-            if (conOut is not null)
+            TextWriter? consoleWriter = conOut is not null
+                ? new StreamWriter(conOut) { AutoFlush = true }
+                : null;
+
+            TextWriter? fileWriter = null;
+            if (logFilePath is not null)
             {
-                var writer = new StreamWriter(conOut) { AutoFlush = true };
-                Console.SetOut(writer);
-                Console.SetError(writer);
+                try
+                {
+                    var fs = new FileStream(logFilePath, FileMode.Create, FileAccess.Write, FileShare.Read);
+                    fileWriter = new StreamWriter(fs) { AutoFlush = true };
+                }
+                catch { /* file logging is best-effort */ }
+            }
+
+            TextWriter? combined = (consoleWriter, fileWriter) switch
+            {
+                (not null, not null) => new TeeTextWriter(consoleWriter, fileWriter),
+                (not null, null)     => consoleWriter,
+                (null, not null)     => fileWriter,
+                _                    => null,
+            };
+
+            if (combined is not null)
+            {
+                Console.SetOut(combined);
+                Console.SetError(combined);
             }
 
             try { Console.Title = title; } catch { /* title is cosmetic */ }
@@ -97,4 +125,15 @@ internal static class ConsoleHost
 
     [DllImport("user32.dll")] private static extern nint GetSystemMenu(nint hWnd, bool revert);
     [DllImport("user32.dll")] private static extern bool DeleteMenu(nint hMenu, uint position, uint flags);
+}
+
+/// <summary>Forwards every write to two underlying writers — used to mirror console output to a log file.</summary>
+internal sealed class TeeTextWriter(TextWriter a, TextWriter b) : TextWriter
+{
+    public override System.Text.Encoding Encoding => a.Encoding;
+
+    public override void Write(char value)       { a.Write(value);  b.Write(value); }
+    public override void Write(string? value)    { a.Write(value);  b.Write(value); }
+    public override void WriteLine(string? value){ a.WriteLine(value); b.WriteLine(value); }
+    public override void Flush()                 { a.Flush();       b.Flush(); }
 }

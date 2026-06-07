@@ -20,15 +20,20 @@ public static class ModLoader
     {
         try
         {
-            // Stand up the console first so every line that follows — host and
-            // mods alike — is actually visible.
-            ConsoleHost.Initialize("DS1Mod — Mod Loader");
-
-            GameMemory.Initialize();
-
             string gameDir = argSizeInBytes > 0
                 ? Marshal.PtrToStringUni(arg, argSizeInBytes / 2)?.TrimEnd('\0') ?? ""
                 : "";
+
+            // Stand up the console first so every line that follows — host and
+            // mods alike — is actually visible. Also tee everything to a log
+            // file so output survives after the console window closes and can
+            // be read by tooling without a human watching the screen.
+            string? consoleLogPath = gameDir.Length > 0
+                ? Path.Combine(gameDir, "ds1mod_console.log")
+                : null;
+            ConsoleHost.Initialize("DS1Mod — Mod Loader", consoleLogPath);
+
+            GameMemory.Initialize();
 
             string modsDir = Path.Combine(gameDir, "mods");
 

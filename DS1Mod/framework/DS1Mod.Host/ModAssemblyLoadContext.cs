@@ -21,6 +21,12 @@ internal sealed class ModAssemblyLoadContext : AssemblyLoadContext
     {
         "DS1Mod.Core",
         "DS1Mod.SDK",
+        // Modding types (EsdEditor, GamePatch, etc.) are instantiated by the host
+        // and passed to mods — both sides must share the same type identity.
+        "DS1Mod.Modding",
+        // SoulsFormats/ZstdSharp types cross the host/mod boundary via Modding.
+        "SoulsFormats",
+        "ZstdSharp",
     };
 
     private readonly AssemblyDependencyResolver _resolver;

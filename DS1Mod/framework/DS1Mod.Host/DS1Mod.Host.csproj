@@ -19,6 +19,8 @@
     <ProjectReference Include="..\DS1Mod.SDK\DS1Mod.SDK.csproj"/>
     <!-- Rendering bridge: ImGuiRenderer + NativeD3DHook P/Invokes -->
     <ProjectReference Include="..\DS1Mod.Rendering\DS1Mod.Rendering.csproj"/>
+    <!-- ModLifecycleManager/PatchContext build the shared bonfire ESD via EsdEditor -->
+    <ProjectReference Include="..\DS1Mod.Modding\DS1Mod.Modding.csproj"/>
   </ItemGroup>
 
   <ItemGroup>

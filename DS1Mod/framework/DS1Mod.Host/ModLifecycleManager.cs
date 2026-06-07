@@ -193,26 +193,39 @@ internal sealed class ModLifecycleManager : IDisposable
     {
         try
         {
-            const int VanillaBonfireEsdSize = 23012;
             string talkDir = Path.Combine(gameDir, @"script\talk");
+            string[] bndPaths = Directory.GetFiles(talkDir, "*.talkesdbnd.dcx");
 
-            // Find and load a bonfire ESD from any talkesdbnd file
-            foreach (string bndPath in Directory.GetFiles(talkDir, "*.talkesdbnd.dcx"))
+            // Detect the bonfire ESD size: all 74 bonfire scripts are byte-for-byte
+            // identical, so they share a size that appears far more often than any
+            // other entry size. Works on both vanilla (23012) and already-patched files.
+            var sizeCounts = new Dictionary<int, int>();
+            foreach (string p in bndPaths)
             {
-                byte[] dec = DCX.Decompress(bndPath, out _);
-                BND3 bnd = BND3.Read(dec);
-
-                var bonfireEntry = bnd.Files.FirstOrDefault(f => f.Bytes.Length == VanillaBonfireEsdSize);
-                if (bonfireEntry != null)
-                {
-                    ESD esdObj = ESD.Read(bonfireEntry.Bytes);
-                    patchCtx.BonfireEsd = new EsdEditor(esdObj);
-                    Console.WriteLine($"[DS1Mod.Host] Loaded shared bonfire ESD from {Path.GetFileName(bndPath)}");
-                    return;
-                }
+                BND3 b = BND3.Read(DCX.Decompress(p, out _));
+                foreach (var f in b.Files)
+                    sizeCounts[f.Bytes.Length] = sizeCounts.GetValueOrDefault(f.Bytes.Length) + 1;
             }
+            if (sizeCounts.Count == 0) { Console.WriteLine("[DS1Mod.Host] Warning: no talkesdbnd entries found."); return; }
 
-            Console.WriteLine("[DS1Mod.Host] Warning: bonfire ESD not found — bonfire menu modifications will be skipped.");
+            var (bonfireSize, count) = sizeCounts.OrderByDescending(kv => kv.Value).First();
+            if (count < 5) { Console.WriteLine("[DS1Mod.Host] Warning: bonfire ESD not found — bonfire modifications skipped."); return; }
+
+            patchCtx.BonfireEsdSize = bonfireSize;
+
+            // Load one instance, strip any custom slots from a previous run, hand to mods.
+            foreach (string p in bndPaths)
+            {
+                BND3 b = BND3.Read(DCX.Decompress(p, out _));
+                var entry = b.Files.FirstOrDefault(f => f.Bytes.Length == bonfireSize);
+                if (entry == null) continue;
+
+                var editor = new EsdEditor(ESD.Read(entry.Bytes));
+                editor.ResetCustomBonfireSlots();
+                patchCtx.BonfireEsd = editor;
+                Console.WriteLine($"[DS1Mod.Host] Loaded bonfire ESD template ({bonfireSize} bytes, {count} instances)");
+                return;
+            }
         }
         catch (Exception ex)
         {
@@ -226,11 +239,10 @@ internal sealed class ModLifecycleManager : IDisposable
 
         try
         {
-            const int VanillaBonfireEsdSize = 23012;
             string talkDir = Path.Combine(gameDir, @"script\talk");
             byte[] modifiedEsdBytes = patchCtx.BonfireEsd.Esd.Write();
+            int bonfireSize = patchCtx.BonfireEsdSize;
 
-            // Write to all bonfire ESDs (identified by vanilla size) in all talkesdbnd files
             int filesModified = 0;
             foreach (string bndPath in Directory.GetFiles(talkDir, "*.talkesdbnd.dcx"))
             {
@@ -240,25 +252,20 @@ internal sealed class ModLifecycleManager : IDisposable
                 bool changed = false;
                 foreach (BinderFile file in bnd.Files)
                 {
-                    if (file.Bytes.Length == VanillaBonfireEsdSize)
-                    {
-                        file.Bytes = modifiedEsdBytes;
-                        changed = true;
-                    }
+                    if (file.Bytes.Length != bonfireSize) continue;
+                    file.Bytes = modifiedEsdBytes;
+                    changed = true;
                 }
 
                 if (changed)
                 {
-                    string bakPath = bndPath + ".bak";
-                    if (!File.Exists(bakPath)) File.Copy(bndPath, bakPath);
-
                     File.WriteAllBytes(bndPath, DCX.Compress(bnd.Write(), type));
                     filesModified++;
                 }
             }
 
             if (filesModified > 0)
-                Console.WriteLine($"[DS1Mod.Host] Wrote accumulated bonfire ESD to {filesModified} file(s)");
+                Console.WriteLine($"[DS1Mod.Host] Wrote bonfire ESD to {filesModified} file(s)");
         }
         catch (Exception ex)
         {

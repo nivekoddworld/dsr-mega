@@ -62,7 +62,9 @@ internal sealed class IdAllocator
         // Each map has a reserved flag range; event IDs use a SEPARATE offset (+500)
         // so that the "event N is registered → flag N" DS1R mirroring never causes
         // an allocated event flag to collide with an allocated event ID.
+        { "EventFlags_m18_00_00_00", 11809000 },
         { "EventFlags_m18_01_00_00", 11819000 },
+        { "EventFlags_m10_00_00_00", 11009000 },
         { "EventFlags_m10_01_00_00", 11010900 },
         { "EventFlags_m14_01_00_00", 11415000 },
         { "EventFlags_m12_01_00_00", 11215000 },
@@ -71,7 +73,9 @@ internal sealed class IdAllocator
         { "EventFlags_m11_00_00_00", 11110000 },
 
         // EMEVD events (per-map) — +500 offset from flags to avoid flag-mirror collision
+        { "EmevdEvents_m18_00_00_00", 11809500 },
         { "EmevdEvents_m18_01_00_00", 11819500 },
+        { "EmevdEvents_m10_00_00_00", 11009500 },
         { "EmevdEvents_m10_01_00_00", 11011400 },
         { "EmevdEvents_m14_01_00_00", 11415500 },
         { "EmevdEvents_m12_01_00_00", 11215500 },
@@ -80,7 +84,9 @@ internal sealed class IdAllocator
         { "EmevdEvents_m11_00_00_00", 11110500 },
 
         // MSB entity IDs (per-map) — use high unused ranges
+        { "MsbEntities_m18_00_00_00", 1809000 },
         { "MsbEntities_m18_01_00_00", 1811000 },
+        { "MsbEntities_m10_00_00_00", 1009000 },
         { "MsbEntities_m10_01_00_00", 1010000 },
         { "MsbEntities_m14_01_00_00", 1410000 },
         { "MsbEntities_m12_01_00_00", 1210000 },
