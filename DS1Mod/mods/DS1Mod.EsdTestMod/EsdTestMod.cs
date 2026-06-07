@@ -2,8 +2,10 @@ using DS1Mod.Core;
 using DS1Mod.Core.ImGui;
 using DS1Mod.Modding;
 using DS1Mod.SDK;
+using SoulsFormats;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace DS1Mod.EsdTestMod;
 
@@ -13,7 +15,12 @@ public class EsdTestMod : ModBase, IGamePatcher, IGuiMod
 	public override string Version => "1.0";
 	public override string Author => "Test Suite";
 
-	private const int TestFlag = 11815700;  // Bonfire test flag
+	// Allocated at patch time via the ID allocation system (allocations.json in game dir).
+	// Instance fields so OnGui() can read them after Patch() runs.
+	private int _testFlag;
+	private int _ratEntityId;
+	private int _ratInitEvent;
+	private int _ratSpawnEvent;
 
 	private Dictionary<string, TestStatus> testResults = new();
 	private int testsFailed = 0;
@@ -30,6 +37,15 @@ public class EsdTestMod : ModBase, IGamePatcher, IGuiMod
 	public void Patch(IPatchContext patchCtx)
 	{
 		var g = new GamePatch(patchCtx);
+
+		// Allocate all IDs via the central allocator (persisted in allocations.json).
+		// Same mod always gets the same IDs across runs for save-game compatibility.
+		_testFlag    = patchCtx.AllocateId("EventFlags_m18_00_00_00");
+		_ratEntityId = patchCtx.AllocateId("MsbEntities_m18_00_00_00");
+		int evBase   = patchCtx.AllocateIds("EmevdEvents_m18_00_00_00", 2);
+		_ratInitEvent  = evBase;
+		_ratSpawnEvent = evBase + 1;
+
 		Log("Starting ESD Framework Tests...");
 
 		try
@@ -45,7 +61,6 @@ public class EsdTestMod : ModBase, IGamePatcher, IGuiMod
 
 			// Gameplay changes demonstrating Talk ESD capability
 			TestBonfireUnlock(g);
-			TestTalkEsdBatching(g);
 
 			Log($"✓ All tests completed: {testsPassed} passed, {testsFailed} failed");
 		}
@@ -64,8 +79,7 @@ public class EsdTestMod : ModBase, IGamePatcher, IGuiMod
 		{
 			g.EditBnd3Glob("msg", "menu.msgbnd.dcx", bnd =>
 			{
-				Texts.Set(bnd, Texts.EventText, 15001200, "[TEST] Custom Menu Item 1");
-				Texts.Set(bnd, Texts.EventText, 15001201, "[TEST] Custom Menu Item 2 (Gated)");
+				Texts.Set(bnd, Texts.EventText, 15001200, "Spawn Rat");
 			});
 
 			Log("✓ FMG entries added");
@@ -82,37 +96,57 @@ public class EsdTestMod : ModBase, IGamePatcher, IGuiMod
 
 		try
 		{
-			// Pattern 1: Unlock existing items via gate flags
-			// (This modifies the vanilla menu items that already exist)
-			g.EditEsdBySize("script/talk", 23012, esd =>
+			// Pattern 1: Unlock existing items via gate flags via the shared ESD so
+			// changes are combined with AddBonfireMenuItem in a single write pass.
+			bool gated = g.EditBonfireEsd(esd =>
 			{
 				esd.SetTalkListGateFlag(1, 4, 15000100, -1);  // Level Up
-				esd.SetTalkListGateFlag(1, 4, 15000170, -1);  // Homeward Bone
+				esd.SetTalkListGateFlag(1, 4, 15000170, -1);  // Reverse Hollowing
 				esd.SetTalkListGateFlag(1, 4, 15000270, -1);  // Leave
 			});
+			Assert(gated, "Bonfire.UnlockViaGates (shared ESD available)");
 
 			testResults["Bonfire.UnlockViaGates"] = TestStatus.Passed;
 			testsPassed++;
-			Log("✓ Bonfire.UnlockViaGates (existing items unlocked)");
+			Log("✓ Bonfire.UnlockViaGates (gate flags queued in shared ESD)");
 
-			// Pattern 2: Add cooperative bonfire menu items via shared ESD
-			// When player selects this item, it will set TestFlag.
-			// Mods can hook this flag in EMEVD to give items, warp, etc.
-			// See reference/SoulsModding_Advanced_ESD_Tutorial.md for full pattern.
-			if (g.AddBonfireMenuItem(talkId: 15001200, gateFlag: -1))
+			// Pattern 2: Add a "Spawn Rat" menu item.
+			// Selecting it sets _testFlag; EMEVD in Firelink watches that flag and enables the rat.
+			bool itemAdded = g.AddBonfireMenuItem(talkId: 15001200, gateFlag: -1, flagId: _testFlag);
+			Assert(itemAdded, "Bonfire.AddMenuItem (spawn rat)");
+			testResults["Bonfire.AddMenuItem"] = TestStatus.Passed;
+			testsPassed++;
+			Log($"✓ Bonfire.AddMenuItem → queued 'Spawn Rat' in shared ESD (flag {_testFlag})");
+
+			// Place rat NPC in Firelink (disabled until flag fires).
+			g.EditMsb("m18_00_00_00", msb => msb
+				.PlaceEnemy(
+					entityId: _ratEntityId,
+					modelName: "c1201",  // Small Rat
+					npcParamId: 120100,
+					thinkParamId: 120100,
+					position: new Vector3(48.0f, -62.5f, 103.0f),  // near bonfire
+					collisionName: "h0014B0"));
+
+			// EMEVD: disable rat at map load, then loop: watch _testFlag → enable rat → clear flag.
+			g.EditEmevd("m18_00_00_00", emevd =>
 			{
-				testResults["Bonfire.AddMenuItem"] = TestStatus.Passed;
-				testsPassed++;
-				Log("✓ Bonfire.AddMenuItem (custom item added to shared ESD)");
-				Log("  → When selected, sets flag " + TestFlag);
-				Log("  → Mods can listen to this flag in EMEVD to execute behavior");
-			}
-			else
-			{
-				testResults["Bonfire.AddMenuItem"] = TestStatus.Passed;
-				testsPassed++;
-				Log("✓ Bonfire.AddMenuItem (shared ESD not available, skipped)");
-			}
+				// One-shot init: disable the rat when the map first loads.
+				emevd.DefineEvent(_ratInitEvent, EMEVD.Event.RestBehaviorType.Default, evb =>
+				{
+					evb.SetCharacterEnabled(_ratEntityId, EnabledState.Disabled);
+				});
+
+				// Spawn loop: wait for flag → enable rat → clear flag → restart.
+				emevd.DefineEvent(_ratSpawnEvent, EMEVD.Event.RestBehaviorType.Restart, evb =>
+				{
+					evb.WhenFlag(_testFlag, FlagState.On);
+					evb.SetCharacterEnabled(_ratEntityId, EnabledState.Enabled);
+					evb.SetFlag(_testFlag, FlagState.Off);
+				});
+			});
+
+			Log("✓ Bonfire.SpawnRat (MSB + EMEVD wired for Firelink)");
 		}
 		catch (Exception ex)
 		{
@@ -142,7 +176,8 @@ public void OnGui()
 			DS1ImGui.Separator();
 			DS1ImGui.Text("Gameplay Demo:");
 			DS1ImGui.Text("  ✓ Bonfire items unlocked via gates");
-			DS1ImGui.Text("  ✓ ESD batch editing working");
+			DS1ImGui.Text("  ✓ 'Spawn Rat' button added to bonfire menu");
+			DS1ImGui.Text("  ✓ Firelink MSB + EMEVD wired for rat spawn");
 
 			DS1ImGui.Separator();
 			DisplayGameplayState();
@@ -164,7 +199,7 @@ public void OnGui()
 		DS1ImGui.Text($"Level: {level}");
 
 		// Check if our test flags are set
-		bool testFlagSet = ctx.Reader.GetEventFlag(TestFlag);
+		bool testFlagSet = _testFlag != 0 && ctx.Reader.GetEventFlag(_testFlag);
 		DS1ImGui.Text($"Test Flag: {(testFlagSet ? "SET" : "not set")}");
 	}
 
@@ -240,8 +275,8 @@ public void OnGui()
 			cmd = TalkCmd.ShowShopMessage();
 			Assert(cmd != null, test);
 
-			test = "TalkESD.UpdateRespawnPoint";
-			cmd = TalkCmd.UpdateRespawnPoint(4010000);
+			test = "TalkESD.ClearTalkListData";
+			cmd = TalkCmd.ClearTalkListData();
 			Assert(cmd != null, test);
 		}
 		catch (Exception ex)
@@ -253,33 +288,6 @@ public void OnGui()
 
 		testResults["TalkESD.Commands"] = TestStatus.Passed;
 		testsPassed++;
-	}
-
-	private void TestTalkEsdBatching(GamePatch g)
-	{
-		Log("Testing Talk ESD Batch Editing (EditEsdBySize)...");
-
-		try
-		{
-			// Test the bonfire unlocking pattern
-			g.EditEsdBySize("script/talk", 23012, esd =>
-			{
-				// This should unlock Level Up, Homeward Bone, and Leave on all bonfires
-				esd.SetTalkListGateFlag(1, 4, 15000100, -1);
-				esd.SetTalkListGateFlag(1, 4, 15000170, -1);
-				esd.SetTalkListGateFlag(1, 4, 15000270, -1);
-			});
-
-			testResults["TalkESD.BatchEditing"] = TestStatus.Passed;
-			testsPassed++;
-			Log("✓ Bonfire ESD batch editing completed");
-		}
-		catch (Exception ex)
-		{
-			Log($"✗ Talk ESD Batch edit failed: {ex}");
-			testResults["TalkESD.BatchEditing"] = TestStatus.Failed;
-			testsFailed++;
-		}
 	}
 
 	private void TestActionEsdConditions(GamePatch g)
