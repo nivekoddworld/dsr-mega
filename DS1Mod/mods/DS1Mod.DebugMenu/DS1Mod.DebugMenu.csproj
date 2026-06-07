@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>DS1Mod.DebugMenu</AssemblyName>
+    <RootNamespace>DS1Mod.DebugMenu</RootNamespace>
+    <Description>ImGui debug menu — god mode, hitboxes, AI toggles, and more. Toggle with F3.</Description>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\framework\DS1Mod.SDK\DS1Mod.SDK.csproj" />
+    <ProjectReference Include="..\..\framework\DS1Mod.Core\DS1Mod.Core.csproj" />
+  </ItemGroup>
+</Project>
