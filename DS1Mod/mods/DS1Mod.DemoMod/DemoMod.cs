@@ -1,4 +1,5 @@
 using DS1Mod.Core;
+using DS1Mod.Core.ImGui;
 using DS1Mod.SDK;
 
 namespace DS1Mod.DemoMod;
@@ -9,12 +10,13 @@ namespace DS1Mod.DemoMod;
 ///   IGameHooks    — all four events (boss kills, fog gates, deaths, level-ups)
 ///   IGameReader   — HP/stamina, position, map ID, soul level, souls, event flags
 ///   IGameWriter   — round-trip flag read → write → verify
+///   IGuiMod       — overlay window with a probe for ChrInsFactory::create
 ///   OnTick        — periodic state snapshot
 ///   OnUnload      — session summary
 ///
 /// Output goes to <modsDir>/DemoMod.log and stdout.
 /// </summary>
-public sealed class DemoMod : ModBase, IGamePatcher
+public sealed class DemoMod : ModBase, IGamePatcher, IGuiMod
 {
     public override string Name    => "DS1 Demo Mod";
     public override string Version => "1.0.0";
@@ -27,6 +29,11 @@ public sealed class DemoMod : ModBase, IGamePatcher
     private int _deaths     = 0;
     private int _bossKills  = 0;
     private int _fogGates   = 0;
+
+    // ── ChrInsFactory probe state ─────────────────────────────────────────
+    private bool                             _showProbe   = true;
+    private ChrInsFactoryProbe.ProbeResult?  _probe;
+    private string                           _callStatus  = "";
 
     // ── IGamePatcher ──────────────────────────────────────────────────────────
 
@@ -137,6 +144,123 @@ public sealed class DemoMod : ModBase, IGamePatcher
         Log($"Session summary: {_deaths} death(s), {_bossKills} boss kill(s), {_fogGates} fog gate(s)");
         _log?.Dispose();
         _log = null;
+    }
+
+    // ── IGuiMod ───────────────────────────────────────────────────────────────
+
+    public void OnGui()
+    {
+        if (!_showProbe) return;
+
+        DS1ImGui.SetNextWindowPos(320, 10, ImGuiCond.FirstUseEver);
+        DS1ImGui.SetNextWindowSize(560, 360, ImGuiCond.FirstUseEver);
+        DS1ImGui.SetNextWindowBgAlpha(0.85f);
+
+        if (!DS1ImGui.Begin("ChrInsFactory probe", ref _showProbe))
+        {
+            DS1ImGui.End();
+            return;
+        }
+
+        DS1ImGui.Text("Walks RTTI from the mangled name to vftable[0].");
+        DS1ImGui.Text("Target: NS_FRPG::ChrInsFactory::create");
+        DS1ImGui.Separator();
+
+        if (DS1ImGui.Button("Resolve via RTTI walk"))
+        {
+            try
+            {
+                _probe = ChrInsFactoryProbe.Resolve();
+                Log("[Probe] Resolve clicked. Result:\n" + _probe.Log);
+            }
+            catch (Exception ex)
+            {
+                _callStatus = "Resolve threw: " + ex.Message;
+                Log("[Probe] Resolve threw: " + ex);
+            }
+        }
+
+        DS1ImGui.Spacing();
+
+        // ── Result panel ───────────────────────────────────────────────
+        if (_probe is null)
+        {
+            DS1ImGui.Text("(no result — click Resolve)");
+        }
+        else
+        {
+            var p = _probe;
+            DS1ImGui.Text($"name string  : 0x{(ulong)p.NameStringVA:X}");
+            DS1ImGui.Text($"TypeDesc     : 0x{(ulong)p.TypeDescriptorVA:X}");
+            DS1ImGui.Text($"COL          : 0x{(ulong)p.ColVA:X}");
+            DS1ImGui.Text($"vftable      : 0x{(ulong)p.VftableVA:X}");
+            DS1ImGui.Text($"create fn    : 0x{(ulong)p.FunctionVA:X}");
+
+            if (p.EntryBytes.Length > 0)
+                DS1ImGui.Text("entry bytes  : " + BytesToHex(p.EntryBytes));
+
+            DS1ImGui.Spacing();
+            if (p.Ok)
+            {
+                DS1ImGui.PushStyleColor(ImGuiCol.Text, 0.4f, 0.9f, 0.4f, 1f);
+                DS1ImGui.Text("RESOLVE PASSED  (first byte is 0xE9 — JMP trampoline)");
+                DS1ImGui.PopStyleColor();
+            }
+            else
+            {
+                DS1ImGui.PushStyleColor(ImGuiCol.Text, 0.95f, 0.5f, 0.4f, 1f);
+                DS1ImGui.Text("RESOLVE FAILED — see DemoMod.log for trace.");
+                DS1ImGui.PopStyleColor();
+            }
+        }
+
+        DS1ImGui.Separator();
+
+        // ── Dangerous call section ─────────────────────────────────────
+        DS1ImGui.PushStyleColor(ImGuiCol.Text, 1f, 0.7f, 0.3f, 1f);
+        DS1ImGui.Text("DANGER ZONE");
+        DS1ImGui.PopStyleColor();
+        DS1ImGui.Text("Calls vftable[0] with NULL this/args. Real signature is");
+        DS1ImGui.Text("unknown — this is expected to crash DSR. Use only when");
+        DS1ImGui.Text("you're ready to verify it crashes INSIDE the resolved fn.");
+
+        bool canCall = _probe is { Ok: true, FunctionVA: not 0 };
+        if (canCall && DS1ImGui.Button("Call create(null, null, null, null)"))
+        {
+            try
+            {
+                var (returned, result) = ChrInsFactoryProbe.TryCall(
+                    _probe!.FunctionVA, 0, 0, 0, 0);
+                _callStatus = returned
+                    ? $"call returned 0x{(ulong)result:X} (did NOT crash — unexpected)"
+                    : "call setup failed";
+                Log($"[Probe] {_callStatus}");
+            }
+            catch (Exception ex)
+            {
+                _callStatus = "managed exception: " + ex.Message;
+                Log("[Probe] call threw managed exception: " + ex);
+            }
+        }
+
+        if (!string.IsNullOrEmpty(_callStatus))
+        {
+            DS1ImGui.Spacing();
+            DS1ImGui.Text("last call: " + _callStatus);
+        }
+
+        DS1ImGui.End();
+    }
+
+    private static string BytesToHex(byte[] b)
+    {
+        var sb = new System.Text.StringBuilder(b.Length * 3);
+        for (int i = 0; i < b.Length; i++)
+        {
+            if (i > 0) sb.Append(' ');
+            sb.Append(b[i].ToString("X2"));
+        }
+        return sb.ToString();
     }
 
     // ── Hook handlers ─────────────────────────────────────────────────────────
