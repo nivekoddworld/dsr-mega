@@ -118,8 +118,13 @@ ESD is FromSoft's graph-based state machine scripting used for NPC dialog, bonfi
 - `OpenGenericDialog(type, msgId, btnType, numBtns, unk)` — show yes/no dialog
 - `AddTalkListData(listIdx, talkId, gateFlag=-1)` — bonfire/shop menu item (gateFlag=-1 always show)
 - `AddTalkListDataIf(condition, listIdx, talkId, unk)` — conditional menu item (FogMod warp style)
-- `ShowShopMessage()` — wares/vendor message
-- `UpdateRespawnPoint(bonfireEntityId)` — set player bonfire warp target
+- `ClearTalkListData()` — clear the menu list before repopulating with `AddTalkListData`
+- `ShowShopMessage(a=0, b=0, c=0)` — shop/wares message (3 int args; vanilla always passes `(0,0,0)`)
+
+Note: there is no Talk ESD command for setting the player's respawn bonfire — that's an
+EMEVD-level operation (`SetPlayerRespawnPoint`). Verified by walking all 357 Talk ESDs in
+the DSR corpus with `SoulsFormats.ESD` and tabulating `(bank, commandId) → argCount`;
+Bank 1 command 101 ("UpdateRespawnPoint") never appears.
 
 **Key use case**: Bonfire menu gating via `EsdEditor.SetTalkListGateFlag()` — unlock/lock bonfire menu items (they are predefined in the ESD; you are only changing visibility flags):
 ```csharp
