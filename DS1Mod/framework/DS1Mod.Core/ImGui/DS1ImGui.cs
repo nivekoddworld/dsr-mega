@@ -66,6 +66,18 @@ public static partial class DS1ImGui
     public static void ProgressBar(float fraction, float sizeX = -1f, float sizeY = 0f, string? overlay = null)
         => igProgressBar(fraction, sizeX, sizeY, overlay);
 
+    // Button takes an ImVec2 by value. We pass it as a 2-float struct — the
+    // Win64 ABI puts it in the second argument register (or XMM1) the same
+    // way cimgui expects.
+    [StructLayout(LayoutKind.Sequential)]
+    private struct ImVec2 { public float X, Y; }
+
+    [LibraryImport(Dll, StringMarshalling = StringMarshalling.Utf8)]
+    [return: MarshalAs(UnmanagedType.U1)]
+    private static partial byte igButton(string label, ImVec2 size);
+    public static bool Button(string label, float width = 0f, float height = 0f)
+        => igButton(label, new ImVec2 { X = width, Y = height }) != 0;
+
     [LibraryImport(Dll)] public static partial void igPushStyleColor(ImGuiCol idx, float r, float g, float b, float a);
     public static void PushStyleColor(ImGuiCol idx, float r, float g, float b, float a = 1f) => igPushStyleColor(idx, r, g, b, a);
 
