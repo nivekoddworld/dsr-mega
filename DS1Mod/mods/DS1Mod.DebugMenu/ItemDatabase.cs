@@ -1,0 +1,781 @@
+namespace DS1Mod.DebugMenu;
+
+/// <summary>
+/// DSR item database — ported from JKAnderson/DSR-Gadget resource files.
+/// Format per entry: (baseId, stackLimit, upgradeType, name)
+/// upgradeType: 0=None, 1=Unique(+5), 2=Armor(+10), 3=Infusable, 4=InfusableRestricted, 5=PyroFlame(+15), 6=PyroFlameAscended(+5)
+/// </summary>
+internal static class ItemDatabase
+{
+    internal record Item(int Id, int StackLimit, int UpgradeType, string Name);
+
+    internal record Category(string Name, int CategoryId, Item[] Items);
+
+    internal record Infusion(string Name, int Value, int MaxUpgrade, bool Restricted);
+
+    internal static readonly Infusion[] Infusions =
+    {
+        new("Normal",    0,   15, false),
+        new("Crystal",   100,  5, false),
+        new("Lightning", 200,  5, false),
+        new("Raw",       300,  5, true),
+        new("Magic",     400, 10, false),
+        new("Enchanted", 500,  5, true),
+        new("Divine",    600, 10, false),
+        new("Occult",    700,  5, true),
+        new("Fire",      800, 10, false),
+        new("Chaos",     900,  5, true),
+    };
+
+    internal static readonly Category[] Categories;
+
+    static ItemDatabase()
+    {
+        Categories = new Category[]
+        {
+            new("Melee Weapons",       0x00000000, ParseItems(MeleeWeapons)),
+            new("Ranged Weapons",      0x00000000, ParseItems(RangedWeapons)),
+            new("Shields",             0x00000000, ParseItems(Shields)),
+            new("Spell Tools",         0x00000000, ParseItems(SpellTools)),
+            new("Armor",               0x10000000, ParseItems(Armor)),
+            new("Rings",               0x20000000, ParseItems(Rings)),
+            new("Consumables",         0x40000000, ParseItems(Consumables)),
+            new("Key Items",           0x40000000, ParseItems(KeyItems)),
+            new("Spells",              0x40000000, ParseItems(Spells)),
+            new("Usable Items",        0x40000000, ParseItems(UsableItems)),
+            new("Upgrade Materials",   0x40000000, ParseItems(UpgradeMaterials)),
+        };
+    }
+
+    private static Item[] ParseItems(string data)
+    {
+        var list = new System.Collections.Generic.List<Item>();
+        foreach (string line in data.Split('\n'))
+        {
+            string s = line.Trim();
+            if (s.Length == 0) continue;
+            // format: "id stackLimit upgradeType name"
+            int i0 = s.IndexOf(' ');
+            if (i0 < 0) continue;
+            int i1 = s.IndexOf(' ', i0 + 1);
+            if (i1 < 0) continue;
+            int i2 = s.IndexOf(' ', i1 + 1);
+            if (i2 < 0) continue;
+            if (!int.TryParse(s[..i0], out int id)) continue;
+            if (!int.TryParse(s[(i0+1)..i1], out int stack)) continue;
+            if (!int.TryParse(s[(i1+1)..i2], out int upg)) continue;
+            string name = s[(i2+1)..];
+            list.Add(new Item(id, stack, upg, name));
+        }
+        list.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase));
+        return list.ToArray();
+    }
+
+    // ── Item data (from JKAnderson/DSR-Gadget Resources/Items/*.txt) ─────────
+
+    private const string MeleeWeapons = @"
+100000 1 3 Dagger
+101000 1 3 Parrying Dagger
+102000 1 1 Ghost Blade
+103000 1 3 Bandit's Knife
+104000 1 1 Priscilla's Dagger
+200000 1 3 Shortsword
+201000 1 3 Longsword
+202000 1 3 Broadsword
+203000 1 3 Broken Straight Sword
+204000 1 3 Balder Side Sword
+205000 1 0 Crystal Straight Sword
+206000 1 3 Sunlight Straight Sword
+207000 1 3 Barbed Straight Sword
+208000 1 1 Silver Knight Straight Sword
+209000 1 1 Astora's Straight Sword
+210000 1 3 Darksword
+211000 1 1 Drake Sword
+212000 1 3 Straight Sword Hilt
+300000 1 3 Bastard Sword
+301000 1 3 Claymore
+302000 1 3 Man-serpent Greatsword
+303000 1 3 Flamberge
+304000 1 0 Crystal Greatsword
+306000 1 1 Stone Greatsword
+307000 1 1 Greatsword of Artorias
+309000 1 1 Moonlight Greatsword
+310000 1 1 Black Knight Sword
+311000 1 1 Greatsword of Artorias (Cursed)
+314000 1 1 Great Lord Greatsword
+350000 1 3 Zweihander
+351000 1 3 Greatsword
+352000 1 3 Demon Great Machete
+354000 1 1 Dragon Greatsword
+355000 1 1 Black Knight Greatsword
+400000 1 3 Scimitar
+401000 1 3 Falchion
+402000 1 3 Shotel
+403000 1 1 Jagged Ghost Blade
+405000 1 3 Painting Guardian Sword
+406000 1 1 Quelaag's Furysword
+450000 1 3 Server
+451000 1 3 Murakumo
+453000 1 1 Gravelord Sword
+500000 1 3 Uchigatana
+501000 1 3 Washing Pole
+502000 1 3 Iaito
+503000 1 1 Chaos Blade
+600000 1 3 Mail Breaker
+601000 1 3 Rapier
+602000 1 3 Estoc
+603000 1 1 Velka's Rapier
+604000 1 3 Ricard's Rapier
+700000 1 3 Hand Axe
+701000 1 3 Battle Axe
+702000 1 1 Crescent Axe
+703000 1 3 Butcher Knife
+704000 1 1 Golem Axe
+705000 1 3 Gargoyle Tail Axe
+750000 1 3 Greataxe
+751000 1 3 Demon's Greataxe
+752000 1 1 Dragon King Greataxe
+753000 1 1 Black Knight Greataxe
+800000 1 3 Club
+801000 1 3 Mace
+802000 1 3 Morning Star
+803000 1 3 Warpick
+804000 1 3 Pickaxe
+809000 1 3 Reinforced Club
+810000 1 3 Blacksmith Hammer
+811000 1 1 Blacksmith Giant Hammer
+812000 1 1 Hammer of Vamos
+850000 1 3 Great Club
+851000 1 1 Grant
+852000 1 3 Demon's Great Hammer
+854000 1 1 Dragon Tooth
+855000 1 3 Large Club
+856000 1 1 Smough's Hammer
+901000 1 3 Caestus
+902000 1 3 Claw
+903000 1 1 Dragon Bone Fist
+904000 1 0 Dark Hand
+1000000 1 3 Spear
+1001000 1 3 Winged Spear
+1002000 1 3 Partizan
+1003000 1 1 Demon's Spear
+1004000 1 1 Channeler's Trident
+1006000 1 1 Silver Knight Spear
+1050000 1 3 Pike
+1051000 1 1 Dragonslayer Spear
+1052000 1 1 Moonlight Butterfly Horn
+1100000 1 3 Halberd
+1101000 1 1 Giant's Halberd
+1102000 1 1 Titanite Catch Pole
+1103000 1 3 Gargoyle's Halberd
+1105000 1 1 Black Knight Halberd
+1106000 1 3 Lucerne
+1107000 1 3 Scythe
+1150000 1 3 Great Scythe
+1151000 1 1 Lifehunt Scythe
+1600000 1 3 Whip
+1601000 1 3 Notched Whip
+9010000 1 1 Gold Tracer
+9011000 1 1 Dark Silver Tracer
+9012000 1 1 Abyss Greatsword
+9015000 1 1 Stone Greataxe
+9016000 1 3 Four-pronged Plow
+9019000 1 3 Guardian Tail
+9020000 1 1 Obsidian Greatsword";
+
+    private const string RangedWeapons = @"
+1200000 1 3 Short Bow
+1201000 1 3 Longbow
+1202000 1 3 Black Bow of Pharis
+1203000 1 1 Dragonslayer Greatbow
+1204000 1 3 Composite Bow
+1205000 1 1 Darkmoon Bow
+1250000 1 4 Light Crossbow
+1251000 1 4 Heavy Crossbow
+1252000 1 4 Avelyn
+1253000 1 4 Sniper Crossbow
+2000000 999 0 Standard Arrow
+2001000 999 0 Large Arrow
+2002000 999 0 Feather Arrow
+2003000 999 0 Fire Arrow
+2004000 999 0 Poison Arrow
+2005000 999 0 Moonlight Arrow
+2006000 999 0 Wooden Arrow
+2007000 999 0 Dragonslayer Arrow
+2008000 999 0 Gough's Great Arrow
+2100000 999 0 Standard Bolt
+2101000 999 0 Heavy Bolt
+2102000 999 0 Sniper Bolt
+2103000 999 0 Wood Bolt
+2104000 999 0 Lightning Bolt
+9021000 1 1 Gough's Greatbow";
+
+    private const string Shields = @"
+1396000 1 0 Skull Lantern
+1400000 1 4 East-West Shield
+1401000 1 4 Wooden Shield
+1402000 1 4 Large Leather Shield
+1403000 1 4 Small Leather Shield
+1404000 1 4 Target Shield
+1405000 1 4 Buckler
+1406000 1 4 Cracked Round Shield
+1408000 1 4 Leather Shield
+1409000 1 4 Plank Shield
+1410000 1 4 Caduceus Round Shield
+1411000 1 1 Crystal Ring Shield
+1450000 1 4 Heater Shield
+1451000 1 4 Knight Shield
+1452000 1 4 Tower Kite Shield
+1453000 1 4 Grass Crest Shield
+1454000 1 4 Hollow Soldier Shield
+1455000 1 4 Balder Shield
+1456000 1 1 Crest Shield
+1457000 1 1 Dragon Crest Shield
+1460000 1 4 Warrior's Round Shield
+1461000 1 4 Iron Round Shield
+1462000 1 4 Spider Shield
+1470000 1 3 Spiked Shield
+1471000 1 0 Crystal Shield
+1472000 1 4 Sunlight Shield
+1473000 1 1 Silver Knight Shield
+1474000 1 1 Black Knight Shield
+1475000 1 3 Pierce Shield
+1476000 1 4 Red and White Round Shield
+1477000 1 4 Caduceus Kite Shield
+1478000 1 4 Gargoyle's Shield
+1500000 1 4 Eagle Shield
+1501000 1 4 Tower Shield
+1502000 1 4 Giant Shield
+1503000 1 1 Stone Greatshield
+1505000 1 1 Havel's Greatshield
+1506000 1 3 Bonewheel Shield
+1507000 1 1 Greatshield of Artorias
+9000000 1 4 Effigy Shield
+9001000 1 4 Sanctus
+9002000 1 4 Bloodshield
+9003000 1 4 Black Iron Greatshield
+9014000 1 1 Cleansing Greatshield";
+
+    private const string SpellTools = @"
+1300000 1 0 Sorcerer's Catalyst
+1301000 1 0 Beatrice's Catalyst
+1302000 1 0 Tin Banishment Catalyst
+1303000 1 0 Logan's Catalyst
+1304000 1 0 Tin Darkmoon Catalyst
+1305000 1 0 Oolacile Ivory Catalyst
+1306000 1 0 Tin Crystallization Catalyst
+1307000 1 0 Demon's Catalyst
+1308000 1 0 Izalith Catalyst
+1330000 1 5 Pyromancy Flame
+1332000 1 6 Pyromancy Flame (Ascended)
+1360000 1 0 Talisman
+1361000 1 0 Canvas Talisman
+1362000 1 0 Thorolund Talisman
+1363000 1 0 Ivory Talisman
+1365000 1 0 Sunlight Talisman
+1366000 1 0 Darkmoon Talisman
+1367000 1 0 Velka's Talisman
+9017000 1 0 Manus Catalyst
+9018000 1 0 Oolacile Catalyst";
+
+    private const string Armor = @"
+10000 1 1 Catarina Helm
+11000 1 1 Catarina Armor
+12000 1 1 Catarina Gauntlets
+13000 1 1 Catarina Leggings
+20000 1 1 Paladin Helm
+21000 1 1 Paladin Armor
+22000 1 1 Paladin Gauntlets
+23000 1 1 Paladin Leggings
+40000 1 1 Dark Mask
+41000 1 1 Dark Armor
+42000 1 1 Dark Gauntlets
+43000 1 1 Dark Leggings
+50000 1 2 Brigand Hood
+51000 1 2 Brigand Armor
+52000 1 2 Brigand Gauntlets
+53000 1 2 Brigand Trousers
+60000 1 1 Shadow Mask
+61000 1 1 Shadow Garb
+62000 1 1 Shadow Gauntlets
+63000 1 1 Shadow Leggings
+70000 1 1 Black Iron Helm
+71000 1 1 Black Iron Armor
+72000 1 1 Black Iron Gauntlets
+73000 1 1 Black Iron Leggings
+80000 1 0 Smough's Helm
+81000 1 0 Smough's Armor
+82000 1 0 Smough's Gauntlets
+83000 1 0 Smough's Leggings
+90000 1 0 Six-Eyed Helm of the Channelers
+91000 1 0 Robe of the Channelers
+92000 1 0 Gauntlets of the Channelers
+93000 1 0 Waistcloth of the Channelers
+100000 1 1 Helm of Favor
+101000 1 1 Embraced Armor of Favor
+102000 1 1 Gauntlets of Favor
+103000 1 1 Leggings of Favor
+110000 1 0 Helm of the Wise
+111000 1 0 Armor of the Glorious
+112000 1 0 Gauntlets of the Vanquisher
+113000 1 0 Boots of the Explorer
+120000 1 0 Stone Helm
+121000 1 0 Stone Armor
+122000 1 0 Stone Gauntlets
+123000 1 0 Stone Leggings
+130000 1 0 Crystalline Helm
+131000 1 0 Crystalline Armor
+132000 1 0 Crystalline Gauntlets
+133000 1 0 Crystalline Leggings
+140000 1 1 Mask of the Sealer
+141000 1 1 Crimson Robe
+142000 1 1 Crimson Gloves
+143000 1 1 Crimson Waistcloth
+150000 1 1 Mask of Velka
+151000 1 1 Black Cleric Robe
+152000 1 1 Black Manchette
+153000 1 1 Black Tights
+160000 1 2 Iron Helm
+161000 1 2 Armor of the Sun
+162000 1 2 Iron Bracelet
+163000 1 2 Iron Leggings
+170000 1 2 Chain Helm
+171000 1 2 Chain Armor
+172000 1 2 Leather Gauntlets
+173000 1 2 Chain Leggings
+180000 1 2 Cleric Helm
+181000 1 2 Cleric Armor
+182000 1 2 Cleric Gauntlets
+183000 1 2 Cleric Leggings
+190000 1 0 Sunlight Maggot
+200000 1 1 Helm of Thorns
+201000 1 1 Armor of Thorns
+202000 1 1 Gauntlets of Thorns
+203000 1 1 Leggings of Thorns
+210000 1 2 Standard Helm
+211000 1 2 Hard Leather Armor
+212000 1 2 Hard Leather Gauntlets
+213000 1 2 Hard Leather Boots
+220000 1 2 Sorcerer Hat
+221000 1 2 Sorcerer Cloak
+222000 1 2 Sorcerer Gauntlets
+223000 1 2 Sorcerer Boots
+230000 1 2 Tattered Cloth Hood
+231000 1 2 Tattered Cloth Robe
+232000 1 2 Tattered Cloth Manchette
+233000 1 2 Heavy Boots
+240000 1 2 Pharis's Hat
+241000 1 2 Leather Armor
+242000 1 2 Leather Gloves
+243000 1 2 Leather Boots
+250000 1 1 Painting Guardian Hood
+251000 1 1 Painting Guardian Robe
+252000 1 1 Painting Guardian Gloves
+253000 1 1 Painting Guardian Waistcloth
+270000 1 0 Ornstein's Helm
+271000 1 0 Ornstein's Armor
+272000 1 0 Ornstein's Gauntlets
+273000 1 0 Ornstein's Leggings
+280000 1 1 Eastern Helm
+281000 1 1 Eastern Armor
+282000 1 1 Eastern Gauntlets
+283000 1 1 Eastern Leggings
+290000 1 1 Xanthous Crown
+291000 1 1 Xanthous Overcoat
+292000 1 1 Xanthous Gloves
+293000 1 1 Xanthous Waistcloth
+300000 1 2 Thief Mask
+301000 1 2 Black Leather Armor
+302000 1 2 Black Leather Gloves
+303000 1 2 Black Leather Boots
+310000 1 2 Priest's Hat
+311000 1 2 Holy Robe
+312000 1 2 Traveling Gloves (Holy)
+313000 1 2 Holy Trousers
+320000 1 1 Black Knight Helm
+321000 1 1 Black Knight Armor
+322000 1 1 Black Knight Gauntlets
+323000 1 1 Black Knight Leggings
+330000 1 0 Crown of Dusk
+331000 1 1 Antiquated Dress
+332000 1 1 Antiquated Gloves
+333000 1 1 Antiquated Skirt
+340000 1 1 Witch Hat
+341000 1 1 Witch Cloak
+342000 1 1 Witch Gloves
+343000 1 1 Witch Skirt
+350000 1 2 Elite Knight Helm
+351000 1 2 Elite Knight Armor
+352000 1 2 Elite Knight Gauntlets
+353000 1 2 Elite Knight Leggings
+360000 1 2 Wanderer Hood
+361000 1 2 Wanderer Coat
+362000 1 2 Wanderer Manchette
+363000 1 2 Wanderer Boots
+380000 1 1 Big Hat
+381000 1 1 Sage Robe
+382000 1 2 Traveling Gloves (Sage)
+383000 1 2 Traveling Boots
+390000 1 2 Knight Helm
+391000 1 2 Knight Armor
+392000 1 2 Knight Gauntlets
+393000 1 2 Knight Leggings
+400000 1 2 Dingy Hood
+401000 1 2 Dingy Robe
+402000 1 2 Dingy Gloves
+403000 1 2 Blood-Stained Skirt
+410000 1 2 Maiden Hood
+411000 1 2 Maiden Robe
+412000 1 2 Maiden Gloves
+413000 1 2 Maiden Skirt
+420000 1 1 Silver Knight Helm
+421000 1 1 Silver Knight Armor
+422000 1 1 Silver Knight Gauntlets
+423000 1 1 Silver Knight Leggings
+440000 1 0 Havel's Helm
+441000 1 0 Havel's Armor
+442000 1 0 Havel's Gauntlets
+443000 1 0 Havel's Leggings
+450000 1 1 Brass Helm
+451000 1 1 Brass Armor
+452000 1 1 Brass Gauntlets
+453000 1 1 Brass Leggings
+460000 1 0 Gold-Hemmed Black Hood
+461000 1 0 Gold-Hemmed Black Cloak
+462000 1 0 Gold-Hemmed Black Gloves
+463000 1 0 Gold-Hemmed Black Skirt
+470000 1 0 Golem Helm
+471000 1 0 Golem Armor
+472000 1 0 Golem Gauntlets
+473000 1 0 Golem Leggings
+480000 1 2 Hollow Soldier Helm
+481000 1 2 Hollow Soldier Armor
+483000 1 2 Hollow Soldier Waistcloth
+490000 1 2 Steel Helm
+491000 1 2 Steel Armor
+492000 1 2 Steel Gauntlets
+493000 1 2 Steel Leggings
+500000 1 2 Hollow Thief's Hood
+501000 1 2 Hollow Thief's Leather Armor
+503000 1 2 Hollow Thief's Tights
+510000 1 2 Balder Helm
+511000 1 2 Balder Armor
+512000 1 2 Balder Gauntlets
+513000 1 2 Balder Leggings
+520000 1 2 Hollow Warrior Helm
+521000 1 2 Hollow Warrior Armor
+523000 1 2 Hollow Warrior Waistcloth
+530000 1 1 Giant Helm
+531000 1 1 Giant Armor
+532000 1 1 Giant Gauntlets
+533000 1 1 Giant Leggings
+540000 1 0 Crown of the Dark Sun
+541000 1 0 Moonlight Robe
+542000 1 0 Moonlight Gloves
+543000 1 0 Moonlight Waistcloth
+550000 1 0 Crown of the Great Lord
+551000 1 0 Robe of the Great Lord
+552000 1 0 Bracelet of the Great Lord
+553000 1 0 Anklet of the Great Lord
+560000 1 2 Sack
+570000 1 0 Symbol of Avarice
+580000 1 2 Royal Helm
+590000 1 0 Mask of the Father
+600000 1 0 Mask of the Mother
+610000 1 0 Mask of the Child
+620000 1 1 Fang Boar Helm
+630000 1 1 Gargoyle Helm
+640000 1 2 Black Sorcerer Hat
+641000 1 2 Black Sorcerer Cloak
+642000 1 2 Black Sorcerer Gauntlets
+643000 1 2 Black Sorcerer Boots
+660000 1 1 Helm of Artorias
+661000 1 1 Armor of Artorias
+662000 1 1 Gauntlets of Artorias
+663000 1 1 Leggings of Artorias
+670000 1 1 Porcelain Mask
+671000 1 1 Lord's Blade Robe
+672000 1 1 Lord's Blade Gloves
+673000 1 1 Lord's Blade Waistcloth
+680000 1 1 Gough's Helm
+681000 1 1 Gough's Armor
+682000 1 1 Gough's Gauntlets
+683000 1 1 Gough's Leggings
+690000 1 0 Guardian Helm
+691000 1 0 Guardian Armor
+692000 1 0 Guardian Gauntlets
+693000 1 0 Guardian Leggings
+700000 1 1 Snickering Top Hat
+701000 1 1 Chester's Long Coat
+702000 1 1 Chester's Gloves
+703000 1 1 Chester's Trousers
+710000 1 0 Bloated Head
+720000 1 0 Bloated Sorcerer Head";
+
+    private const string Rings = @"
+100 1 0 Havel's Ring
+101 1 0 Red Tearstone Ring
+102 1 0 Darkmoon Blade Covenant Ring
+103 1 0 Cat Covenant Ring
+104 1 0 Cloranthy Ring
+105 1 0 Flame Stoneplate Ring
+106 1 0 Thunder Stoneplate Ring
+107 1 0 Spell Stoneplate Ring
+108 1 0 Speckled Stoneplate Ring
+109 1 0 Bloodbite Ring
+110 1 0 Poisonbite Ring
+111 1 0 Tiny Being's Ring
+113 1 0 Cursebite Ring
+114 1 0 White Seance Ring
+115 1 0 Bellowing Dragoncrest Ring
+116 1 0 Dusk Crown Ring
+117 1 0 Hornet Ring
+119 1 0 Hawk Ring
+120 1 0 Ring of Steel Protection
+121 1 0 Covetous Gold Serpent Ring
+122 1 0 Covetous Silver Serpent Ring
+123 1 0 Slumbering Dragoncrest Ring
+124 1 0 Ring of Fog
+125 1 0 Rusted Iron Ring
+126 1 0 Ring of Sacrifice
+127 1 0 Rare Ring of Sacrifice
+128 1 0 Dark Wood Grain Ring
+130 1 0 Ring of the Sun Princess
+137 1 0 Old Witch's Ring
+138 1 0 Covenant of Artorias
+139 1 0 Orange Charred Ring
+141 1 0 Lingering Dragoncrest Ring
+142 1 0 Ring of the Evil Eye
+143 1 0 Ring of Favor and Protection
+144 1 0 Leo Ring
+145 1 0 East Wood Grain Ring
+146 1 0 Wolf Ring
+147 1 0 Blue Tearstone Ring
+148 1 0 Ring of the Sun's Firstborn
+149 1 0 Darkmoon Seance Ring
+150 1 0 Calamity Ring";
+
+    private const string Consumables = @"
+109 99 0 Eye of Death
+111 99 0 Cracked Red Eye Orb
+230 99 0 Elizabeth's Mushroom
+240 99 0 Divine Blessing
+260 99 0 Green Blossom
+270 99 0 Bloodred Moss Clump
+271 99 0 Purple Moss Clump
+272 99 0 Blooming Purple Moss Clump
+274 99 0 Purging Stone
+275 99 0 Egg Vermifuge
+280 99 0 Repair Powder
+290 99 0 Throwing Knife
+291 99 0 Poison Throwing Knife
+292 99 0 Firebomb
+293 99 0 Dung Pie
+294 99 0 Alluring Skull
+296 99 0 Lloyd's Talisman
+297 99 0 Black Firebomb
+310 99 0 Charcoal Pine Resin
+311 99 0 Gold Pine Resin
+312 99 0 Transient Curse
+313 99 0 Rotten Pine Resin
+330 99 0 Homeward Bone
+370 99 0 Prism Stone
+373 99 0 Indictment
+374 99 0 Souvenir of Reprisal
+375 99 0 Sunlight Medal
+376 99 0 Pendant
+380 99 0 Rubbish
+381 99 0 Copper Coin
+382 99 0 Silver Coin
+383 99 0 Gold Coin
+390 1 0 Fire Keeper Soul (Anastacia of Astora)
+391 1 0 Fire Keeper Soul (Darkmoon Knightess)
+392 1 0 Fire Keeper Soul (Daughter of Chaos)
+393 1 0 Fire Keeper Soul (New Londo)
+394 1 0 Fire Keeper Soul (Blighttown)
+395 1 0 Fire Keeper Soul (Duke's Archives)
+396 1 0 Fire Keeper Soul (Undead Parish)
+400 99 0 Soul of a Lost Undead
+401 99 0 Large Soul of a Lost Undead
+402 99 0 Soul of a Nameless Soldier
+403 99 0 Large Soul of a Nameless Soldier
+404 99 0 Soul of a Proud Knight
+405 99 0 Large Soul of a Proud Knight
+406 99 0 Soul of a Brave Warrior
+407 99 0 Large Soul of a Brave Warrior
+408 99 0 Soul of a Hero
+409 99 0 Soul of a Great Hero
+500 99 0 Humanity
+501 99 0 Twin Humanities
+700 99 0 Soul of Quelaag
+701 99 0 Soul of Sif
+702 99 0 Soul of Gwyn, Lord of Cinder
+703 99 0 Core of an Iron Golem
+704 99 0 Soul of Ornstein
+705 99 0 Soul of the Moonlight Butterfly
+706 99 0 Soul of Smough
+707 99 0 Soul of Priscilla
+708 99 0 Soul of Gwyndolin
+709 99 0 Guardian Soul
+710 99 0 Soul of Artorias
+711 99 0 Soul of Manus";
+
+    private const string KeyItems = @"
+384 1 0 Peculiar Doll
+2001 1 0 Basement Key
+2002 1 0 Crest of Artorias
+2003 1 0 Cage Key
+2004 1 0 Archive Tower Cell Key
+2005 1 0 Archive Tower Giant Door Key
+2006 1 0 Archive Tower Giant Cell Key
+2007 1 0 Blighttown Key
+2008 1 0 Key to New Londo Ruins
+2009 1 0 Annex Key
+2010 1 0 Dungeon Cell Key
+2011 1 0 Big Pilgrim's Key
+2012 1 0 Undead Asylum F2 East Key
+2013 1 0 Key to the Seal
+2014 1 0 Key to Depths
+2016 1 0 Undead Asylum F2 West Key
+2017 1 0 Mystery Key
+2018 1 0 Sewer Chamber Key
+2019 1 0 Watchtower Basement Key
+2020 1 0 Archive Prison Extra Key
+2021 1 0 Residence Key
+2022 1 0 Crest Key
+2100 1 0 Master Key
+2500 1 0 Lord Soul (Nito)
+2501 1 0 Lord Soul (Bed of Chaos)
+2502 1 0 Bequeathed Lord Soul Shard (Four Kings)
+2503 1 0 Bequeathed Lord Soul Shard (Seath)
+2510 1 0 Lordvessel
+2520 1 0 Broken Pendant
+2600 1 0 Weapon Smithbox
+2601 1 0 Armor Smithbox
+2602 1 0 Repairbox
+2607 1 0 Rite of Kindling
+2608 1 0 Bottomless Box";
+
+    private const string Spells = @"
+3000 99 0 Sorcery: Soul Arrow
+3010 99 0 Sorcery: Great Soul Arrow
+3020 99 0 Sorcery: Heavy Soul Arrow
+3030 99 0 Sorcery: Great Heavy Soul Arrow
+3040 99 0 Sorcery: Homing Soulmass
+3050 99 0 Sorcery: Homing Crystal Soulmass
+3060 99 0 Sorcery: Soul Spear
+3070 99 0 Sorcery: Crystal Soul Spear
+3100 99 0 Sorcery: Magic Weapon
+3110 99 0 Sorcery: Great Magic Weapon
+3120 99 0 Sorcery: Crystal Magic Weapon
+3300 99 0 Sorcery: Magic Shield
+3310 99 0 Sorcery: Strong Magic Shield
+3400 99 0 Sorcery: Hidden Weapon
+3410 99 0 Sorcery: Hidden Body
+3500 99 0 Sorcery: Cast Light
+3510 99 0 Sorcery: Hush
+3520 99 0 Sorcery: Aural Decoy
+3530 99 0 Sorcery: Repair
+3540 99 0 Sorcery: Fall Control
+3550 99 0 Sorcery: Chameleon
+3600 99 0 Sorcery: Resist Curse
+3610 99 0 Sorcery: Remedy
+3700 99 0 Sorcery: White Dragon Breath
+3710 99 0 Sorcery: Dark Orb
+3720 99 0 Sorcery: Dark Bead
+3730 99 0 Sorcery: Dark Fog
+3740 99 0 Sorcery: Pursuers
+4000 99 0 Pyromancy: Fireball
+4010 99 0 Pyromancy: Fire Orb
+4020 99 0 Pyromancy: Great Fireball
+4030 99 0 Pyromancy: Firestorm
+4040 99 0 Pyromancy: Fire Tempest
+4050 99 0 Pyromancy: Fire Surge
+4060 99 0 Pyromancy: Fire Whip
+4100 99 0 Pyromancy: Combustion
+4110 99 0 Pyromancy: Great Combustion
+4200 99 0 Pyromancy: Poison Mist
+4210 99 0 Pyromancy: Toxic Mist
+4220 99 0 Pyromancy: Acid Surge
+4300 99 0 Pyromancy: Iron Flesh
+4310 99 0 Pyromancy: Flash Sweat
+4360 99 0 Pyromancy: Undead Rapport
+4400 99 0 Pyromancy: Power Within
+4500 99 0 Pyromancy: Great Chaos Fireball
+4510 99 0 Pyromancy: Chaos Storm
+4520 99 0 Pyromancy: Chaos Fire Whip
+4530 99 0 Pyromancy: Black Flame
+5000 99 0 Miracle: Heal
+5010 99 0 Miracle: Great Heal
+5020 99 0 Miracle: Great Heal Excerpt
+5030 99 0 Miracle: Soothing Sunlight
+5040 99 0 Miracle: Replenishment
+5050 99 0 Miracle: Bountiful Sunlight
+5100 99 0 Miracle: Gravelord Sword Dance
+5110 99 0 Miracle: Gravelord Greatsword Dance
+5210 99 0 Miracle: Homeward
+5300 99 0 Miracle: Force
+5310 99 0 Miracle: Wrath of the Gods
+5320 99 0 Miracle: Emit Force
+5400 99 0 Miracle: Seek Guidance
+5500 99 0 Miracle: Lightning Spear
+5510 99 0 Miracle: Great Lightning Spear
+5520 99 0 Miracle: Sunlight Spear
+5600 99 0 Miracle: Magic Barrier
+5610 99 0 Miracle: Great Magic Barrier
+5700 99 0 Miracle: Karmic Justice
+5800 99 0 Miracle: Tranquil Walk of Peace
+5810 99 0 Miracle: Vow of Silence
+5900 99 0 Miracle: Sunlight Blade
+5910 99 0 Miracle: Darkmoon Blade";
+
+    private const string UsableItems = @"
+100 1 0 White Sign Soapstone
+101 1 0 Red Sign Soapstone
+102 1 0 Red Eye Orb
+103 1 0 Black Separation Crystal
+106 1 0 Orange Guidance Soapstone
+108 1 0 Book of the Guilty
+112 1 0 Servant Roster
+113 1 0 Blue Eye Orb
+114 1 0 Dragon Eye
+115 1 0 Black Eye Orb
+117 1 0 Darksign
+118 1 0 Purple Coward's Crystal
+220 99 0 Silver Pendant
+371 1 0 Binoculars
+377 99 0 Dragon Head Stone
+378 99 0 Dragon Torso Stone
+385 1 0 Dried Finger
+510 1 0 Hello Carving
+511 1 0 Thank you Carving
+512 1 0 Very good! Carving
+513 1 0 I'm sorry Carving
+514 1 0 Help me! Carving";
+
+    private const string UpgradeMaterials = @"
+800 1 0 Large Ember
+801 1 0 Very Large Ember
+802 1 0 Crystal Ember
+806 1 0 Large Magic Ember
+807 1 0 Enchanted Ember
+808 1 0 Divine Ember
+809 1 0 Large Divine Ember
+810 1 0 Dark Ember
+812 1 0 Large Flame Ember
+813 1 0 Chaos Flame Ember
+1000 99 0 Titanite Shard
+1010 99 0 Large Titanite Shard
+1020 99 0 Green Titanite Shard
+1030 99 0 Titanite Chunk
+1040 99 0 Blue Titanite Chunk
+1050 99 0 White Titanite Chunk
+1060 99 0 Red Titanite Chunk
+1070 99 0 Titanite Slab
+1080 99 0 Blue Titanite Slab
+1090 99 0 White Titanite Slab
+1100 99 0 Red Titanite Slab
+1110 99 0 Dragon Scale
+1120 99 0 Demon Titanite
+1130 99 0 Twinkling Titanite";
+}
