@@ -72,28 +72,63 @@ public partial class MainWindow : Window
             _settingsPage = new SettingsPage { DataContext = settingsVM };
             _modBrowserPage = new ModBrowserPage { DataContext = modBrowserVM };
 
-            // Build the UI
+            // Build the UI with DS1-style ornate borders
             var navListBox = new ListBox
             {
                 SelectionMode = SelectionMode.Single,
-                Background = new SolidColorBrush(Color.Parse("#1a1a1a")),
-                BorderThickness = new Thickness(1, 0, 0, 0),
-                BorderBrush = new SolidColorBrush(Color.Parse("#444444")),
-                Padding = new Thickness(0)
+                Background = new SolidColorBrush(Color.Parse("#1a1410")),
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(8)
             };
+
+            // Wrap nav in ornate border with gradient
+            var navGradient = new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(1, 0, RelativeUnit.Relative),
+                GradientStops = new GradientStops
+                {
+                    new GradientStop(Color.Parse("#6b5a47"), 0),
+                    new GradientStop(Color.Parse("#8b7355"), 0.5),
+                    new GradientStop(Color.Parse("#6b5a47"), 1)
+                }
+            };
+
+            var navBorder = new Border
+            {
+                Background = new SolidColorBrush(Color.Parse("#0a0a0a")),
+                BorderBrush = navGradient,
+                BorderThickness = new Thickness(4),
+                CornerRadius = new CornerRadius(0),
+                Padding = new Thickness(3),
+                Child = new Border
+                {
+                    Background = new SolidColorBrush(Color.Parse("#1a1410")),
+                    BorderBrush = new SolidColorBrush(Color.Parse("#2a2820")),
+                    BorderThickness = new Thickness(2),
+                    Child = new Border
+                    {
+                        Background = new SolidColorBrush(Color.Parse("#0f0d0a")),
+                        BorderBrush = new SolidColorBrush(Color.Parse("#4a4a4a")),
+                        BorderThickness = new Thickness(1),
+                        Child = navListBox
+                    }
+                }
+            };
+
             var contentArea = new ContentControl();
 
             var modsItem = new ListBoxItem { Padding = new Thickness(0), Background = new SolidColorBrush(Colors.Transparent) };
-            modsItem.Content = new TextBlock { Text = "Mods", Margin = new Thickness(16, 16, 16, 16), Foreground = new SolidColorBrush(Color.Parse("#cccccc")), FontWeight = FontWeight.Bold };
+            modsItem.Content = new TextBlock { Text = "Mods", Margin = new Thickness(12, 12, 12, 12), Foreground = new SolidColorBrush(Color.Parse("#d4af37")), FontWeight = FontWeight.Bold, FontSize = 14 };
 
             var launchItem = new ListBoxItem { Padding = new Thickness(0), Background = new SolidColorBrush(Colors.Transparent) };
-            launchItem.Content = new TextBlock { Text = "Launch", Margin = new Thickness(16, 16, 16, 16), Foreground = new SolidColorBrush(Color.Parse("#cccccc")), FontWeight = FontWeight.Bold };
+            launchItem.Content = new TextBlock { Text = "Launch", Margin = new Thickness(12, 12, 12, 12), Foreground = new SolidColorBrush(Color.Parse("#d4af37")), FontWeight = FontWeight.Bold, FontSize = 14 };
 
             var settingsItem = new ListBoxItem { Padding = new Thickness(0), Background = new SolidColorBrush(Colors.Transparent) };
-            settingsItem.Content = new TextBlock { Text = "Settings", Margin = new Thickness(16, 16, 16, 16), Foreground = new SolidColorBrush(Color.Parse("#cccccc")), FontWeight = FontWeight.Bold };
+            settingsItem.Content = new TextBlock { Text = "Settings", Margin = new Thickness(12, 12, 12, 12), Foreground = new SolidColorBrush(Color.Parse("#d4af37")), FontWeight = FontWeight.Bold, FontSize = 14 };
 
             var browserItem = new ListBoxItem { Padding = new Thickness(0), Background = new SolidColorBrush(Colors.Transparent) };
-            browserItem.Content = new TextBlock { Text = "Browse", Margin = new Thickness(16, 16, 16, 16), Foreground = new SolidColorBrush(Color.Parse("#cccccc")), FontWeight = FontWeight.Bold };
+            browserItem.Content = new TextBlock { Text = "Browse", Margin = new Thickness(12, 12, 12, 12), Foreground = new SolidColorBrush(Color.Parse("#d4af37")), FontWeight = FontWeight.Bold, FontSize = 14 };
 
             // Store nav items to update styling
             var navItems = new[] { modsItem, launchItem, browserItem, settingsItem };
@@ -109,13 +144,13 @@ public partial class MainWindow : Window
                 {
                     if (i == navListBox.SelectedIndex)
                     {
-                        navItems[i].Background = new SolidColorBrush(Color.Parse("#3a3a3a"));
-                        ((TextBlock)navItems[i].Content).Foreground = new SolidColorBrush(Color.Parse("#d4af37"));
+                        navItems[i].Background = new SolidColorBrush(Color.Parse("#5a4a3a"));
+                        ((TextBlock)navItems[i].Content).Foreground = new SolidColorBrush(Color.Parse("#ffd700"));
                     }
                     else
                     {
                         navItems[i].Background = new SolidColorBrush(Colors.Transparent);
-                        ((TextBlock)navItems[i].Content).Foreground = new SolidColorBrush(Color.Parse("#cccccc"));
+                        ((TextBlock)navItems[i].Content).Foreground = new SolidColorBrush(Color.Parse("#d4af37"));
                     }
                 }
 
@@ -129,14 +164,53 @@ public partial class MainWindow : Window
                 };
             };
 
-            var grid = new Grid();
-            grid.ColumnDefinitions.Add(new ColumnDefinition(200, GridUnitType.Pixel));
-            grid.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
+            // Wrap content in ornate border with gradient
+            var contentGradient = new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
+                GradientStops = new GradientStops
+                {
+                    new GradientStop(Color.Parse("#6b5a47"), 0),
+                    new GradientStop(Color.Parse("#8b7355"), 0.5),
+                    new GradientStop(Color.Parse("#6b5a47"), 1)
+                }
+            };
 
-            Grid.SetColumn(navListBox, 0);
-            Grid.SetColumn(contentArea, 1);
-            grid.Children.Add(navListBox);
-            grid.Children.Add(contentArea);
+            var contentBorder = new Border
+            {
+                Background = new SolidColorBrush(Color.Parse("#0a0a0a")),
+                BorderBrush = contentGradient,
+                BorderThickness = new Thickness(4),
+                CornerRadius = new CornerRadius(0),
+                Padding = new Thickness(3),
+                Margin = new Thickness(8),
+                Child = new Border
+                {
+                    Background = new SolidColorBrush(Color.Parse("#1a1410")),
+                    BorderBrush = new SolidColorBrush(Color.Parse("#2a2820")),
+                    BorderThickness = new Thickness(2),
+                    Child = new Border
+                    {
+                        Background = new SolidColorBrush(Color.Parse("#0f0d0a")),
+                        BorderBrush = new SolidColorBrush(Color.Parse("#4a4a4a")),
+                        BorderThickness = new Thickness(1),
+                        Child = contentArea
+                    }
+                }
+            };
+
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition(220, GridUnitType.Pixel));
+            grid.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
+            grid.RowDefinitions.Add(new RowDefinition(1, GridUnitType.Star));
+            grid.Background = new SolidColorBrush(Color.Parse("#0a0a0a"));
+            grid.Margin = new Thickness(8);
+
+            Grid.SetColumn(navBorder, 0);
+            Grid.SetColumn(contentBorder, 1);
+            grid.Children.Add(navBorder);
+            grid.Children.Add(contentBorder);
 
             this.Content = grid;
             navListBox.SelectedIndex = 0;

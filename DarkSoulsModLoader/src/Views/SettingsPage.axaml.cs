@@ -25,19 +25,11 @@ public partial class SettingsPage : UserControl
         }
     }
 
-    private async void OnBackupClick(object? sender, RoutedEventArgs e)
+    private async void OnSaveManifestUrl(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is SettingsPageViewModel vm)
+        if (this.FindControl<TextBox>("ManifestUrlInput") is TextBox input && DataContext is SettingsPageViewModel vm)
         {
-            await vm.BackupGameFilesAsync();
-        }
-    }
-
-    private async void OnRestoreClick(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is SettingsPageViewModel vm)
-        {
-            await vm.RestoreFromBackupAsync();
+            await vm.SetManifestUrlAsync(input.Text ?? "");
         }
     }
 

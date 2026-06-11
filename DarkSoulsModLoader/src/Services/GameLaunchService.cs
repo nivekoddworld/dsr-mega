@@ -35,9 +35,9 @@ public class GameLaunchService
         if (!Directory.Exists(_gameDirectory))
             errors.Add($"Game directory not found: {_gameDirectory}");
 
-        var dsrExePath = Path.Combine(_gameDirectory, "DARKSOULS.exe");
+        var dsrExePath = Path.Combine(_gameDirectory, "DarkSoulsRemastered.exe");
         if (!File.Exists(dsrExePath))
-            errors.Add($"DARKSOULS.exe not found at {dsrExePath}");
+            errors.Add($"DarkSoulsRemastered.exe not found at {dsrExePath}");
 
         if (!IsInjectorPresent)
             errors.Add("Mod injector (dinput8.dll) not found. Mods will not be loaded.");

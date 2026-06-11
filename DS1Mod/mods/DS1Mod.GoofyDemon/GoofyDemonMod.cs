@@ -168,6 +168,14 @@ public sealed class GoofyDemonMod : ModBase, IGamePatcher
         Log("patch complete.");
     }
 
+    // ── Config ────────────────────────────────────────────────────────────────────
+    public override void InitializeConfig(ModConfig config)
+    {
+        config.AddBool("enableLogging", true);
+        config.AddBool("verboseLogging", false);
+        config.AddInt("heartbeatInterval", 20);
+    }
+
     // ── IGameMod (console readout) ──────────────────────────────────────────────
     public override void OnLoad(IModContext ctx)
     {

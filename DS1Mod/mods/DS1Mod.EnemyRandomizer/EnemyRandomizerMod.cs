@@ -3,6 +3,7 @@ using DS1Mod.Core;
 using DS1Mod.Modding;
 using DS1Mod.SDK;
 using DS1Mod.EnemyRandomizer.Core;
+using DS1Mod.EnemyRandomizer.Config;
 using SoulsFormats;
 
 namespace DS1Mod.EnemyRandomizer;
@@ -37,6 +38,84 @@ public sealed class EnemyRandomizerMod : ModBase, IGamePatcher
         "spEffectID4", "spEffectID5", "spEffectID6", "spEffectID7",
     };
 
+    public override void InitializeConfig(ModConfig config)
+    {
+        // Top-level settings
+        config.AddBool("enabled", true)
+            .Tooltip("Enable or disable the Enemy Randomizer mod");
+
+        config.AddString("seed", "")
+            .Tooltip("Random seed for reproducible randomization. Leave empty for random seed");
+
+        // Boss randomization
+        config.AddBool("randomizeBosses", true)
+            .Tooltip("Randomize boss placements throughout the game");
+
+        config.AddBool("allowDuplicateBosses", false)
+            .Tooltip("Allow the same boss to appear in multiple slots");
+
+        config.AddEnum("bossRandomizationMode", DS1Mod.EnemyRandomizer.Config.BossRandomizationMode.BossForBoss)
+            .Tooltip("*BossForBoss*: Bosses are only replaced by other bosses\n" +
+                     "*BossForAnything*: Bosses can be replaced by any enemy");
+
+        // Miniboss and regular enemy randomization
+        config.AddBool("randomizeMinibosses", true)
+            .Tooltip("Randomize miniboss placements (e.g. Capra Demon, Taurus Demon)");
+
+        config.AddBool("randomizeRegularEnemies", false)
+            .Tooltip("Randomize regular enemy placements (soldiers, hollow warriors, etc.)");
+
+        config.AddEnum("enemyPlacementMode", DS1Mod.EnemyRandomizer.Config.EnemyPlacementMode.CategoryRestricted)
+            .Tooltip("*CategoryRestricted*: Enemies replaced by similar types\n" +
+                     "*FreeForAll*: Any enemy can be placed anywhere");
+
+        // Enemy stat scaling
+        config.AddBool("scaleEnemyStats", true)
+            .Tooltip("Automatically scale enemy stats (HP, damage) based on location difficulty");
+
+        config.AddEnum("enemyScalingSource", DS1Mod.EnemyRandomizer.Config.EnemyScalingSource.FogGateDepth)
+            .Tooltip("*FogGateDepth*: Scale based on distance from start (through fog gates)\n" +
+                     "*VanillaDepth*: No scaling - enemies stay as they are\n" +
+                     "*Fixed*: Scale all enemies by the same amount");
+
+        config.AddFloat("scaleHPFactor", 1.0f)
+            .Tooltip("Multiply enemy HP by this factor (1.0 = no change, 2.0 = double HP)");
+
+        config.AddFloat("scaleDamageFactor", 1.0f)
+            .Tooltip("Multiply enemy damage by this factor (1.0 = no change, 0.5 = half damage)");
+
+        config.AddBool("scalePoiseArmor", false)
+            .Tooltip("Scale enemy poise/armor values along with HP and damage");
+
+        // AI and behavior
+        config.AddBool("preserveAIBehavior", true)
+            .Tooltip("Keep each enemy's original AI behavior after replacement");
+
+        config.AddBool("randomizeEnemyAI", false)
+            .Tooltip("Randomize enemy AI behavior (experimental, may cause issues)");
+
+        // Advanced options
+        config.AddBool("protectImportantNPCs", true)
+            .Tooltip("Prevent important NPCs from being randomized (Solaire, Laurentius, etc.)");
+
+        config.AddBool("allowFlyingEnemiesInDoors", false)
+            .Tooltip("Allow flying enemies (Drake, Wyvern) to spawn indoors");
+
+        config.AddBool("includeDLCEnemies", true)
+            .Tooltip("Include Artorias of the Abyss DLC enemies in the randomization pool");
+
+        config.AddBool("randomizePatrolPaths", false)
+            .Tooltip("Randomize enemy patrol routes (experimental, may cause AI issues)");
+
+        config.AddEnum("enemyDensityMode", DS1Mod.EnemyRandomizer.Config.EnemyDensityMode.Vanilla)
+            .Tooltip("*Vanilla*: Keep original number of enemies\n" +
+                     "*Reduced*: Reduce enemy count\n" +
+                     "*Increased*: Increase enemy count");
+
+        config.AddBool("allowBossesAsRegularEnemies", false)
+            .Tooltip("Allow boss-type enemies to appear as regular enemies in the world");
+    }
+
     public void Patch(IPatchContext ctx)
     {
         ctx.Log("[EnemyRandomizer] Loading configuration...");
@@ -45,11 +124,11 @@ public sealed class EnemyRandomizerMod : ModBase, IGamePatcher
         if (!File.Exists(configPath))
         {
             ctx.Log($"[EnemyRandomizer] Config not found. Generating default...");
-            Config.ConfigGenerator.WriteDefault(configPath, ctx.Log);
+            DS1Mod.EnemyRandomizer.Config.ConfigGenerator.WriteDefault(configPath, ctx.Log);
             return;
         }
 
-        Config.EnemyConfig? config;
+        DS1Mod.EnemyRandomizer.Config.EnemyConfig? config;
         try
         {
             string json = File.ReadAllText(configPath);
@@ -106,7 +185,7 @@ public sealed class EnemyRandomizerMod : ModBase, IGamePatcher
 
             // Load boss overrides if present
             string overridesPath = Path.Combine(ctx.GameDir, BossOverridesFileName);
-            var overrides = Config.BossOverrideConfig.LoadFromFile(overridesPath);
+            var overrides = DS1Mod.EnemyRandomizer.Config.BossOverrideConfig.LoadFromFile(overridesPath);
 
             RandomizeEnemies(ctx, config, overrides, seedValue);
             ctx.Log("[EnemyRandomizer] Randomization complete.");
@@ -187,13 +266,13 @@ public sealed class EnemyRandomizerMod : ModBase, IGamePatcher
 
         // Apply density filter to regular enemies
         regularEnemies = ApplyDensity(regularEnemies, settings, rng);
-        if (settings.EnemyDensityMode != "Vanilla")
+        if (settings.EnemyDensityMode != EnemyDensityMode.Vanilla)
             ctx.Log($"[EnemyRandomizer] After density filter: {regularEnemies.Count} regular enemies");
 
         var allPlacements = new List<EnemyPlacement>();
 
         // Randomize bosses
-        if ((settings.RandomizeBosses || settings.EnemyPlacementMode == "BossOnly") && bossEnemies.Count > 0)
+        if ((settings.RandomizeBosses || settings.EnemyPlacementMode == EnemyPlacementMode.BossOnly) && bossEnemies.Count > 0)
         {
             ctx.Log($"[EnemyRandomizer] Randomizing {bossEnemies.Count} bosses...");
             var bossRandomizer = new BossRandomizer();
@@ -212,7 +291,7 @@ public sealed class EnemyRandomizerMod : ModBase, IGamePatcher
         }
 
         // Randomize regular enemies
-        if (settings.EnemyPlacementMode != "BossOnly" && regularEnemies.Count > 0)
+        if (settings.EnemyPlacementMode != EnemyPlacementMode.BossOnly && regularEnemies.Count > 0)
         {
             ctx.Log($"[EnemyRandomizer] Randomizing {regularEnemies.Count} regular enemies...");
             var placer = new EnemyPlacer(ctx.Log);
@@ -521,8 +600,8 @@ public sealed class EnemyRandomizerMod : ModBase, IGamePatcher
     {
         return settings.EnemyDensityMode switch
         {
-            "Reduced" => enemies.OrderBy(_ => rng.Next()).Take((int)(enemies.Count * 0.6)).ToList(),
-            "Increased" => enemies.Concat(enemies.OrderBy(_ => rng.Next()).Take(enemies.Count / 3)).ToList(),
+            EnemyDensityMode.Reduced => enemies.OrderBy(_ => rng.Next()).Take((int)(enemies.Count * 0.6)).ToList(),
+            EnemyDensityMode.Increased => enemies.Concat(enemies.OrderBy(_ => rng.Next()).Take(enemies.Count / 3)).ToList(),
             _ => enemies,
         };
     }

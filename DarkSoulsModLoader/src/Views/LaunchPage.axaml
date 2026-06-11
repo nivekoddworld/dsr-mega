@@ -1,14 +1,14 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="DarkSoulsModLoader.Views.LaunchPage"
-             Background="#1a1a1a">
+             Background="#1a1410">
 
     <UserControl.Styles>
         <Style Selector="Button.gold">
             <Setter Property="Background" Value="#d4af37" />
-            <Setter Property="Foreground" Value="#1a1a1a" />
+            <Setter Property="Foreground" Value="#1a1410" />
             <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="CornerRadius" Value="2" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Transitions">
                 <Transitions>
@@ -17,16 +17,16 @@
             </Setter>
         </Style>
         <Style Selector="Button.gold:pointerover">
-            <Setter Property="Background" Value="#e5c158" />
+            <Setter Property="Background" Value="#ffd700" />
         </Style>
         <Style Selector="Button.gold:pressed">
             <Setter Property="Background" Value="#c49722" />
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="20">
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="12">
         <!-- Header -->
-        <TextBlock Grid.Row="0" Text="Launch Game" FontSize="18" FontWeight="Bold" Margin="0,0,0,16" Foreground="#d4af37" />
+        <TextBlock Grid.Row="0" Text="Launch Game" FontSize="18" FontWeight="Bold" Margin="0,0,0,16" Foreground="#ffd700" />
 
         <!-- Game Directory -->
         <StackPanel Grid.Row="1" Spacing="8">

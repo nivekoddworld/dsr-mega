@@ -30,6 +30,11 @@ public sealed class AsylumSlamMod : ModBase, IGamePatcher
     private const string EntryLeaf   = "223200_battle.lua";  // Asylum Demon AI (see BossIds.AsylumDemon)
     private const string ResourceLua = "223200_battle.luac";
 
+    public override void InitializeConfig(ModConfig config)
+    {
+        config.AddBool("enabled", true);
+    }
+
     public void Patch(IPatchContext ctx)
     {
         // SoulsFormats reads shift-jis strings in BND entry names.

@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="DarkSoulsModLoader.Views.SettingsPage"
-             Background="#1a1a1a">
+             Background="#1a1410">
     <UserControl.Styles>
         <Style Selector="Button.gold">
             <Setter Property="Background" Value="#d4af37" />
@@ -23,9 +23,9 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,*" Margin="20">
+    <Grid RowDefinitions="Auto,*" Margin="12">
         <!-- Header -->
-        <TextBlock Grid.Row="0" Text="Settings" FontSize="18" FontWeight="Bold" Margin="0,0,0,16" Foreground="#d4af37" />
+        <TextBlock Grid.Row="0" Text="Settings" FontSize="18" FontWeight="Bold" Margin="0,0,0,16" Foreground="#ffd700" />
 
         <!-- Settings List -->
         <StackPanel Grid.Row="1" Spacing="16">

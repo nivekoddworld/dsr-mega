@@ -32,6 +32,13 @@ public sealed class DiscordRpcMod : ModBase
 
     private readonly DateTime _sessionStart = DateTime.UtcNow;
 
+    // ── Config ──────────────────────────────────────────────────────────
+    public override void InitializeConfig(ModConfig config)
+    {
+        config.AddString("discordAppId", AppId);
+        config.AddBool("enablePresenceUpdates", true);
+    }
+
     // ── Lifecycle ────────────────────────────────────────────────────────────
     public override void OnLoad(IModContext ctx)
     {

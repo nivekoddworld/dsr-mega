@@ -2,11 +2,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="DarkSoulsModLoader.Views.MainWindow"
         Title="Dark Souls Mod Loader"
-        Width="1000"
-        Height="650"
-        Background="#1a1a1a">
+        Width="1200"
+        Height="750"
+        Background="#0a0a0a">
 
-    <Grid RowDefinitions="*">
+    <Grid RowDefinitions="*" Background="#0a0a0a">
         <TextBlock x:Name="LoadingText" Text="Loading..." Foreground="#d4af37" Margin="16" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center" />
     </Grid>
 

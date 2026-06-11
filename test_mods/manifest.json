@@ -1,0 +1,12 @@
+{
+  "mods": [
+    {
+      "name": "Enemy Randomizer",
+      "version": "1.0.0",
+      "description": "Randomize all enemies, bosses, and minibosses throughout Dark Souls. Configure scaling, placement modes, and randomization options.",
+      "author": "DS1MegaRando",
+      "iconUrl": "https://your-copyparty-url/icon.png",
+      "downloadUrl": "https://your-copyparty-url/EnemyRandomizer.zip"
+    }
+  ]
+}

@@ -20,6 +20,13 @@ public sealed class FogLoggerMod : ModBase
     private StreamWriter? _log;
     private int _count;
 
+    public override void InitializeConfig(ModConfig config)
+    {
+        config.AddBool("enableFileLogging", true);
+        config.AddBool("enableConsoleLogging", true);
+        config.AddBool("logCoordinates", true);
+    }
+
     public override void OnLoad(IModContext ctx)
     {
         _ctx = ctx;

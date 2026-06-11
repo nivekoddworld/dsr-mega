@@ -95,11 +95,31 @@ public class ConfigService
         var config = await LoadConfigAsync();
         return config.GameDirectory;
     }
+
+    /// <summary>
+    /// Set the manifest URL and save config.
+    /// </summary>
+    public async Task SetManifestUrlAsync(string manifestUrl)
+    {
+        var config = await LoadConfigAsync();
+        config.ManifestUrl = manifestUrl;
+        await SaveConfigAsync(config);
+    }
+
+    /// <summary>
+    /// Get the configured manifest URL.
+    /// </summary>
+    public async Task<string?> GetManifestUrlAsync()
+    {
+        var config = await LoadConfigAsync();
+        return config.ManifestUrl;
+    }
 }
 
 public class AppConfig
 {
     public string? GameDirectory { get; set; }
+    public string? ManifestUrl { get; set; }
     public DateTime LastModified { get; set; } = DateTime.Now;
 
     public bool IsValid => !string.IsNullOrEmpty(GameDirectory) && Directory.Exists(GameDirectory);

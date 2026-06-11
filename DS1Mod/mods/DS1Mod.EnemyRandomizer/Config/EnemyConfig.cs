@@ -2,8 +2,8 @@ using System.Text.Json.Serialization;
 
 namespace DS1Mod.EnemyRandomizer.Config;
 
-public enum EnemyPlacementMode { FullRandom, CategoryRestricted, AreaCohesive, BossOnly }
-public enum BossRandomizationMode { BossForBoss }
+public enum EnemyPlacementMode { CategoryRestricted, FreeForAll, AreaCohesive, BossOnly }
+public enum BossRandomizationMode { BossForBoss, BossForAnything }
 public enum EnemyScalingSource { FogGateDepth, VanillaDepth, Fixed }
 public enum EnemyDensityMode { Vanilla, Reduced, Increased }
 
@@ -47,7 +47,7 @@ public class EnemySettings
     public bool RandomizeRegularEnemies { get; set; } = false;
 
     [JsonPropertyName("enemyPlacementMode")]
-    public string EnemyPlacementMode { get; set; } = "CategoryRestricted";
+    public EnemyPlacementMode EnemyPlacementMode { get; set; } = EnemyPlacementMode.BossOnly;
 
     [JsonPropertyName("scaleEnemyStats")]
     public bool ScaleEnemyStats { get; set; } = true;
@@ -83,7 +83,7 @@ public class EnemySettings
     public bool RandomizePatrolPaths { get; set; } = false;
 
     [JsonPropertyName("enemyDensityMode")]
-    public string EnemyDensityMode { get; set; } = "Vanilla";
+    public EnemyDensityMode EnemyDensityMode { get; set; } = EnemyDensityMode.Vanilla;
 
     [JsonPropertyName("allowBossesAsRegularEnemies")]
     public bool AllowBossesAsRegularEnemies { get; set; } = false;

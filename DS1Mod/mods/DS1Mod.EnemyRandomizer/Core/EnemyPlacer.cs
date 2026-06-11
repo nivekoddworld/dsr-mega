@@ -48,7 +48,7 @@ public class EnemyPlacer
         {
             var target = slots[i];
 
-            if (settings.EnemyPlacementMode == "BossOnly")
+            if (settings.EnemyPlacementMode == Config.EnemyPlacementMode.BossOnly)
             {
                 placements.Add(MakeVanilla(target));
                 continue;
@@ -84,7 +84,7 @@ public class EnemyPlacer
 
         switch (settings.EnemyPlacementMode)
         {
-            case "CategoryRestricted":
+            case Config.EnemyPlacementMode.CategoryRestricted:
             {
                 var targetCat = target.Definition?.Category ?? EnemyCategory.Misc;
                 var sameGroup = candidates.Where(e => AreSameGroup(targetCat, e.Category)).ToList();
@@ -92,7 +92,7 @@ public class EnemyPlacer
                     return sameGroup;
                 break;
             }
-            case "AreaCohesive":
+            case Config.EnemyPlacementMode.AreaCohesive:
             {
                 if (areaModels != null &&
                     !string.IsNullOrEmpty(target.Area) &&

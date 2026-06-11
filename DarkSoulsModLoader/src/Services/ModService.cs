@@ -9,24 +9,33 @@ namespace DarkSoulsModLoader.Services;
 
 /// <summary>
 /// Manages mod discovery, loading, and configuration.
-/// Scans mods/ folder, reads mod metadata and configs from settings/.
+/// Scans mods/ folder for .dll (enabled) and .disabled (disabled) files.
 /// </summary>
 public class ModService
 {
     private readonly string _modsDirectory;
     private readonly string _settingsDirectory;
-    private readonly string _enabledModsFile;
+
+    private readonly string[] _excludedMods = new string[]
+    {
+        "DS1Mod.Core",
+        "DS1Mod.SDK",
+        "DS1Mod.Modding",
+        "SoulsFormats"
+    };
 
     public ModService(string gameDirectory)
     {
         _modsDirectory = Path.Combine(gameDirectory, "mods");
         _settingsDirectory = Path.Combine(_modsDirectory, "settings");
-        _enabledModsFile = Path.Combine(_settingsDirectory, ".enabled_mods");
     }
+
+    public string[] ExcludedMods => _excludedMods;
 
     /// <summary>
     /// Discover all installed mods from the mods/ directory.
     /// Returns mod metadata + current configuration.
+    /// Enabled mods have .dll extension, disabled have .disabled.
     /// </summary>
     public async Task<List<ModInfo>> DiscoverModsAsync()
     {
@@ -35,19 +44,25 @@ public class ModService
         if (!Directory.Exists(_modsDirectory))
             return mods;
 
-        var enabledMods = await LoadEnabledModsAsync();
+        // Get all .dll and .disabled files
+        var allModFiles = Directory.GetFiles(_modsDirectory, "*.dll")
+            .Concat(Directory.GetFiles(_modsDirectory, "*.disabled"))
+            .OrderBy(f => Path.GetFileNameWithoutExtension(f))
+            .ToList();
 
-        foreach (var dllFile in Directory.GetFiles(_modsDirectory, "*.dll").OrderBy(f => Path.GetFileName(f)))
+        foreach (var modFile in allModFiles)
         {
-            var modName = Path.GetFileNameWithoutExtension(dllFile);
+            var fileName = Path.GetFileName(modFile);
+            var modName = Path.GetFileNameWithoutExtension(modFile);
+            var isEnabled = modFile.EndsWith(".dll", StringComparison.OrdinalIgnoreCase);
             var configPath = Path.Combine(_settingsDirectory, $"{modName}.json");
 
             var mod = new ModInfo
             {
                 Name = modName,
-                DllPath = dllFile,
+                DllPath = modFile,
                 ConfigPath = configPath,
-                IsEnabled = enabledMods.Contains(modName),
+                IsEnabled = isEnabled,
                 Config = await LoadConfigAsync(configPath)
             };
 
@@ -109,47 +124,38 @@ public class ModService
     }
 
     /// <summary>
-    /// Enable or disable a mod.
+    /// Enable or disable a mod by renaming its file extension.
+    /// Enabled mods have .dll extension, disabled have .disabled extension.
     /// </summary>
     public async Task SetModEnabledAsync(string modName, bool enabled)
     {
-        var enabledMods = await LoadEnabledModsAsync();
+        var dllFile = Path.Combine(_modsDirectory, $"{modName}.dll");
+        var disabledFile = Path.Combine(_modsDirectory, $"{modName}.disabled");
 
-        if (enabled && !enabledMods.Contains(modName))
-            enabledMods.Add(modName);
-        else if (!enabled && enabledMods.Contains(modName))
-            enabledMods.Remove(modName);
+        var existingFile = File.Exists(dllFile) ? dllFile :
+                          File.Exists(disabledFile) ? disabledFile : null;
 
-        await SaveEnabledModsAsync(enabledMods);
-    }
+        if (existingFile == null)
+            return;
 
-    /// <summary>
-    /// Load the list of enabled mod names.
-    /// </summary>
-    private async Task<List<string>> LoadEnabledModsAsync()
-    {
-        if (!File.Exists(_enabledModsFile))
-            return new List<string>();
+        var targetFile = enabled ? dllFile : disabledFile;
 
-        try
+        if (existingFile != targetFile)
         {
-            var json = await File.ReadAllTextAsync(_enabledModsFile);
-            return JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
-        }
-        catch
-        {
-            return new List<string>();
-        }
-    }
+            try
+            {
+                if (File.Exists(targetFile))
+                    File.Delete(targetFile);
 
-    /// <summary>
-    /// Save the list of enabled mod names.
-    /// </summary>
-    private async Task SaveEnabledModsAsync(List<string> enabledMods)
-    {
-        Directory.CreateDirectory(_settingsDirectory);
-        var json = JsonSerializer.Serialize(enabledMods, new JsonSerializerOptions { WriteIndented = true });
-        await File.WriteAllTextAsync(_enabledModsFile, json);
+                File.Move(existingFile, targetFile, overwrite: true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to rename mod {modName}: {ex.Message}");
+            }
+        }
+
+        await Task.CompletedTask;
     }
 
     /// <summary>

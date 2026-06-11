@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using DarkSoulsModLoader.Services;
@@ -104,7 +106,8 @@ public class LaunchPageViewModel : INotifyPropertyChanged
 
         var validation = launcher.ValidateGameDirectory();
         var enabledMods = await mods.GetEnabledModsAsync();
-        EnabledModCount = enabledMods.Count;
+        var excludedSet = new HashSet<string>(mods.ExcludedMods, StringComparer.OrdinalIgnoreCase);
+        EnabledModCount = enabledMods.Count(m => !excludedSet.Contains(m.Name));
 
         CanLaunch = validation.IsValid;
         StatusColor = validation.IsValid ? "#27AE60" : "#cc4125";

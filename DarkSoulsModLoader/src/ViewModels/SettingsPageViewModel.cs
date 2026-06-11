@@ -12,9 +12,7 @@ public class SettingsPageViewModel : INotifyPropertyChanged
     private readonly ConfigService _configService;
     private readonly GameLaunchService _gameLaunchService;
     private string _gameDirectory = "";
-    private string _backupStatus = "No backups yet";
-    private bool _canBackup = false;
-    private bool _canRestore = false;
+    private string _manifestUrl = "";
 
     public string GameDirectory
     {
@@ -22,27 +20,15 @@ public class SettingsPageViewModel : INotifyPropertyChanged
         set => SetProperty(ref _gameDirectory, value);
     }
 
-    public string BackupStatus
+    public string ManifestUrl
     {
-        get => _backupStatus;
-        set => SetProperty(ref _backupStatus, value);
-    }
-
-    public bool CanBackup
-    {
-        get => _canBackup;
-        set => SetProperty(ref _canBackup, value);
-    }
-
-    public bool CanRestore
-    {
-        get => _canRestore;
-        set => SetProperty(ref _canRestore, value);
+        get => _manifestUrl;
+        set => SetProperty(ref _manifestUrl, value);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public SettingsPageViewModel(ConfigService configService, GameLaunchService gameLaunchService)
+    public SettingsPageViewModel(ConfigService configService, GameLaunchService gameLaunchService, ModService modService = null!)
     {
         _configService = configService;
         _gameLaunchService = gameLaunchService;
@@ -53,7 +39,7 @@ public class SettingsPageViewModel : INotifyPropertyChanged
     private async Task InitializeAsync()
     {
         GameDirectory = await _configService.GetGameDirectoryAsync() ?? "Not set";
-        RefreshBackupStatus();
+        ManifestUrl = await _configService.GetManifestUrlAsync() ?? "";
     }
 
     public async Task SetGameDirectoryAsync(string path)
@@ -63,70 +49,12 @@ public class SettingsPageViewModel : INotifyPropertyChanged
 
         await _configService.SetGameDirectoryAsync(path);
         GameDirectory = path;
-        RefreshBackupStatus();
     }
 
-    public async Task BackupGameFilesAsync()
+    public async Task SetManifestUrlAsync(string url)
     {
-        if (string.IsNullOrEmpty(GameDirectory))
-            return;
-
-        try
-        {
-            BackupStatus = "Creating backup...";
-
-            var backupDir = Path.Combine(GameDirectory, ".backup");
-            Directory.CreateDirectory(backupDir);
-
-            var filesToBackup = new[] { "DARKSOULS.exe", "dinput8.dll" };
-            foreach (var file in filesToBackup)
-            {
-                var source = Path.Combine(GameDirectory, file);
-                var dest = Path.Combine(backupDir, file);
-                if (File.Exists(source))
-                    File.Copy(source, dest, true);
-            }
-
-            BackupStatus = $"Backup created: {DateTime.Now:yyyy-MM-dd HH:mm}";
-            CanRestore = true;
-        }
-        catch (Exception ex)
-        {
-            BackupStatus = $"Backup failed: {ex.Message}";
-        }
-    }
-
-    public async Task RestoreFromBackupAsync()
-    {
-        if (string.IsNullOrEmpty(GameDirectory))
-            return;
-
-        try
-        {
-            BackupStatus = "Restoring from backup...";
-
-            var backupDir = Path.Combine(GameDirectory, ".backup");
-            if (!Directory.Exists(backupDir))
-            {
-                BackupStatus = "No backup found";
-                return;
-            }
-
-            var filesToRestore = new[] { "DARKSOULS.exe", "dinput8.dll" };
-            foreach (var file in filesToRestore)
-            {
-                var source = Path.Combine(backupDir, file);
-                var dest = Path.Combine(GameDirectory, file);
-                if (File.Exists(source))
-                    File.Copy(source, dest, true);
-            }
-
-            BackupStatus = "Restored successfully";
-        }
-        catch (Exception ex)
-        {
-            BackupStatus = $"Restore failed: {ex.Message}";
-        }
+        await _configService.SetManifestUrlAsync(url);
+        ManifestUrl = url;
     }
 
     public async Task ClearCacheAsync()
@@ -143,33 +71,11 @@ public class SettingsPageViewModel : INotifyPropertyChanged
                 if (Directory.Exists(settingsDir))
                     Directory.Delete(settingsDir, true);
             }
-
-            BackupStatus = "Cache cleared";
         }
         catch (Exception ex)
         {
-            BackupStatus = $"Clear failed: {ex.Message}";
+            Console.WriteLine($"Clear cache failed: {ex.Message}");
         }
-    }
-
-    private void RefreshBackupStatus()
-    {
-        if (string.IsNullOrEmpty(GameDirectory))
-        {
-            CanBackup = false;
-            CanRestore = false;
-            BackupStatus = "Set game directory first";
-            return;
-        }
-
-        CanBackup = true;
-        var backupDir = Path.Combine(GameDirectory, ".backup");
-        CanRestore = Directory.Exists(backupDir) && File.Exists(Path.Combine(backupDir, "DARKSOULS.exe"));
-
-        if (CanRestore)
-            BackupStatus = "Backup available";
-        else
-            BackupStatus = "No backup found";
     }
 
     protected void SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
