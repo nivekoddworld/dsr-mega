@@ -23,29 +23,42 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,*,Auto" Margin="12">
+    <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" Margin="12">
         <!-- Header -->
         <TextBlock Grid.Row="0" Text="Debug Console" FontSize="18" FontWeight="Bold" Margin="0,0,0,16" Foreground="#d4af37" />
 
+        <!-- Controls -->
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto" Spacing="8" Margin="0,0,0,12">
+            <TextBlock Grid.Column="0" Text="Font Size:" Foreground="#cccccc" VerticalAlignment="Center" />
+            <Slider Grid.Column="1"
+                    Minimum="8"
+                    Maximum="24"
+                    Value="{Binding FontSize}"
+                    Background="#1a1a1a"
+                    Foreground="#d4af37"
+                    VerticalAlignment="Center" />
+            <Button Grid.Column="3" Classes="gold" Content="Copy Selected" Padding="12,6" Click="OnCopySelectedClick" />
+            <Button Grid.Column="4" Classes="gold" Content="Copy All" Padding="12,6" Click="OnCopyAllClick" />
+            <Button Grid.Column="5" Classes="gold" Content="Clear" Padding="12,6" Click="OnClearClick" />
+        </Grid>
+
         <!-- Log Output -->
-        <Border Grid.Row="1" Background="#000000" BorderBrush="#d4af37" BorderThickness="1" CornerRadius="0" Margin="0,0,0,12">
-            <ListBox Background="#1a1a1a"
+        <Border Grid.Row="2" Background="#000000" BorderBrush="#d4af37" BorderThickness="1" CornerRadius="0">
+            <ListBox x:Name="LogListBox"
+                     Background="#1a1a1a"
                      BorderThickness="0"
                      ItemsSource="{Binding LogLines}"
-                     Focusable="False">
+                     SelectionMode="Multiple">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding}"
                                    Foreground="#a0a0a0"
-                                   FontSize="11"
+                                   FontSize="{Binding DataContext.FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                    FontFamily="Courier New"
-                                   Margin="8,2" />
+                                   Margin="8,4" />
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
         </Border>
-
-        <!-- Clear Button -->
-        <Button Grid.Row="2" Classes="gold" Content="Clear Logs" Padding="12,8" Click="OnClearClick" />
     </Grid>
 </UserControl>
