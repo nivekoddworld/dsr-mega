@@ -1,7 +1,6 @@
 # DS1Mod.AutoEquip
 
-In-process port of [cboyo's DS1Remastered-AutoEquipMod](https://github.com/cboyo/DS1Remastered-AutoEquipMod)
-(Beta branch). Whenever you pick up a weapon, armor piece, ring, or ammo, it is
+Whenever you pick up a weapon, armor piece, ring, or ammo, it is
 equipped automatically into the matching slot. Rings alternate between the two
 ring slots; shields/catalysts/parry daggers go to the left hand, everything
 else to the right.
