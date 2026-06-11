@@ -3,6 +3,27 @@
              x:Class="DarkSoulsModLoader.Views.LaunchPage"
              Background="#1a1a1a">
 
+    <UserControl.Styles>
+        <Style Selector="Button.gold">
+            <Setter Property="Background" Value="#d4af37" />
+            <Setter Property="Foreground" Value="#1a1a1a" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.2" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.gold:pointerover">
+            <Setter Property="Background" Value="#e5c158" />
+        </Style>
+        <Style Selector="Button.gold:pressed">
+            <Setter Property="Background" Value="#c49722" />
+        </Style>
+    </UserControl.Styles>
+
     <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="20">
         <!-- Header -->
         <TextBlock Grid.Row="0" Text="Launch Game" FontSize="18" FontWeight="Bold" Margin="0,0,0,16" Foreground="#d4af37" />
@@ -12,7 +33,7 @@
             <TextBlock Text="Game Directory" FontWeight="Bold" Foreground="#cccccc" />
             <Grid ColumnDefinitions="*,Auto">
                 <TextBox Grid.Column="0" Text="{Binding GameDirectory}" IsReadOnly="True" Background="#2a2a2a" Foreground="#cccccc" BorderBrush="#444444" />
-                <Button Grid.Column="1" Content="Browse..." Margin="8,0,0,0" Padding="12,8" Background="#444444" Foreground="#d4af37" CornerRadius="4" Click="OnBrowseGameDirectory" />
+                <Button Grid.Column="1" Classes="gold" Content="Browse..." Margin="8,0,0,0" Padding="12,8" Click="OnBrowseGameDirectory" />
             </Grid>
         </StackPanel>
 
@@ -32,7 +53,7 @@
         <Border Grid.Row="3" />
 
         <!-- Launch Button -->
-        <Button Grid.Row="4" Content="Launch Dark Souls Remastered" Padding="16,12" FontSize="14" Background="#6ba82a" Foreground="#1a1a1a" FontWeight="Bold" CornerRadius="4" Click="OnLaunchClick" IsEnabled="{Binding CanLaunch}" />
+        <Button Grid.Row="4" Classes="gold" Content="Launch Dark Souls Remastered" Padding="16,12" FontSize="14" Click="OnLaunchClick" IsEnabled="{Binding CanLaunch}" />
     </Grid>
 
 </UserControl>

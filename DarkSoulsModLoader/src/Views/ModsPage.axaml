@@ -1,44 +1,107 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:DarkSoulsModLoader.Views"
              x:Class="DarkSoulsModLoader.Views.ModsPage"
              Background="#1a1a1a">
+    <UserControl.Styles>
+        <Style Selector="Button.gold">
+            <Setter Property="Background" Value="#d4af37" />
+            <Setter Property="Foreground" Value="#1a1a1a" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.2" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.gold:pointerover">
+            <Setter Property="Background" Value="#e5c158" />
+        </Style>
+        <Style Selector="Button.gold:pressed">
+            <Setter Property="Background" Value="#c49722" />
+        </Style>
+    </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,*,Auto" Margin="20">
-        <!-- Header -->
-        <TextBlock Grid.Row="0" Text="Installed Mods" FontSize="18" FontWeight="Bold" Margin="0,0,0,16" Foreground="#d4af37" />
+    <Grid x:Name="MainGrid" ColumnDefinitions="*,Auto,400" Margin="20">
+        <!-- Left Side: Mods List -->
+        <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto">
+            <!-- Header -->
+            <TextBlock Grid.Row="0" Text="Installed Mods" FontSize="18" FontWeight="Bold" Margin="0,0,20,16" Foreground="#d4af37" />
 
-        <!-- Mods List -->
-        <ListBox Grid.Row="1" Background="#2a2a2a" BorderThickness="1" BorderBrush="#444444" CornerRadius="4" ItemsSource="{Binding Mods}">
-            <ListBox.Styles>
-                <Style Selector="ListBoxItem">
-                    <Setter Property="Foreground" Value="#cccccc" />
-                    <Setter Property="Background" Value="Transparent" />
-                    <Setter Property="Padding" Value="12,8" />
-                </Style>
-                <Style Selector="ListBoxItem:pointerover">
-                    <Setter Property="Background" Value="#3a3a3a" />
-                </Style>
-                <Style Selector="ListBoxItem:selected">
-                    <Setter Property="Background" Value="#444444" />
-                    <Setter Property="Foreground" Value="#d4af37" />
-                </Style>
-            </ListBox.Styles>
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}" FontWeight="Bold" Foreground="#d4af37" />
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding DllPath}" Foreground="#888" FontSize="11" />
-                        <CheckBox Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" IsChecked="{Binding IsEnabled}" VerticalAlignment="Center" />
-                    </Grid>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+            <!-- Mods List -->
+            <ListBox Grid.Row="1"
+                     Background="#2a2a2a"
+                     BorderThickness="1"
+                     BorderBrush="#444444"
+                     CornerRadius="4"
+                     ItemsSource="{Binding Mods}"
+                     SelectedItem="{Binding SelectedMod}">
+                <ListBox.Styles>
+                    <Style Selector="ListBoxItem">
+                        <Setter Property="Foreground" Value="#cccccc" />
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="Padding" Value="12,8" />
+                        <Setter Property="Cursor" Value="Hand" />
+                        <Setter Property="Transitions">
+                            <Transitions>
+                                <BrushTransition Property="Background" Duration="0:0:0.15" />
+                            </Transitions>
+                        </Setter>
+                    </Style>
+                    <Style Selector="ListBoxItem:pointerover">
+                        <Setter Property="Background" Value="#3a3a3a" />
+                        <Setter Property="Foreground" Value="#e5c158" />
+                    </Style>
+                    <Style Selector="ListBoxItem:selected">
+                        <Setter Property="Background" Value="#444444" />
+                        <Setter Property="Foreground" Value="#d4af37" />
+                    </Style>
+                </ListBox.Styles>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}" FontWeight="Bold" Foreground="#d4af37" />
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding DllPath}" Foreground="#888" FontSize="11" />
+                            <CheckBox Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" IsChecked="{Binding IsEnabled}" VerticalAlignment="Center" Margin="8,0" />
+                            <Button Grid.Row="0" Grid.Column="2" Grid.RowSpan="2" Content="✕" Padding="6,4" Background="#cc4125" Foreground="#ffffff" CornerRadius="2" VerticalAlignment="Center" Click="OnUninstallClick" FontSize="12" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
 
-        <!-- Footer Actions -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" Margin="0,16,0,0">
-            <Button Content="Refresh" Padding="12,8" Background="#d4af37" Foreground="#1a1a1a" FontWeight="Bold" CornerRadius="4" Click="OnRefreshClick" />
-            <Button Content="Browse Folder" Padding="12,8" Background="#444444" Foreground="#d4af37" CornerRadius="4" />
-        </StackPanel>
+            <!-- Footer Actions -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" Margin="0,16,0,0">
+                <Button Classes="gold" Content="Refresh" Padding="12,8" Click="OnRefreshClick" />
+                <Button Content="Browse Folder" Padding="12,8" Background="#333333" Foreground="#d4af37" CornerRadius="6" Cursor="Hand" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Resizable Splitter -->
+        <GridSplitter Grid.Column="1"
+                      Width="4"
+                      Background="#333333"
+                      IsVisible="{Binding ShowConfigEditor}" />
+
+        <!-- Right Side: Config Editor (slides in from right) -->
+        <local:ConfigEditorPage x:Name="ConfigEditorPanel"
+                                Grid.Column="2"
+                                DataContext="{Binding ConfigEditor}"
+                                BorderThickness="1,0,0,0"
+                                BorderBrush="#444444"
+                                Margin="20,0,0,0"
+                                Opacity="0">
+            <local:ConfigEditorPage.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.5" Easing="CubicEaseOut" />
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.5" Easing="CubicEaseOut" />
+                </Transitions>
+            </local:ConfigEditorPage.Transitions>
+            <local:ConfigEditorPage.RenderTransform>
+                <TranslateTransform X="400" />
+            </local:ConfigEditorPage.RenderTransform>
+        </local:ConfigEditorPage>
     </Grid>
 
 </UserControl>

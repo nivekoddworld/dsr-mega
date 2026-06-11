@@ -2,6 +2,26 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="DarkSoulsModLoader.Views.SettingsPage"
              Background="#1a1a1a">
+    <UserControl.Styles>
+        <Style Selector="Button.gold">
+            <Setter Property="Background" Value="#d4af37" />
+            <Setter Property="Foreground" Value="#1a1a1a" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.2" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.gold:pointerover">
+            <Setter Property="Background" Value="#e5c158" />
+        </Style>
+        <Style Selector="Button.gold:pressed">
+            <Setter Property="Background" Value="#c49722" />
+        </Style>
+    </UserControl.Styles>
 
     <Grid RowDefinitions="Auto,*" Margin="20">
         <!-- Header -->
@@ -11,6 +31,18 @@
         <StackPanel Grid.Row="1" Spacing="16">
             <!-- Game Directory Setting -->
             <Border Background="#2a2a2a" CornerRadius="4" Padding="12" BorderBrush="#444444" BorderThickness="1">
+                <Border.Transitions>
+                    <Transitions>
+                        <BrushTransition Property="Background" Duration="0:0:0.15" />
+                        <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+                    </Transitions>
+                </Border.Transitions>
+                <Border.Styles>
+                    <Style Selector="Border:pointerover">
+                        <Setter Property="Background" Value="#323232" />
+                        <Setter Property="BorderBrush" Value="#666666" />
+                    </Style>
+                </Border.Styles>
                 <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Game Directory" FontWeight="Bold" Foreground="#d4af37" />
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding GameDirectory}" Foreground="#888" FontSize="12" />
@@ -18,20 +50,44 @@
                 </Grid>
             </Border>
 
-            <!-- Backup Setting -->
+            <!-- Manifest URL Setting -->
             <Border Background="#2a2a2a" CornerRadius="4" Padding="12" BorderBrush="#444444" BorderThickness="1">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Backup" FontWeight="Bold" Foreground="#d4af37" />
-                    <TextBlock Text="{Binding BackupStatus}" Foreground="#888" FontSize="12" />
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Content="Backup Now" Padding="12,8" Background="#444444" Foreground="#d4af37" CornerRadius="4" Click="OnBackupClick" IsEnabled="{Binding CanBackup}" />
-                        <Button Content="Restore from Backup" Padding="12,8" Background="#444444" Foreground="#d4af37" CornerRadius="4" Click="OnRestoreClick" IsEnabled="{Binding CanRestore}" />
+                <Border.Transitions>
+                    <Transitions>
+                        <BrushTransition Property="Background" Duration="0:0:0.15" />
+                        <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+                    </Transitions>
+                </Border.Transitions>
+                <Border.Styles>
+                    <Style Selector="Border:pointerover">
+                        <Setter Property="Background" Value="#323232" />
+                        <Setter Property="BorderBrush" Value="#666666" />
+                    </Style>
+                </Border.Styles>
+                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Mod Manifest URL" FontWeight="Bold" Foreground="#d4af37" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="URL to your mod manifest.json" Foreground="#888" FontSize="12" />
+                    <StackPanel Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" Orientation="Vertical" Spacing="4" VerticalAlignment="Center">
+                        <TextBox Name="ManifestUrlInput" Text="{Binding ManifestUrl}" Background="#333333" Foreground="#cccccc" Padding="8" Watermark="https://..." Width="300" />
+                        <Button Content="Save" Padding="12,6" Background="#444444" Foreground="#d4af37" CornerRadius="4" Click="OnSaveManifestUrl" />
                     </StackPanel>
-                </StackPanel>
+                </Grid>
             </Border>
 
             <!-- Cache Setting -->
             <Border Background="#2a2a2a" CornerRadius="4" Padding="12" BorderBrush="#444444" BorderThickness="1">
+                <Border.Transitions>
+                    <Transitions>
+                        <BrushTransition Property="Background" Duration="0:0:0.15" />
+                        <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+                    </Transitions>
+                </Border.Transitions>
+                <Border.Styles>
+                    <Style Selector="Border:pointerover">
+                        <Setter Property="Background" Value="#323232" />
+                        <Setter Property="BorderBrush" Value="#666666" />
+                    </Style>
+                </Border.Styles>
                 <StackPanel Spacing="8">
                     <TextBlock Text="Cache" FontWeight="Bold" Foreground="#d4af37" />
                     <TextBlock Text="Clear cached data and temporary files" Foreground="#888" FontSize="12" />

@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="DarkSoulsModLoader.Views.ModBrowserPage"
+             Background="#1a1a1a"
+             Padding="20">
+    <UserControl.Styles>
+        <Style Selector="Button.gold">
+            <Setter Property="Background" Value="#d4af37" />
+            <Setter Property="Foreground" Value="#1a1a1a" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.2" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.gold:pointerover">
+            <Setter Property="Background" Value="#e5c158" />
+        </Style>
+        <Style Selector="Button.gold:pressed">
+            <Setter Property="Background" Value="#c49722" />
+        </Style>
+    </UserControl.Styles>
+    <Grid RowDefinitions="Auto,*">
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,16">
+            <TextBlock Text="Browse Mods" FontSize="20" Foreground="#d4af37" FontWeight="Bold" />
+            <TextBlock Text="{Binding StatusText}" FontSize="12" Foreground="#888888" />
+            <Button Classes="gold" Content="Refresh" Padding="12,8" Click="OnRefreshClick" IsEnabled="{Binding !IsLoading}" />
+        </StackPanel>
+
+        <!-- Mods Grid -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding AvailableMods}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="#2a2a2a" CornerRadius="8" Padding="12" Margin="8" BorderThickness="1" BorderBrush="#444444" Width="300" Cursor="Hand">
+                            <Border.Transitions>
+                                <Transitions>
+                                    <BrushTransition Property="Background" Duration="0:0:0.2" />
+                                    <BrushTransition Property="BorderBrush" Duration="0:0:0.2" />
+                                </Transitions>
+                            </Border.Transitions>
+                            <Border.Styles>
+                                <Style Selector="Border:pointerover">
+                                    <Setter Property="Background" Value="#383838" />
+                                    <Setter Property="BorderBrush" Value="#d4af37" />
+                                </Style>
+                            </Border.Styles>
+                            <StackPanel Spacing="12">
+                                <!-- Icon -->
+                                <Border Height="150" CornerRadius="4" Background="#333333">
+                                    <Image Source="{Binding Icon}" Stretch="UniformToFill" />
+                                </Border>
+
+                                <!-- Info -->
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="{Binding ModInfo.Name}" FontSize="14" FontWeight="Bold" Foreground="#d4af37" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding ModInfo.Version}" FontSize="11" Foreground="#888888" />
+                                    <TextBlock Text="{Binding ModInfo.Author}" FontSize="11" Foreground="#888888" />
+                                    <TextBlock Text="{Binding ModInfo.Description}" FontSize="12" Foreground="#cccccc" TextWrapping="Wrap" />
+                                </StackPanel>
+
+                                <!-- Install Button -->
+                                <Button Classes="gold"
+                                        Content="{Binding InstallStatus}"
+                                        Padding="12,8"
+                                        Click="OnInstallClick"
+                                        IsEnabled="{Binding !IsInstalling}" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
