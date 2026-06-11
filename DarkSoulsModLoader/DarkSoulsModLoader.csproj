@@ -10,6 +10,12 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 
+  <!-- Prevent compilation error Avalonia UI -->
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DebugSymbols>False</DebugSymbols>
+    <DebugType>None</DebugType>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- Avalonia UI -->
     <PackageReference Include="Avalonia" Version="11.0.0" />
