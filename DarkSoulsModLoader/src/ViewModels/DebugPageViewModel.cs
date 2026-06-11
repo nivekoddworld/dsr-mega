@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Avalonia;
+using System.Threading.Tasks;
 using Avalonia.Input.Platform;
 using DarkSoulsModLoader.Services;
 
@@ -45,30 +45,22 @@ public class DebugPageViewModel : INotifyPropertyChanged
         _logService.Clear();
     }
 
-    public async void CopySelected(System.Collections.IList? selectedItems)
+    public async Task CopySelected(System.Collections.IList? selectedItems, IClipboard? clipboard)
     {
-        if (selectedItems == null || selectedItems.Count == 0)
+        if (selectedItems == null || selectedItems.Count == 0 || clipboard == null)
             return;
 
         var text = string.Join("\n", selectedItems.Cast<string>());
-        var clipboard = TopLevel.GetTopLevel(Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Application)?.Clipboard;
-        if (clipboard != null)
-        {
-            await clipboard.SetTextAsync(text);
-        }
+        await clipboard.SetTextAsync(text);
     }
 
-    public async void CopyAll()
+    public async Task CopyAll(IClipboard? clipboard)
     {
-        if (LogLines.Count == 0)
+        if (LogLines.Count == 0 || clipboard == null)
             return;
 
         var text = string.Join("\n", LogLines);
-        var clipboard = TopLevel.GetTopLevel(Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Application)?.Clipboard;
-        if (clipboard != null)
-        {
-            await clipboard.SetTextAsync(text);
-        }
+        await clipboard.SetTextAsync(text);
     }
 
     protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)

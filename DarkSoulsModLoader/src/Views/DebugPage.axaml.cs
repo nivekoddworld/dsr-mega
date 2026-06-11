@@ -18,19 +18,21 @@ public partial class DebugPage : UserControl
         }
     }
 
-    private void OnCopySelectedClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void OnCopySelectedClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is DebugPageViewModel vm && this.FindControl<ListBox>("LogListBox") is ListBox listBox)
         {
-            vm.CopySelected(listBox.SelectedItems);
+            var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+            await vm.CopySelected(listBox.SelectedItems, clipboard);
         }
     }
 
-    private void OnCopyAllClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void OnCopyAllClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is DebugPageViewModel vm)
         {
-            vm.CopyAll();
+            var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+            await vm.CopyAll(clipboard);
         }
     }
 }
