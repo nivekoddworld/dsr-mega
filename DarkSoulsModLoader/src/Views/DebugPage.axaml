@@ -28,17 +28,18 @@
         <TextBlock Grid.Row="0" Text="Debug Console" FontSize="18" FontWeight="Bold" Margin="0,0,0,16" Foreground="#d4af37" />
 
         <!-- Controls -->
-        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto" Spacing="8" Margin="0,0,0,12">
-            <TextBlock Grid.Column="0" Text="Font Size:" Foreground="#cccccc" VerticalAlignment="Center" />
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto" Margin="0,0,0,12">
+            <TextBlock Grid.Column="0" Text="Font Size:" Foreground="#cccccc" VerticalAlignment="Center" Margin="0,0,8,0" />
             <Slider Grid.Column="1"
                     Minimum="8"
                     Maximum="24"
                     Value="{Binding FontSize}"
                     Background="#1a1a1a"
                     Foreground="#d4af37"
-                    VerticalAlignment="Center" />
-            <Button Grid.Column="3" Classes="gold" Content="Copy Selected" Padding="12,6" Click="OnCopySelectedClick" />
-            <Button Grid.Column="4" Classes="gold" Content="Copy All" Padding="12,6" Click="OnCopyAllClick" />
+                    VerticalAlignment="Center"
+                    Margin="0,0,8,0" />
+            <Button Grid.Column="3" Classes="gold" Content="Copy Selected" Padding="12,6" Click="OnCopySelectedClick" Margin="0,0,8,0" />
+            <Button Grid.Column="4" Classes="gold" Content="Copy All" Padding="12,6" Click="OnCopyAllClick" Margin="0,0,8,0" />
             <Button Grid.Column="5" Classes="gold" Content="Clear" Padding="12,6" Click="OnClearClick" />
         </Grid>
 
