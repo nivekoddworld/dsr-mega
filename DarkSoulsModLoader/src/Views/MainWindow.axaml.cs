@@ -46,6 +46,14 @@ public partial class MainWindow : Window
             // Auto-detect game directory on first load
             await configService.InitializeAsync();
 
+            // Recreate services with detected game directory
+            var gameDir = await configService.GetGameDirectoryAsync() ?? "";
+            if (!string.IsNullOrEmpty(gameDir))
+            {
+                modService = new ModService(gameDir);
+                gameLaunchService = new GameLaunchService(gameDir);
+            }
+
             var modsVM = new ModManagerViewModel(modService);
             var launchVM = new LaunchPageViewModel(gameLaunchService, modService, configService);
             var settingsVM = new SettingsPageViewModel(configService, gameLaunchService);
