@@ -1,0 +1,54 @@
+name: Release
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-release-readiness:
+    if: github.event_name == 'pull_request'
+    name: Check release readiness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Ensure changelog has notes for release
+        run: python ./.github/scripts/release_notes.py
+
+      - name: Publish dry-run
+        run: cargo publish --dry-run -p dearxan -p dearxan-test-utils
+
+  publish:
+    if: github.event_name == 'push'
+    name: cargo publish and create release
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Make static library dist
+        run: python ./.github/scripts/build_dist_archive.py
+
+      - name: crates.io publish
+        run: cargo publish -p dearxan -p dearxan-test-utils --token ${{ secrets.CRATES_IO_TOKEN }}
+
+      - name: Get package version
+        id: get_version
+        run: |
+          $version = python ./.github/scripts/package_version.py
+          echo "version=$version" >> "$env:GITHUB_OUTPUT"
+
+      - name: Generate release notes
+        run: python ./.github/scripts/release_notes.py > release-notes.md
+
+      - name: GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.get_version.outputs.version }}
+          files: target/dearxan-${{  steps.get_version.outputs.version }}.zip
+          body_path: release-notes.md

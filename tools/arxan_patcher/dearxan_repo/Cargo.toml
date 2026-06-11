@@ -1,0 +1,82 @@
+[workspace]
+resolver = "2"
+members = ["test_dll", "test_launcher", "test_utils"]
+
+[workspace.package]
+version = "0.5.3"
+authors = ["William Tremblay"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/tremwil/dearxan"
+
+[workspace.dependencies]
+log = "0.4"
+simplelog = "0.12.2"
+clap = { version = "4.5.32", features = ["derive"] }
+pelite = { version = "0.10", default-features = false }
+
+[package]
+name = "dearxan"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+repository.workspace = true
+description = "Static analyzer and patcher for the Arxan anti-debug/DRM as found in FromSoftware titles"
+keywords = ["arxan", "guardit", "reverse-engineering", "modding", "fromsoftware"]
+categories = ["security"]
+
+[lib]
+crate-type = ["rlib", "staticlib"]
+
+[features]
+default = ["rayon", "disabler"]
+disabler = ["dep:closure-ffi", "dep:windows-sys"]
+ffi = ["disabler"]
+instrument_stubs = []
+internal_api = []
+
+[dependencies]
+pelite.workspace = true
+log.workspace = true
+iced-x86 = "1.21"
+memchr = "2.7.4"
+fxhash = "0.2.1"
+indexmap = "2.7.1"
+bitvec = "1.0"
+bytemuck = "1.22"
+bitfield-struct = "0.12.1"
+closure-ffi = { version = "5.0.1", optional = true }
+rayon = { version = "1.10", optional = true }
+atomic-wait = "1.1.0"
+
+[dependencies.windows-sys]
+optional = true
+version = "0.61.2"
+features = [
+    "Win32_Security",
+    "Win32_System_Kernel",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Memory",
+    "Win32_System_Diagnostics_Debug",
+    "Win32_System_SystemInformation",
+    "Win32_System_Threading",
+]
+
+[dev-dependencies]
+simplelog.workspace = true
+clap.workspace = true
+clap-num = "1.2"
+dearxan-test-utils = { version = "0.5.3", path = "test_utils" }
+iced-x86 = { version = "1.21", features = ["code_asm"] }
+pretty-hex = "0.4.1"
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "fat"
+
+[package.metadata.docs.rs]
+features = ["disabler", "internal_api", "ffi"]
+default-target = "x86_64-pc-windows-msvc"
+rustdoc-args = ["--cfg", "docsrs"]

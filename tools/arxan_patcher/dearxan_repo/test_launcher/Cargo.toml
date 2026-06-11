@@ -1,0 +1,20 @@
+[package]
+name = "dearxan-test-launcher"
+description = "simple launcher to inject dearxan-dll in FromSoftware games"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+log.workspace = true
+simplelog.workspace = true
+clap.workspace = true
+dll-syringe = { version = "0.17", default-features = false, features = ["syringe"] }
+dotenvy_macro = "0.15"
+steamlocate = "2.0"
+
+[dependencies.windows]
+version = "0.61"
+features = [
+    "Win32_System_Threading"
+]
