@@ -58,12 +58,27 @@ public partial class MainWindow : Window
             _settingsPage = new SettingsPage { DataContext = settingsVM };
 
             // Build the UI
-            var navListBox = new ListBox { SelectionMode = SelectionMode.Single, Background = new SolidColorBrush(Color.Parse("#2a2a2a")), BorderThickness = new Thickness(0) };
+            var navListBox = new ListBox
+            {
+                SelectionMode = SelectionMode.Single,
+                Background = new SolidColorBrush(Color.Parse("#2a2a2a")),
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(0)
+            };
             var contentArea = new ContentControl();
 
-            navListBox.Items.Add(new ListBoxItem { Content = new TextBlock { Text = "Mods", Margin = new Thickness(16, 12, 16, 12), Foreground = new SolidColorBrush(Color.Parse("#cccccc")) } });
-            navListBox.Items.Add(new ListBoxItem { Content = new TextBlock { Text = "Launch", Margin = new Thickness(16, 12, 16, 12), Foreground = new SolidColorBrush(Color.Parse("#cccccc")) } });
-            navListBox.Items.Add(new ListBoxItem { Content = new TextBlock { Text = "Settings", Margin = new Thickness(16, 12, 16, 12), Foreground = new SolidColorBrush(Color.Parse("#cccccc")) } });
+            var modsItem = new ListBoxItem { Padding = new Thickness(0), Background = new SolidColorBrush(Colors.Transparent) };
+            modsItem.Content = new TextBlock { Text = "Mods", Margin = new Thickness(16, 12, 16, 12), Foreground = new SolidColorBrush(Color.Parse("#cccccc")) };
+
+            var launchItem = new ListBoxItem { Padding = new Thickness(0), Background = new SolidColorBrush(Colors.Transparent) };
+            launchItem.Content = new TextBlock { Text = "Launch", Margin = new Thickness(16, 12, 16, 12), Foreground = new SolidColorBrush(Color.Parse("#cccccc")) };
+
+            var settingsItem = new ListBoxItem { Padding = new Thickness(0), Background = new SolidColorBrush(Colors.Transparent) };
+            settingsItem.Content = new TextBlock { Text = "Settings", Margin = new Thickness(16, 12, 16, 12), Foreground = new SolidColorBrush(Color.Parse("#cccccc")) };
+
+            navListBox.Items.Add(modsItem);
+            navListBox.Items.Add(launchItem);
+            navListBox.Items.Add(settingsItem);
 
             navListBox.SelectionChanged += (s, e) =>
             {
