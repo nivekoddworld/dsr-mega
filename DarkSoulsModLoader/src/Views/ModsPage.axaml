@@ -31,9 +31,8 @@
             <TextBlock Grid.Row="0" Text="Installed Mods" FontSize="18" FontWeight="Bold" Margin="0,0,20,16" Foreground="#ffd700" />
 
             <!-- Mods List -->
-            <Border Background="#0a0a0a" BorderBrush="#8b7355" BorderThickness="3" CornerRadius="2" Padding="2" Grid.Row="1" Margin="0,0,0,12">
-                <Border Background="#1a1410" BorderBrush="#444444" BorderThickness="1">
-                    <ListBox Background="#1a1410"
+            <Border Background="#000000" BorderBrush="#d4af37" BorderThickness="1" CornerRadius="0" Padding="0" Grid.Row="1" Margin="0,0,0,12">
+                    <ListBox Background="#1a1a1a"
                              BorderThickness="0"
                              ItemsSource="{Binding Mods}"
                              SelectedItem="{Binding SelectedMod}">
@@ -69,7 +68,6 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
                     </ListBox>
-                </Border>
             </Border>
 
             <!-- Footer Actions -->
