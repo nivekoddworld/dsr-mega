@@ -144,7 +144,7 @@ public partial class MainWindow : Window
                 BorderBrush = new SolidColorBrush(Color.Parse("#d4af37")),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(0),
-                Margin = new Thickness(8),
+                Margin = new Thickness(0),
                 Child = contentArea
             };
 
@@ -152,8 +152,8 @@ public partial class MainWindow : Window
             grid.ColumnDefinitions.Add(new ColumnDefinition(220, GridUnitType.Pixel));
             grid.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
             grid.RowDefinitions.Add(new RowDefinition(1, GridUnitType.Star));
-            grid.Background = new SolidColorBrush(Color.Parse("#0a0a0a"));
-            grid.Margin = new Thickness(8);
+            grid.Background = new SolidColorBrush(Color.Parse("#000000"));
+            grid.Margin = new Thickness(0);
 
             Grid.SetColumn(navBorder, 0);
             Grid.SetColumn(contentBorder, 1);
