@@ -18,9 +18,8 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         var configService = new ConfigService();
-        var gameDir = configService.GetGameDirectoryAsync().Result ?? "";
-        var modService = new ModService(gameDir);
-        var gameLaunchService = new GameLaunchService(gameDir);
+        var modService = new ModService("");
+        var gameLaunchService = new GameLaunchService("");
 
         InitializeServices(configService, modService, gameLaunchService);
     }
