@@ -11,4 +11,5 @@
 	<Project Path="DS1Mod.DebugMenu\DS1Mod.DebugMenu.csproj" />
 	<Project Path="DS1Mod.ImGuiDemo\DS1Mod.ImGuiDemo.csproj" />
 	<Project Path="DS1Mod.ItemsDemo\DS1Mod.ItemsDemo.csproj" />
+	<Project Path="DS1Mod.EnemyRandomizer\DS1Mod.EnemyRandomizer.csproj" />
 </Solution>

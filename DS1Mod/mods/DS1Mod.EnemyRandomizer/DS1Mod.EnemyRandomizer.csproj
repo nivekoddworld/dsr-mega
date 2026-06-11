@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\framework\DS1Mod.SDK\DS1Mod.SDK.csproj" />
+    <ProjectReference Include="..\..\framework\DS1Mod.Modding\DS1Mod.Modding.csproj" />
+    <ProjectReference Include="..\..\..\lib\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="paramdef.paramdefbnd.dcx">
+      <LogicalName>paramdef.paramdefbnd.dcx</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>
