@@ -42,7 +42,10 @@ public class ModService
         var mods = new List<ModInfo>();
 
         if (!Directory.Exists(_modsDirectory))
+        {
+            Console.WriteLine($"ModService: Mods directory not found: {_modsDirectory}");
             return mods;
+        }
 
         // Get all .dll and .disabled files
         var allModFiles = Directory.GetFiles(_modsDirectory, "*.dll")
@@ -50,12 +53,18 @@ public class ModService
             .OrderBy(f => Path.GetFileNameWithoutExtension(f))
             .ToList();
 
+        Console.WriteLine($"ModService: Found {allModFiles.Count} mod files in {_modsDirectory}");
+        foreach (var file in allModFiles)
+            Console.WriteLine($"  - {Path.GetFileName(file)}");
+
         foreach (var modFile in allModFiles)
         {
             var fileName = Path.GetFileName(modFile);
             var modName = Path.GetFileNameWithoutExtension(modFile);
             var isEnabled = modFile.EndsWith(".dll", StringComparison.OrdinalIgnoreCase);
             var configPath = Path.Combine(_settingsDirectory, $"{modName}.json");
+
+            Console.WriteLine($"ModService: Discovered mod '{modName}' (enabled={isEnabled}) at {modFile}");
 
             var mod = new ModInfo
             {
