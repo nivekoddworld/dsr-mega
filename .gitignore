@@ -3,6 +3,18 @@ bin/
 obj/
 publish/
 
+# MSVC C++ build intermediates (DS1Mod.Injector)
+x64/
+*.obj
+*.iobj
+*.ipdb
+*.tlog
+*.recipe
+*.lastbuildstate
+
+# Claude Code local state
+.claude/scheduled_tasks.lock
+
 # Visual Studio
 .vs/
 
