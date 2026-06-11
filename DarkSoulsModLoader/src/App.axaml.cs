@@ -1,3 +1,4 @@
+using System;
 using Avalonia;
 using Avalonia.Markup.Xaml;
 using DarkSoulsModLoader.Services;
@@ -14,16 +15,24 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        // Initialize services
-        var configService = new ConfigService();
-        var gameDir = configService.GetGameDirectoryAsync().Result ?? "";
-        var modService = new ModService(gameDir);
-        var gameLaunchService = new GameLaunchService(gameDir);
-
-        if (ApplicationLifetime != null)
+        try
         {
-            dynamic lifetime = ApplicationLifetime;
-            lifetime.MainWindow = new MainWindow(configService, modService, gameLaunchService);
+            var configService = new ConfigService();
+            var gameDir = configService.GetGameDirectoryAsync().Result ?? "";
+            var modService = new ModService(gameDir);
+            var gameLaunchService = new GameLaunchService(gameDir);
+
+            if (ApplicationLifetime != null)
+            {
+                dynamic lifetime = ApplicationLifetime;
+                lifetime.MainWindow = new MainWindow(configService, modService, gameLaunchService);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"FATAL ERROR: {ex}");
+            System.Diagnostics.Debug.WriteLine(ex.StackTrace);
+            throw;
         }
 
         base.OnFrameworkInitializationCompleted();
