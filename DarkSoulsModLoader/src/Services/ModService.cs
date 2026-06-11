@@ -15,6 +15,7 @@ public class ModService
 {
     private readonly string _modsDirectory;
     private readonly string _settingsDirectory;
+    private readonly string _logPath = Path.Combine(Path.GetTempPath(), "mod_loader.log");
 
     private readonly string[] _excludedMods = new string[]
     {
@@ -32,6 +33,16 @@ public class ModService
 
     public string[] ExcludedMods => _excludedMods;
 
+    private void Log(string message)
+    {
+        try
+        {
+            var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            File.AppendAllText(_logPath, $"[{timestamp}] {message}\n");
+        }
+        catch { }
+    }
+
     /// <summary>
     /// Discover all installed mods from the mods/ directory.
     /// Returns mod metadata + current configuration.
@@ -43,7 +54,7 @@ public class ModService
 
         if (!Directory.Exists(_modsDirectory))
         {
-            Console.WriteLine($"ModService: Mods directory not found: {_modsDirectory}");
+            Log($"Mods directory not found: {_modsDirectory}");
             return mods;
         }
 
@@ -53,9 +64,9 @@ public class ModService
             .OrderBy(f => Path.GetFileNameWithoutExtension(f))
             .ToList();
 
-        Console.WriteLine($"ModService: Found {allModFiles.Count} mod files in {_modsDirectory}");
+        Log($"Found {allModFiles.Count} mod files in {_modsDirectory}");
         foreach (var file in allModFiles)
-            Console.WriteLine($"  - {Path.GetFileName(file)}");
+            Log($"  - {Path.GetFileName(file)}");
 
         foreach (var modFile in allModFiles)
         {
@@ -64,7 +75,7 @@ public class ModService
             var isEnabled = modFile.EndsWith(".dll", StringComparison.OrdinalIgnoreCase);
             var configPath = Path.Combine(_settingsDirectory, $"{modName}.json");
 
-            Console.WriteLine($"ModService: Discovered mod '{modName}' (enabled={isEnabled}) at {modFile}");
+            Log($"Discovered mod '{modName}' (enabled={isEnabled}) at {modFile}");
 
             var mod = new ModInfo
             {
@@ -114,7 +125,7 @@ public class ModService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to load config {configPath}: {ex.Message}");
+            Log($"Failed to load config {configPath}: {ex.Message}");
             return null;
         }
     }
@@ -144,8 +155,13 @@ public class ModService
         var existingFile = File.Exists(dllFile) ? dllFile :
                           File.Exists(disabledFile) ? disabledFile : null;
 
+        Log($"SetModEnabledAsync: {modName}, enabled={enabled}, existing={Path.GetFileName(existingFile ?? "none")}");
+
         if (existingFile == null)
+        {
+            Log($"SetModEnabledAsync: {modName} not found");
             return;
+        }
 
         var targetFile = enabled ? dllFile : disabledFile;
 
@@ -157,10 +173,11 @@ public class ModService
                     File.Delete(targetFile);
 
                 File.Move(existingFile, targetFile, overwrite: true);
+                Log($"SetModEnabledAsync: Renamed {Path.GetFileName(existingFile)} -> {Path.GetFileName(targetFile)}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to rename mod {modName}: {ex.Message}");
+                Log($"SetModEnabledAsync: Failed to rename {modName}: {ex.Message}");
             }
         }
 
