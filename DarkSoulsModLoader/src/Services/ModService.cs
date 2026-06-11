@@ -15,7 +15,7 @@ public class ModService
 {
     private readonly string _modsDirectory;
     private readonly string _settingsDirectory;
-    private readonly string _logPath = Path.Combine(Path.GetTempPath(), "mod_loader.log");
+    private readonly LogService? _logService;
 
     private readonly string[] _excludedMods = new string[]
     {
@@ -25,22 +25,18 @@ public class ModService
         "SoulsFormats"
     };
 
-    public ModService(string gameDirectory)
+    public ModService(string gameDirectory, LogService? logService = null)
     {
         _modsDirectory = Path.Combine(gameDirectory, "mods");
         _settingsDirectory = Path.Combine(_modsDirectory, "settings");
+        _logService = logService;
     }
 
     public string[] ExcludedMods => _excludedMods;
 
     private void Log(string message)
     {
-        try
-        {
-            var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-            File.AppendAllText(_logPath, $"[{timestamp}] {message}\n");
-        }
-        catch { }
+        _logService?.Log(message);
     }
 
     /// <summary>

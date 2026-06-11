@@ -15,11 +15,13 @@ public partial class MainWindow : Window
     private LaunchPage _launchPage;
     private SettingsPage _settingsPage;
     private ModBrowserPage _modBrowserPage;
+    private DebugPage _debugPage;
+    private LogService _logService = new();
 
     public MainWindow()
     {
         var configService = new ConfigService();
-        var modService = new ModService("");
+        var modService = new ModService("", _logService);
         var gameLaunchService = new GameLaunchService("");
 
         InitializeServices(configService, modService, gameLaunchService);
@@ -44,6 +46,8 @@ public partial class MainWindow : Window
     {
         try
         {
+            _logService.Log("Initializing app...");
+
             // Auto-detect game directory on first load
             await configService.InitializeAsync();
 
@@ -51,7 +55,8 @@ public partial class MainWindow : Window
             var gameDir = await configService.GetGameDirectoryAsync() ?? "";
             if (!string.IsNullOrEmpty(gameDir))
             {
-                modService = new ModService(gameDir);
+                _logService.Log($"Game directory: {gameDir}");
+                modService = new ModService(gameDir, _logService);
                 gameLaunchService = new GameLaunchService(gameDir);
             }
 
@@ -60,6 +65,7 @@ public partial class MainWindow : Window
             var settingsVM = new SettingsPageViewModel(configService, gameLaunchService, modService);
             var modBrowserService = new ModBrowserService();
             var modBrowserVM = new ModBrowserViewModel(modBrowserService, configService);
+            var debugVM = new DebugPageViewModel(_logService);
 
             await modsVM.LoadModsAsync();
 
@@ -71,6 +77,7 @@ public partial class MainWindow : Window
             _launchPage = new LaunchPage { DataContext = launchVM };
             _settingsPage = new SettingsPage { DataContext = settingsVM };
             _modBrowserPage = new ModBrowserPage { DataContext = modBrowserVM };
+            _debugPage = new DebugPage { DataContext = debugVM };
 
             // Build sleek, sophisticated UI
             var navListBox = new ListBox
@@ -98,18 +105,22 @@ public partial class MainWindow : Window
             var launchItem = new ListBoxItem { Padding = new Thickness(0), Background = new SolidColorBrush(Colors.Transparent) };
             launchItem.Content = new TextBlock { Text = "Launch", Margin = new Thickness(12, 12, 12, 12), Foreground = new SolidColorBrush(Color.Parse("#d4af37")), FontWeight = FontWeight.Bold, FontSize = 14 };
 
-            var settingsItem = new ListBoxItem { Padding = new Thickness(0), Background = new SolidColorBrush(Colors.Transparent) };
-            settingsItem.Content = new TextBlock { Text = "Settings", Margin = new Thickness(12, 12, 12, 12), Foreground = new SolidColorBrush(Color.Parse("#d4af37")), FontWeight = FontWeight.Bold, FontSize = 14 };
-
             var browserItem = new ListBoxItem { Padding = new Thickness(0), Background = new SolidColorBrush(Colors.Transparent) };
             browserItem.Content = new TextBlock { Text = "Browse", Margin = new Thickness(12, 12, 12, 12), Foreground = new SolidColorBrush(Color.Parse("#d4af37")), FontWeight = FontWeight.Bold, FontSize = 14 };
 
+            var settingsItem = new ListBoxItem { Padding = new Thickness(0), Background = new SolidColorBrush(Colors.Transparent) };
+            settingsItem.Content = new TextBlock { Text = "Settings", Margin = new Thickness(12, 12, 12, 12), Foreground = new SolidColorBrush(Color.Parse("#d4af37")), FontWeight = FontWeight.Bold, FontSize = 14 };
+
+            var debugItem = new ListBoxItem { Padding = new Thickness(0), Background = new SolidColorBrush(Colors.Transparent) };
+            debugItem.Content = new TextBlock { Text = "Debug", Margin = new Thickness(12, 12, 12, 12), Foreground = new SolidColorBrush(Color.Parse("#d4af37")), FontWeight = FontWeight.Bold, FontSize = 14 };
+
             // Store nav items to update styling
-            var navItems = new[] { modsItem, launchItem, browserItem, settingsItem };
+            var navItems = new[] { modsItem, launchItem, browserItem, settingsItem, debugItem };
             navListBox.Items.Add(modsItem);
             navListBox.Items.Add(launchItem);
             navListBox.Items.Add(browserItem);
             navListBox.Items.Add(settingsItem);
+            navListBox.Items.Add(debugItem);
 
             navListBox.SelectionChanged += (s, e) =>
             {
@@ -134,6 +145,7 @@ public partial class MainWindow : Window
                     1 => _launchPage,
                     2 => _modBrowserPage,
                     3 => _settingsPage,
+                    4 => _debugPage,
                     _ => null
                 };
             };
