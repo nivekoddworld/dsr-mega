@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="DarkSoulsModLoader.Views.LaunchPage"
+             Background="#1a1a1a">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="20">
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Text="Launch Game" FontSize="18" FontWeight="Bold" Margin="0,0,0,16" Foreground="#d4af37" />
+
+        <!-- Game Directory -->
+        <StackPanel Grid.Row="1" Spacing="8">
+            <TextBlock Text="Game Directory" FontWeight="Bold" Foreground="#cccccc" />
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBox Grid.Column="0" Text="{Binding GameDirectory}" IsReadOnly="True" Background="#2a2a2a" Foreground="#cccccc" BorderBrush="#444444" />
+                <Button Grid.Column="1" Content="Browse..." Margin="8,0,0,0" Padding="12,8" Background="#444444" Foreground="#d4af37" CornerRadius="4" Click="OnBrowseGameDirectory" />
+            </Grid>
+        </StackPanel>
+
+        <!-- Mods Status -->
+        <Border Grid.Row="2" Background="#2a2a2a" CornerRadius="4" Padding="12" Margin="0,16,0,0" BorderBrush="#444444" BorderThickness="1">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Status" FontWeight="Bold" Foreground="#d4af37" />
+                <TextBlock Text="{Binding StatusText}" Foreground="#a89968" />
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Text="{Binding EnabledModCount}" Foreground="#a89968" />
+                    <TextBlock Text="mods active" Foreground="#a89968" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Spacer -->
+        <Border Grid.Row="3" />
+
+        <!-- Launch Button -->
+        <Button Grid.Row="4" Content="Launch Dark Souls Remastered" Padding="16,12" FontSize="14" Background="#6ba82a" Foreground="#1a1a1a" FontWeight="Bold" CornerRadius="4" Click="OnLaunchClick" IsEnabled="{Binding CanLaunch}" />
+    </Grid>
+
+</UserControl>

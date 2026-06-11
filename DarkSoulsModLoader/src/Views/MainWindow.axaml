@@ -1,0 +1,52 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:DarkSoulsModLoader.Views"
+        x:Class="DarkSoulsModLoader.Views.MainWindow"
+        Title="Dark Souls Mod Loader"
+        Width="1000"
+        Height="650"
+        Background="#1a1a1a">
+
+    <Grid ColumnDefinitions="200,*">
+        <!-- Sidebar -->
+        <Border Grid.Column="0" Background="#2a2a2a">
+            <StackPanel>
+                <TextBlock Text="Dark Souls" Margin="16,16,16,8" FontSize="14" FontWeight="Bold" Foreground="#d4af37" />
+                <TextBlock Text="Mod Loader" Margin="16,0,16,16" FontSize="12" FontWeight="Bold" Foreground="#a89968" />
+
+                <ListBox x:Name="NavListBox" SelectionMode="Single" Background="Transparent" BorderThickness="0">
+                    <ListBox.Styles>
+                        <Style Selector="ListBoxItem">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Foreground" Value="#cccccc" />
+                        </Style>
+                        <Style Selector="ListBoxItem:pointerover">
+                            <Setter Property="Background" Value="#3a3a3a" />
+                        </Style>
+                        <Style Selector="ListBoxItem:selected">
+                            <Setter Property="Background" Value="#d4af37" />
+                            <Setter Property="Foreground" Value="#1a1a1a" />
+                            <Setter Property="FontWeight" Value="Bold" />
+                        </Style>
+                    </ListBox.Styles>
+                    <ListBoxItem>
+                        <TextBlock Text="Mods" Margin="16,12" />
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <TextBlock Text="Launch" Margin="16,12" />
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <TextBlock Text="Settings" Margin="16,12" />
+                    </ListBoxItem>
+                </ListBox>
+            </StackPanel>
+        </Border>
+
+        <!-- Content Area -->
+        <Border Grid.Column="1" BorderThickness="1,0,0,0" BorderBrush="#444444" Background="#1a1a1a">
+            <ContentControl x:Name="ContentArea" />
+        </Border>
+    </Grid>
+
+</Window>
