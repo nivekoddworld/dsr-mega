@@ -14,6 +14,7 @@ public class ModBrowserViewModel : INotifyPropertyChanged
 {
     private readonly ModBrowserService _modBrowserService;
     private readonly ConfigService _configService;
+    private ModService? _modService;
     private ObservableCollection<ModBrowserItemViewModel> _availableMods = new();
     private string _statusText = "Enter manifest URL in settings";
     private bool _isLoading = false;
@@ -38,15 +39,22 @@ public class ModBrowserViewModel : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public ModBrowserViewModel(ModBrowserService modBrowserService, ConfigService configService)
+    public ModBrowserViewModel(ModBrowserService modBrowserService, ConfigService configService, ModService? modService = null)
     {
         _modBrowserService = modBrowserService;
         _configService = configService;
+        _modService = modService;
         _ = InitializeAsync();
     }
 
     private async Task InitializeAsync()
     {
+        var gameDir = await _configService.GetGameDirectoryAsync();
+        if (!string.IsNullOrEmpty(gameDir) && _modService == null)
+        {
+            _modService = new ModService(gameDir);
+        }
+
         var manifestUrl = await _configService.GetManifestUrlAsync();
         if (!string.IsNullOrEmpty(manifestUrl))
         {
@@ -71,9 +79,21 @@ public class ModBrowserViewModel : INotifyPropertyChanged
                 return;
             }
 
+            // Get list of installed mods
+            var installedMods = _modService != null ? await _modService.DiscoverModsAsync() : new List<Services.ModInfo>();
+
             foreach (var mod in manifest.Mods)
             {
                 var item = new ModBrowserItemViewModel(mod, _modBrowserService, _configService);
+
+                // Check if mod is already installed
+                var isInstalled = installedMods.Any(m => m.Name == mod.Name);
+                if (isInstalled)
+                {
+                    item.InstallStatus = "Installed ✓";
+                    item.IsInstalling = true; // Disable button
+                }
+
                 AvailableMods.Add(item);
 
                 // Load icon async

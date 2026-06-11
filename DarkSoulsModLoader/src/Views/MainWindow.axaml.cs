@@ -64,7 +64,7 @@ public partial class MainWindow : Window
             var launchVM = new LaunchPageViewModel(gameLaunchService, modService, configService);
             var settingsVM = new SettingsPageViewModel(configService, gameLaunchService, modService);
             var modBrowserService = new ModBrowserService();
-            var modBrowserVM = new ModBrowserViewModel(modBrowserService, configService);
+            var modBrowserVM = new ModBrowserViewModel(modBrowserService, configService, modService);
             var debugVM = new DebugPageViewModel(_logService);
 
             await modsVM.LoadModsAsync();
