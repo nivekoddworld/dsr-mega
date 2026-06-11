@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>DS1Mod.AutoEquip</AssemblyName>
+    <RootNamespace>DS1Mod.AutoEquip</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- SDK gives us ModBase + pulls in Core transitively -->
+    <ProjectReference Include="..\..\framework\DS1Mod.SDK\DS1Mod.SDK.csproj" />
+  </ItemGroup>
+</Project>
