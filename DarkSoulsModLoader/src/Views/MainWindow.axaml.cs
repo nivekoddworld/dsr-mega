@@ -1,5 +1,9 @@
 using System;
+using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Layout;
+using Avalonia.Media;
 using DarkSoulsModLoader.Services;
 using DarkSoulsModLoader.ViewModels;
 
@@ -32,6 +36,14 @@ public partial class MainWindow : Window
 
         this.Opened += async (s, e) =>
         {
+            await LoadPagesAsync(configService, modService, gameLaunchService);
+        };
+    }
+
+    private async Task LoadPagesAsync(ConfigService configService, ModService modService, GameLaunchService gameLaunchService)
+    {
+        try
+        {
             var modsVM = new ModManagerViewModel(modService);
             var launchVM = new LaunchPageViewModel(gameLaunchService, modService, configService);
             var settingsVM = new SettingsPageViewModel(configService, gameLaunchService);
@@ -42,24 +54,40 @@ public partial class MainWindow : Window
             _launchPage = new LaunchPage { DataContext = launchVM };
             _settingsPage = new SettingsPage { DataContext = settingsVM };
 
-            var navListBox = this.FindControl<ListBox>("NavListBox");
-            var contentArea = this.FindControl<ContentControl>("ContentArea");
+            // Build the UI
+            var navListBox = new ListBox { SelectionMode = SelectionMode.Single, Background = new SolidColorBrush(Color.Parse("#2a2a2a")), BorderThickness = new Thickness(0) };
+            var contentArea = new ContentControl();
 
-            if (navListBox != null && contentArea != null)
+            navListBox.Items.Add(new ListBoxItem { Content = new TextBlock { Text = "Mods", Margin = new Thickness(16, 12, 16, 12), Foreground = new SolidColorBrush(Color.Parse("#cccccc")) } });
+            navListBox.Items.Add(new ListBoxItem { Content = new TextBlock { Text = "Launch", Margin = new Thickness(16, 12, 16, 12), Foreground = new SolidColorBrush(Color.Parse("#cccccc")) } });
+            navListBox.Items.Add(new ListBoxItem { Content = new TextBlock { Text = "Settings", Margin = new Thickness(16, 12, 16, 12), Foreground = new SolidColorBrush(Color.Parse("#cccccc")) } });
+
+            navListBox.SelectionChanged += (s, e) =>
             {
-                navListBox.SelectionChanged += (s, e) =>
+                contentArea.Content = navListBox.SelectedIndex switch
                 {
-                    contentArea.Content = navListBox.SelectedIndex switch
-                    {
-                        0 => _modsPage,
-                        1 => _launchPage,
-                        2 => _settingsPage,
-                        _ => null
-                    };
+                    0 => _modsPage,
+                    1 => _launchPage,
+                    2 => _settingsPage,
+                    _ => null
                 };
+            };
 
-                navListBox.SelectedIndex = 0;
-            }
-        };
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition(200, GridUnitType.Pixel));
+            grid.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
+
+            Grid.SetColumn(navListBox, 0);
+            Grid.SetColumn(contentArea, 1);
+            grid.Children.Add(navListBox);
+            grid.Children.Add(contentArea);
+
+            this.Content = grid;
+            navListBox.SelectedIndex = 0;
+        }
+        catch (Exception ex)
+        {
+            this.Content = new TextBlock { Text = $"Error: {ex.Message}", Foreground = new SolidColorBrush(Color.Parse("#cc4125")), Margin = new Thickness(16) };
+        }
     }
 }

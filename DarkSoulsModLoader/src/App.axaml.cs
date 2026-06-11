@@ -16,9 +16,8 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         var configService = new ConfigService();
-        var gameDir = configService.GetGameDirectoryAsync().Result ?? "";
-        var modService = new ModService(gameDir);
-        var gameLaunchService = new GameLaunchService(gameDir);
+        var modService = new ModService("");
+        var gameLaunchService = new GameLaunchService("");
 
         if (ApplicationLifetime != null)
         {
