@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Solution FileFormatVersion="1.00">
 	<Project Path="DS1Mod.AsylumSlam\DS1Mod.AsylumSlam.csproj" />
+	<Project Path="DS1Mod.AutoEquip\DS1Mod.AutoEquip.csproj" />
 	<Project Path="DS1Mod.ChaosMod\DS1Mod.ChaosMod.csproj" />
 	<Project Path="DS1Mod.DemoMod\DS1Mod.DemoMod.csproj" />
 	<Project Path="DS1Mod.DiscordRPC\DS1Mod.DiscordRPC.csproj" />
