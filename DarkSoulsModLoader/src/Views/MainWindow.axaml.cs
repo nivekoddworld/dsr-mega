@@ -44,6 +44,9 @@ public partial class MainWindow : Window
     {
         try
         {
+            // Auto-detect game directory on first load
+            await configService.InitializeAsync();
+
             var modsVM = new ModManagerViewModel(modService);
             var launchVM = new LaunchPageViewModel(gameLaunchService, modService, configService);
             var settingsVM = new SettingsPageViewModel(configService, gameLaunchService);
