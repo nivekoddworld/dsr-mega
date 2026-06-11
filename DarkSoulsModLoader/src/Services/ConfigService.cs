@@ -19,9 +19,11 @@ public class ConfigService
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         _configDirectory = Path.Combine(appDataPath, "DarkSoulsModLoader");
         _configFilePath = Path.Combine(_configDirectory, "config.json");
+    }
 
-        // Auto-detect DSR on first run
-        _ = AutoDetectGameDirectoryAsync();
+    public async Task InitializeAsync()
+    {
+        await AutoDetectGameDirectoryAsync();
     }
 
     private async Task AutoDetectGameDirectoryAsync()

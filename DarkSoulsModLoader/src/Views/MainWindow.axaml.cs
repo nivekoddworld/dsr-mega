@@ -39,59 +39,54 @@ public partial class MainWindow : Window
     {
         try
         {
-            System.Diagnostics.Debug.WriteLine("MainWindow: InitializeComponent starting...");
             InitializeComponent();
-            System.Diagnostics.Debug.WriteLine("MainWindow: InitializeComponent completed");
 
-            // Create ViewModels
-            System.Diagnostics.Debug.WriteLine("MainWindow: Creating ViewModels...");
-            var modsVM = new ModManagerViewModel(modService);
-            var launchVM = new LaunchPageViewModel(gameLaunchService, modService, configService);
-            var settingsVM = new SettingsPageViewModel(configService, gameLaunchService);
-            System.Diagnostics.Debug.WriteLine("MainWindow: ViewModels created");
-
-            // Load mods
-            _ = modsVM.LoadModsAsync();
-
-            // Create Pages with ViewModels
-            System.Diagnostics.Debug.WriteLine("MainWindow: Creating pages...");
-            _modsPage = new ModsPage { DataContext = modsVM };
-            _launchPage = new LaunchPage { DataContext = launchVM };
-            _settingsPage = new SettingsPage { DataContext = settingsVM };
-            System.Diagnostics.Debug.WriteLine("MainWindow: Pages created");
-
-            System.Diagnostics.Debug.WriteLine("MainWindow: Finding controls...");
-            var navListBox = this.FindControl<ListBox>("NavListBox");
-            var contentArea = this.FindControl<ContentControl>("ContentArea");
-            System.Diagnostics.Debug.WriteLine($"MainWindow: navListBox={navListBox != null}, contentArea={contentArea != null}");
-
-            if (navListBox != null && contentArea != null)
+            // Delay page initialization until window is shown
+            this.Opened += async (s, e) =>
             {
-                navListBox.SelectionChanged += (s, e) =>
+                try
                 {
-                    contentArea.Content = navListBox.SelectedIndex switch
-                    {
-                        0 => _modsPage,
-                        1 => _launchPage,
-                        2 => _settingsPage,
-                        _ => null
-                    };
-                };
+                    // Create ViewModels
+                    var modsVM = new ModManagerViewModel(modService);
+                    var launchVM = new LaunchPageViewModel(gameLaunchService, modService, configService);
+                    var settingsVM = new SettingsPageViewModel(configService, gameLaunchService);
 
-                // Show Mods page by default
-                System.Diagnostics.Debug.WriteLine("MainWindow: Setting SelectedIndex to 0...");
-                navListBox.SelectedIndex = 0;
-                System.Diagnostics.Debug.WriteLine("MainWindow: Window initialization complete");
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("MainWindow: ERROR - Could not find NavListBox or ContentArea!");
-            }
+                    // Load mods async
+                    await modsVM.LoadModsAsync();
+
+                    // Create Pages with ViewModels
+                    _modsPage = new ModsPage { DataContext = modsVM };
+                    _launchPage = new LaunchPage { DataContext = launchVM };
+                    _settingsPage = new SettingsPage { DataContext = settingsVM };
+
+                    var navListBox = this.FindControl<ListBox>("NavListBox");
+                    var contentArea = this.FindControl<ContentControl>("ContentArea");
+
+                    if (navListBox != null && contentArea != null)
+                    {
+                        navListBox.SelectionChanged += (s, e) =>
+                        {
+                            contentArea.Content = navListBox.SelectedIndex switch
+                            {
+                                0 => _modsPage,
+                                1 => _launchPage,
+                                2 => _settingsPage,
+                                _ => null
+                            };
+                        };
+
+                        navListBox.SelectedIndex = 0;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error in window initialization: {ex}");
+                }
+            };
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"ERROR in InitializeServices: {ex}");
-            System.Diagnostics.Debug.WriteLine(ex.StackTrace);
             throw;
         }
     }
