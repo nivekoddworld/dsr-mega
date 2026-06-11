@@ -24,7 +24,7 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid x:Name="MainGrid" ColumnDefinitions="*,Auto,400" Margin="0" Background="#1a1410">
+    <Grid x:Name="MainGrid" ColumnDefinitions="*,Auto,400" Margin="0" Background="#0f0f0f">
         <!-- Left Side: Mods List -->
         <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" Margin="12">
             <!-- Header -->

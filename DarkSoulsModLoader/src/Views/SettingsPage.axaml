@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="DarkSoulsModLoader.Views.SettingsPage"
-             Background="#1a1410">
+             Background="#0f0f0f">
     <UserControl.Styles>
         <Style Selector="Button.gold">
             <Setter Property="Background" Value="#d4af37" />

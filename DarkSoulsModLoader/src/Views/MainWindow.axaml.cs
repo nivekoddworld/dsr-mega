@@ -72,67 +72,22 @@ public partial class MainWindow : Window
             _settingsPage = new SettingsPage { DataContext = settingsVM };
             _modBrowserPage = new ModBrowserPage { DataContext = modBrowserVM };
 
-            // Build the UI with DS1-style ornate borders
+            // Build sleek, sophisticated UI
             var navListBox = new ListBox
             {
                 SelectionMode = SelectionMode.Single,
-                Background = new LinearGradientBrush
-                {
-                    StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-                    EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
-                    GradientStops = new GradientStops
-                    {
-                        new GradientStop(Color.Parse("#1f1815"), 0),
-                        new GradientStop(Color.Parse("#141210"), 1)
-                    }
-                },
+                Background = new SolidColorBrush(Color.Parse("#0f0f0f")),
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(8)
             };
 
-            // Wrap nav in ornate border with multiple gradient layers
-            var outerBorderGradient = new LinearGradientBrush
-            {
-                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-                EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
-                GradientStops = new GradientStops
-                {
-                    new GradientStop(Color.Parse("#8b7d6b"), 0),
-                    new GradientStop(Color.Parse("#a49080"), 0.3),
-                    new GradientStop(Color.Parse("#8b7d6b"), 0.7),
-                    new GradientStop(Color.Parse("#6b5f4f"), 1)
-                }
-            };
-
             var navBorder = new Border
             {
-                Background = new SolidColorBrush(Color.Parse("#0a0a0a")),
-                BorderBrush = outerBorderGradient,
-                BorderThickness = new Thickness(6),
+                Background = new SolidColorBrush(Color.Parse("#0f0f0f")),
+                BorderBrush = new SolidColorBrush(Color.Parse("#d4af37")),
+                BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(0),
-                Padding = new Thickness(2),
-                Child = new Border
-                {
-                    Background = new LinearGradientBrush
-                    {
-                        StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-                        EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
-                        GradientStops = new GradientStops
-                        {
-                            new GradientStop(Color.Parse("#3a3228"), 0),
-                            new GradientStop(Color.Parse("#2a2218"), 1)
-                        }
-                    },
-                    BorderBrush = new SolidColorBrush(Color.Parse("#4a4038")),
-                    BorderThickness = new Thickness(2),
-                    Child = new Border
-                    {
-                        Background = new SolidColorBrush(Color.Parse("#0f0d0a")),
-                        BorderBrush = new SolidColorBrush(Color.Parse("#5a5248")),
-                        BorderThickness = new Thickness(1),
-                        Child = navListBox
-                    }
-                }
+                Child = navListBox
             };
 
             var contentArea = new ContentControl();
@@ -183,50 +138,14 @@ public partial class MainWindow : Window
                 };
             };
 
-            // Wrap content in ornate border with multiple gradient layers
-            var contentOuterGradient = new LinearGradientBrush
-            {
-                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-                EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
-                GradientStops = new GradientStops
-                {
-                    new GradientStop(Color.Parse("#8b7d6b"), 0),
-                    new GradientStop(Color.Parse("#a49080"), 0.3),
-                    new GradientStop(Color.Parse("#8b7d6b"), 0.7),
-                    new GradientStop(Color.Parse("#6b5f4f"), 1)
-                }
-            };
-
             var contentBorder = new Border
             {
-                Background = new SolidColorBrush(Color.Parse("#0a0a0a")),
-                BorderBrush = contentOuterGradient,
-                BorderThickness = new Thickness(6),
+                Background = new SolidColorBrush(Color.Parse("#0f0f0f")),
+                BorderBrush = new SolidColorBrush(Color.Parse("#d4af37")),
+                BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(0),
-                Padding = new Thickness(2),
                 Margin = new Thickness(8),
-                Child = new Border
-                {
-                    Background = new LinearGradientBrush
-                    {
-                        StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-                        EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
-                        GradientStops = new GradientStops
-                        {
-                            new GradientStop(Color.Parse("#3a3228"), 0),
-                            new GradientStop(Color.Parse("#2a2218"), 1)
-                        }
-                    },
-                    BorderBrush = new SolidColorBrush(Color.Parse("#4a4038")),
-                    BorderThickness = new Thickness(2),
-                    Child = new Border
-                    {
-                        Background = new SolidColorBrush(Color.Parse("#0f0d0a")),
-                        BorderBrush = new SolidColorBrush(Color.Parse("#5a5248")),
-                        BorderThickness = new Thickness(1),
-                        Child = contentArea
-                    }
-                }
+                Child = contentArea
             };
 
             var grid = new Grid();

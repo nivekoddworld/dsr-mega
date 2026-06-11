@@ -6,7 +6,7 @@
         Height="750"
         Background="#0a0a0a">
 
-    <Grid RowDefinitions="*" Background="#0a0a0a">
+    <Grid RowDefinitions="*" Background="#000000">
         <TextBlock x:Name="LoadingText" Text="Loading..." Foreground="#d4af37" Margin="16" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center" />
     </Grid>
 

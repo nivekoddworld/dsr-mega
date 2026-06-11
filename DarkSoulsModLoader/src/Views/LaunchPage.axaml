@@ -1,26 +1,26 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="DarkSoulsModLoader.Views.LaunchPage"
-             Background="#1a1410">
+             Background="#0f0f0f">
 
     <UserControl.Styles>
         <Style Selector="Button.gold">
             <Setter Property="Background" Value="#d4af37" />
-            <Setter Property="Foreground" Value="#1a1410" />
+            <Setter Property="Foreground" Value="#000000" />
             <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="CornerRadius" Value="2" />
+            <Setter Property="CornerRadius" Value="3" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Transitions">
                 <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.2" />
+                    <BrushTransition Property="Background" Duration="0:0:0.15" />
                 </Transitions>
             </Setter>
         </Style>
         <Style Selector="Button.gold:pointerover">
-            <Setter Property="Background" Value="#ffd700" />
+            <Setter Property="Background" Value="#e5c158" />
         </Style>
         <Style Selector="Button.gold:pressed">
-            <Setter Property="Background" Value="#c49722" />
+            <Setter Property="Background" Value="#b8930f" />
         </Style>
     </UserControl.Styles>
 
