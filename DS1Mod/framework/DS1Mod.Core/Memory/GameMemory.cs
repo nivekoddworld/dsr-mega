@@ -152,6 +152,49 @@ public static class GameMemory
         return 0;
     }
 
+    /// <summary>
+    /// Like <see cref="Scan"/> but collects every match in the main module,
+    /// up to <paramref name="max"/> hits.
+    /// </summary>
+    public static List<nint> ScanAll(string pattern, int max = 16)
+    {
+        var results = new List<nint>();
+        (byte[] bytes, bool[] match) = ParsePattern(pattern);
+        if (bytes.Length == 0) return results;
+
+        GetModuleBounds(out nint start, out nint size);
+        if (start == 0 || size == 0) return results;
+
+        nint end  = start + size;
+        nint addr = start;
+        while (addr < end && results.Count < max)
+        {
+            if (VirtualQuery(addr, out MEMORY_BASIC_INFORMATION mbi, MbiSize) == 0) break;
+            nint regionEnd = mbi.BaseAddress + mbi.RegionSize;
+            if (mbi.RegionSize <= 0) break;
+
+            bool readable = mbi.State == MEM_COMMIT
+                && (mbi.Protect & (PAGE_GUARD | PAGE_NOACCESS)) == 0
+                && (mbi.Protect & PageReadMask) != 0;
+
+            if (readable)
+            {
+                nint scanEnd = regionEnd < end ? regionEnd : end;
+                nint from = addr;
+                while (results.Count < max)
+                {
+                    nint hit = ScanRegion(from, scanEnd, bytes, match);
+                    if (hit == 0) break;
+                    results.Add(hit);
+                    from = hit + 1;
+                }
+            }
+
+            addr = regionEnd;
+        }
+        return results;
+    }
+
     private static unsafe nint ScanRegion(nint start, nint end, byte[] pat, bool[] match)
     {
         long len = (long)end - (long)start;

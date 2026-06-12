@@ -34,12 +34,18 @@ public readonly struct InventoryAddresses
 /// <summary>
 /// Scans the process heap for the inventory structure. Unlike
 /// GameMemory.Scan (module-only), the inventory lives in a private heap
-/// allocation, so we walk MEM_PRIVATE committed regions ourselves. Running
-/// in-process means a hit is just a pointer — no ReadProcessMemory needed.
+/// allocation, so we walk MEM_PRIVATE committed regions ourselves.
+///
+/// All bulk reads go through ReadProcessMemory on our own process: a region
+/// observed as committed can be decommitted before we touch it, and a direct
+/// dereference would raise an AccessViolation that crashes DSR. RPM just
+/// returns false on unmapped pages.
 /// </summary>
 public static class InventoryScanner
 {
     public const int SlotCount = 2048;
+
+    private const int ChunkSize = 1 << 20;
 
     /// <summary>
     /// Find the unique inventory signature: an 8-aligned qword whose value is
@@ -49,6 +55,8 @@ public static class InventoryScanner
     public static unsafe nint FindSignature(Action<string>? log = null)
     {
         var hits = new List<nint>();
+        var buffer = new byte[ChunkSize];
+        nint self = GetCurrentProcess();
         nint addr = 0x10000;
 
         while (VirtualQuery(addr, out MEMORY_BASIC_INFORMATION mbi, MbiSize) != 0)
@@ -63,13 +71,26 @@ public static class InventoryScanner
 
             if (scannable)
             {
-                ulong* p   = (ulong*)mbi.BaseAddress;
-                ulong* end = (ulong*)(regionEnd - 16);
-                for (; p < end; p++)
+                // Chunks overlap by 16 bytes so a signature can't straddle two.
+                for (nint chunk = mbi.BaseAddress; chunk < regionEnd; chunk += ChunkSize - 16)
                 {
-                    // self-pointer, then capacity 2048 with zero padding
-                    if (*p == (ulong)p && *(uint*)(p + 1) == SlotCount && *((uint*)(p + 1) + 1) == 0)
-                        hits.Add((nint)p);
+                    nint len = nint.Min(ChunkSize, regionEnd - chunk);
+                    if (len < 16) break;
+                    bool ok;
+                    fixed (byte* b = buffer)
+                        ok = ReadProcessMemory(self, chunk, b, len, out _);
+                    if (!ok) continue;
+
+                    fixed (byte* b = buffer)
+                    {
+                        for (nint off = 0; off + 16 <= len; off += 8)
+                        {
+                            ulong* p = (ulong*)(b + off);
+                            if (*p == (ulong)(chunk + off)
+                                && *(uint*)(p + 1) == SlotCount && *((uint*)(p + 1) + 1) == 0)
+                                hits.Add(chunk + off);
+                        }
+                    }
                 }
             }
 
@@ -86,14 +107,15 @@ public static class InventoryScanner
     public static unsafe bool ReadInventory(nint invAddr, InvSlot[] dest)
     {
         int bytes = SlotCount * sizeof(InvSlot);
-        if (!GameMemory.CanRead(invAddr, bytes)) return false;
-
         fixed (InvSlot* d = dest)
-            Buffer.MemoryCopy((void*)invAddr, d, bytes, bytes);
-        return true;
+        {
+            if (!ReadProcessMemory(GetCurrentProcess(), invAddr, (byte*)d, bytes, out nint read))
+                return false;
+            return read == bytes;
+        }
     }
 
-    // ── VirtualQuery interop ───────────────────────────────────────────────
+    // ── interop ────────────────────────────────────────────────────────────
 
     private const uint MEM_COMMIT     = 0x1000;
     private const uint MEM_PRIVATE    = 0x20000;
@@ -117,4 +139,10 @@ public static class InventoryScanner
 
     [DllImport("kernel32.dll")]
     private static extern nint VirtualQuery(nint lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer, nint dwLength);
+
+    [DllImport("kernel32.dll")]
+    private static extern nint GetCurrentProcess();
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern unsafe bool ReadProcessMemory(nint hProcess, nint baseAddress, byte* buffer, nint size, out nint bytesRead);
 }

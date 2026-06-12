@@ -1,4 +1,4 @@
-using System.Numerics;
+﻿using System.Numerics;
 using DS1Mod.Core;
 using SoulsFormats;
 
@@ -10,12 +10,12 @@ namespace DS1Mod.Modding;
 /// DCX, hand you the parsed object, then re-compress and write back (preserving
 /// the original DCX type).
 ///
-/// Preferred construction from an <c>IPatchContext</c> — wires conflict detection automatically:
+/// Preferred construction from an <c>IPatchContext</c> â€” wires conflict detection automatically:
 /// <code>
 ///   var g = new GamePatch(ctx);
 /// </code>
 ///
-/// Everything below is designed so re-running is safe (idempotent) — see the
+/// Everything below is designed so re-running is safe (idempotent) â€” see the
 /// Fmg / ParamRepository / EmevdEditor helpers.
 /// </summary>
 public sealed class GamePatch
@@ -39,7 +39,7 @@ public sealed class GamePatch
 
     /// <summary>
     /// Low-level constructor. Prefer <see cref="GamePatch(IPatchContext)"/> where
-    /// possible — conflict detection is only active when a recorder is wired.
+    /// possible â€” conflict detection is only active when a recorder is wired.
     /// </summary>
     public GamePatch(string gameDir, Action<string> backupFile, Action<string>? log = null)
     {
@@ -56,7 +56,7 @@ public sealed class GamePatch
     private void Record(string filePath, string selector) =>
         _recordEdit?.Invoke(filePath, selector);
 
-    /// <summary>Edit one DCX-wrapped BND3 archive in place (script luabnd, a msgbnd, params…).</summary>
+    /// <summary>Edit one DCX-wrapped BND3 archive in place (script luabnd, a msgbnd, paramsâ€¦).</summary>
     public bool EditBnd3(string relPath, Action<BND3> edit)
     {
         string path = Resolve(relPath);
@@ -72,7 +72,7 @@ public sealed class GamePatch
 
     /// <summary>
     /// Edit every archive named <paramref name="fileName"/> under <paramref name="relDir"/>
-    /// (recursively) — e.g. all languages' menu.msgbnd.dcx. Returns the count edited.
+    /// (recursively) â€” e.g. all languages' menu.msgbnd.dcx. Returns the count edited.
     /// </summary>
     public int EditBnd3Glob(string relDir, string fileName, Action<BND3> edit)
     {
@@ -82,7 +82,7 @@ public sealed class GamePatch
         foreach (string path in Directory.GetFiles(dir, fileName, SearchOption.AllDirectories))
         {
             _backup(path);
-            // No Record() here — EditBnd3Glob targets shared files (msg, params) where
+            // No Record() here â€” EditBnd3Glob targets shared files (msg, params) where
             // multiple mods intentionally write to disjoint IDs. The ID allocator
             // prevents real conflicts; file-level recording would produce false positives.
             byte[] dec = DCX.Decompress(path, out DCX.Type type);
@@ -299,19 +299,19 @@ public sealed class GamePatch
     /// Add a new goods item: writes a row in <c>EquipParamGoods</c> and FMG strings
     /// (name, description, long description).
     /// </summary>
-    /// <param name="paramdefBnd">DS1 paramdefbnd bytes — embedded in mod.</param>
+    /// <param name="paramdefBnd">DS1 paramdefbnd bytes â€” embedded in mod.</param>
     /// <param name="def">Item definition blueprint.</param>
     public void DefineGoods(byte[] paramdefBnd, ItemDef def)
     {
-        // ─────────────────────────────────────────────────────────────
+        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         // PARAM: EquipParamGoods
-        // ─────────────────────────────────────────────────────────────
+        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         EditParams(paramdefBnd, repo =>
         {
             repo.Edit("EquipParamGoods", p =>
             {
                 // Helper: apply all ItemDef fields to an existing or newly cloned row.
-                // refCategory=2 is the correct value for SpEffectParam lookup — refCategory=1
+                // refCategory=2 is the correct value for SpEffectParam lookup â€” refCategory=1
                 // references a weapon-buff/behavior table (used by Dragon Stones, Pine Resin).
                 static void ApplyDef(PARAM.Row row, ItemDef def)
                 {
@@ -360,7 +360,7 @@ public sealed class GamePatch
                 {
                     // Update existing row in-place so parameter changes take effect
                     // on redeploy without requiring a vanilla restore.
-                    Console.WriteLine($"[DEBUG] EquipParamGoods row {def.Id} exists — updating fields.");
+                    ModdingLog.Debug($"[DEBUG] EquipParamGoods row {def.Id} exists â€” updating fields.");
                     ApplyDef(p[def.Id]!, def);
                     return;
                 }
@@ -369,9 +369,9 @@ public sealed class GamePatch
             });
         });
 
-        // ─────────────────────────────────────────────────────────────
+        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         // FMG TEXT
-        // ─────────────────────────────────────────────────────────────
+        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         EditBnd3Glob("msg", "item.msgbnd.dcx", bnd =>
         {
             Texts.Set(bnd, Texts.GoodsName, def.Id, def.Name);
@@ -398,9 +398,9 @@ public sealed class GamePatch
 
                 ParamRepository.AddClone(p, donorId, def.LotId, $"lot_{def.LotId}", row =>
                 {
-                    // ─────────────────────────────────────────────
+                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                     // CLEAR ALL SLOT DATA FIRST
-                    // ─────────────────────────────────────────────
+                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                     foreach (var cell in row.Cells)
                     {
                         if (cell.Def.InternalName.StartsWith("lotItem") ||
@@ -412,14 +412,14 @@ public sealed class GamePatch
                         }
                     }
 
-                    // ─────────────────────────────────────────────
+                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                     // SLOT POPULATION
-                    // ─────────────────────────────────────────────
+                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                     var entries = def.Entries;
 
                     if (entries != null && entries.Count > 0)
                     {
-                        // Multi-slot support (01–08)
+                        // Multi-slot support (01â€“08)
                         for (int i = 0; i < Math.Min(entries.Count, 8); i++)
                         {
                             var e = entries[i];
@@ -440,15 +440,15 @@ public sealed class GamePatch
                         row["lotItemBasePoint01"].Value = def.Weight;
                     }
 
-                    // ─────────────────────────────────────────────
+                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                     // FLAGS
-                    // ─────────────────────────────────────────────
+                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                     if (def.OnceOnlyFlag >= 0)
                         row["getItemFlagId"].Value = def.OnceOnlyFlag;
 
-                    // ─────────────────────────────────────────────
+                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                     // LUCK / RARITY
-                    // ─────────────────────────────────────────────
+                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                     for (int i = 1; i <= 8; i++)
                     {
                         row[$"enableLuck{i:00}"].Value = def.EnableLuck ? (ushort)1 : (ushort)0;
@@ -520,9 +520,9 @@ public sealed class GamePatch
 
                 if (p[def.Id] != null)
                 {
-                    // Row already exists — update it in-place so that parameter changes
+                    // Row already exists â€” update it in-place so that parameter changes
                     // take effect on redeploy without requiring a vanilla restore.
-                    Console.WriteLine($"[DEBUG] Row {def.Id} exists in SpEffectParam — updating fields.");
+                    ModdingLog.Debug($"[DEBUG] Row {def.Id} exists in SpEffectParam â€” updating fields.");
                     ApplyDef(p[def.Id]!, def);
                     return;
                 }
@@ -534,11 +534,11 @@ public sealed class GamePatch
                     Console.WriteLine($"[WARN] Donor ID {def.DonorId} not found in SpEffectParam. Falling back to row {donorId}.");
                 }
 
-                Console.WriteLine($"[DEBUG] Cloning Donor {donorId} to new ID {def.Id}...");
+                ModdingLog.Debug($"[DEBUG] Cloning Donor {donorId} to new ID {def.Id}...");
                 ParamRepository.AddClone(p, donorId, def.Id, $"sp_{def.Id}", row =>
                 {
                     ApplyDef(row, def);
-                    Console.WriteLine($"[DEBUG] Row {def.Id} configuration complete.");
+                    ModdingLog.Debug($"[DEBUG] Row {def.Id} configuration complete.");
                 });
             });
         });
@@ -554,7 +554,7 @@ public sealed class GamePatch
     ///   <item>Waits until the player (entity 10000) has <paramref name="spEffectId"/> active</item>
     ///   <item>Sets <paramref name="triggerFlagId"/> ON</item>
     ///   <item>Waits until the SpEffect expires</item>
-    ///   <item>Sets <paramref name="triggerFlagId"/> OFF and restarts — ready for the next use</item>
+    ///   <item>Sets <paramref name="triggerFlagId"/> OFF and restarts â€” ready for the next use</item>
     /// </list>
     /// </summary>
     /// <param name="mapId">Map that owns the EMEVD, e.g. <c>"m18_01_00_00"</c>.</param>
@@ -583,7 +583,7 @@ public sealed class GamePatch
     public bool EditParams(byte[] paramdefBnd, Action<ParamRepository> edit)
     {
         string path = Resolve("param/GameParam/GameParam.parambnd.dcx");
-        Console.WriteLine($"[DEBUG] Attempting to open: {path}");
+        ModdingLog.Debug($"[DEBUG] Attempting to open: {path}");
 
         if (!File.Exists(path))
         {
@@ -595,19 +595,19 @@ public sealed class GamePatch
         {
             _backup(path);
             byte[] dec = DCX.Decompress(path, out DCX.Type type);
-            Console.WriteLine($"[DEBUG] DCX decompressed. Type: {type} | Size: {dec.Length} bytes");
+            ModdingLog.Debug($"[DEBUG] DCX decompressed. Type: {type} | Size: {dec.Length} bytes");
 
             BND3 bnd = BND3.Read(dec);
-            Console.WriteLine($"[DEBUG] BND3 loaded. File count: {bnd.Files.Count}");
+            ModdingLog.Debug($"[DEBUG] BND3 loaded. File count: {bnd.Files.Count}");
 
             var repo = new ParamRepository(bnd, ParamRepository.LoadDefs(paramdefBnd),
-                (paramName, rowId) => Console.WriteLine($"[DEBUG] Record change: {paramName} ID {rowId}"));
+                (paramName, rowId) => ModdingLog.Debug($"[DEBUG] Record change: {paramName} ID {rowId}"));
 
             edit(repo);
 
             byte[] finalBytes = DCX.Compress(bnd.Write(), type);
             File.WriteAllBytes(path, finalBytes);
-            Console.WriteLine($"[SUCCESS] Saved GameParam.parambnd.dcx to disk.");
+            ModdingLog.Debug($"[SUCCESS] Saved GameParam.parambnd.dcx to disk.");
             return true;
         }
         catch (Exception ex)
@@ -618,7 +618,7 @@ public sealed class GamePatch
         }
     }
 
-    // ── Bonfire menu helpers (cooperative multi-mod editing) ────────────────────
+    // â”€â”€ Bonfire menu helpers (cooperative multi-mod editing) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>
     /// Edit the shared bonfire ESD directly. Changes are accumulated in-memory and
@@ -679,7 +679,7 @@ public sealed class GamePatch
         esd.AddEntryCommand(groupId: 1, stateId: 4,
             TalkCmd.AddTalkListData(slot, talkId, gateFlag));
 
-        // Handler state: optionally set the flag, then exit the menu (→ state 21)
+        // Handler state: optionally set the flag, then exit the menu (â†’ state 21)
         if (flagId >= 0)
             esd.AddEntryCommand(groupId: 1, stateId: handlerState,
                 TalkCmd.SetEventFlag(flagId, true));

@@ -108,8 +108,8 @@ row["lotItemBasePoint01"].Value = 100;         // weight (100% here)
 row["getItemFlagId"].Value = 50009000;         // free flag in the 50000000+ "obtained" range -> once-only
 ```
 
-`lotItemCategory` is a bitfield: `0x10000000` weapon, `0x20000000` protector,
-`0x30000000` accessory, `0x40000000` goods.
+`lotItemCategory` is a bitfield: `0x00000000` weapon, `0x10000000` protector,
+`0x20000000` accessory, `0x40000000` goods.
 
 Then **award it**. Cleanest is an EMEVD event on a trigger — e.g. when the boss
 dies (flag 16 = Asylum Demon killed):

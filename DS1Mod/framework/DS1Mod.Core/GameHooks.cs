@@ -9,6 +9,7 @@ public sealed class GameHooks : IGameHooks
     internal readonly DeathHook    Death    = new();
     internal readonly LevelHook    Level    = new();
     internal readonly ItemUsedHook Items    = new();
+    internal readonly EnemyDamageHook EnemyDmg = new();
 
     public event Action<BossKill>? BossKilled
     {
@@ -45,6 +46,17 @@ public sealed class GameHooks : IGameHooks
     }
 
     /// <summary>
+    /// Fires when any loaded non-player character loses HP (one event per
+    /// character per 500 ms poll, damage summed). Enemy discovery (RTTI walk
+    /// + heap scan) starts lazily on first subscription.
+    /// </summary>
+    public event Action<EnemyDamage>? EnemyDamaged
+    {
+        add    => EnemyDmg.EnemyDamaged += value;
+        remove => EnemyDmg.EnemyDamaged -= value;
+    }
+
+    /// <summary>
     /// Register an item to watch. <paramref name="triggerFlagId"/> must be the
     /// same flag passed to <c>GamePatch.DefineItemTrigger</c> in your patcher.
     /// </summary>
@@ -58,5 +70,6 @@ public sealed class GameHooks : IGameHooks
         Death.Poll();
         Level.Poll();
         Items.Poll();
+        EnemyDmg.Poll();
     }
 }

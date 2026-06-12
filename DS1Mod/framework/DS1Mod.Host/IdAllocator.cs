@@ -51,6 +51,7 @@ internal sealed class IdAllocator
         { "ItemLotParam", 8500 },
         { "SpEffectParam", 9000 },
         { "ItemEquipParamGoods", 8000 },
+        { "EquipParamAccessory", 900 },     // vanilla rings end ~150; 900+ is free
 
         // FMG entries
         { "EventText", 6900000 },

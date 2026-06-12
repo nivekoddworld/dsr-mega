@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>DS1Mod.ChrumburGoofyRings</AssemblyName>
+    <RootNamespace>DS1Mod.ChrumburGoofyRings</RootNamespace>
+    <Description>Chrumbur Goofy Rings — adds new rings to the game (Hunters Ring: Bloodborne rally health).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\framework\DS1Mod.SDK\DS1Mod.SDK.csproj" />
+    <ProjectReference Include="..\..\framework\DS1Mod.Core\DS1Mod.Core.csproj" />
+    <ProjectReference Include="..\..\framework\DS1Mod.Modding\DS1Mod.Modding.csproj" />
+    <ProjectReference Include="..\..\..\lib\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="paramdef.paramdefbnd.dcx">
+      <LogicalName>paramdef.paramdefbnd.dcx</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>

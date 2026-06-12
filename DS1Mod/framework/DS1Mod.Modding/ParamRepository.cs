@@ -1,4 +1,4 @@
-using SoulsFormats;
+﻿using SoulsFormats;
 
 namespace DS1Mod.Modding;
 
@@ -22,7 +22,7 @@ public sealed class ParamRepository
         _record = record;
     }
 
-    /// <summary>Parse a paramdefbnd into a ParamType→def map. Accepts raw or
+    /// <summary>Parse a paramdefbnd into a ParamTypeâ†’def map. Accepts raw or
     /// DCX-wrapped bytes (SoulsFormats' Read auto-handles the DCX wrapper).</summary>
     public static Dictionary<string, PARAMDEF> LoadDefs(byte[] paramdefBnd)
     {
@@ -39,7 +39,7 @@ public sealed class ParamRepository
                 }
                 catch { /* Skip manifest/non-def files */ }
             }
-            Console.WriteLine($"[DEBUG] Loaded {defs.Count} ParamDefs from provided BND.");
+            ModdingLog.Debug($"[DEBUG] Loaded {defs.Count} ParamDefs from provided BND.");
         }
         catch (Exception ex)
         {
@@ -65,12 +65,12 @@ public sealed class ParamRepository
                 continue;
 
             foundFile = true;
-            Console.WriteLine($"[DEBUG] Located Param file: {f.Name}");
+            ModdingLog.Debug($"[DEBUG] Located Param file: {f.Name}");
 
             try
             {
                 PARAM p = PARAM.Read(f.Bytes);
-                Console.WriteLine($"[DEBUG] Param Type: {p.ParamType} | Row Count: {p.Rows.Count}");
+                ModdingLog.Debug($"[DEBUG] Param Type: {p.ParamType} | Row Count: {p.Rows.Count}");
 
                 if (!_defs.TryGetValue(p.ParamType, out PARAMDEF? def))
                 {
@@ -81,7 +81,7 @@ public sealed class ParamRepository
                 p.ApplyParamdef(def);
                 edit(p);
                 f.Bytes = p.Write();
-                Console.WriteLine($"[DEBUG] Applied changes and wrote PARAM back to binder file.");
+                ModdingLog.Debug($"[DEBUG] Applied changes and wrote PARAM back to binder file.");
                 return true;
             }
             catch (Exception ex)
@@ -117,7 +117,7 @@ public sealed class ParamRepository
     }
 
     /// <summary>
-    /// Instance overload — same as <see cref="AddClone(PARAM,int,int,string,Action{PARAM.Row}?)"/>
+    /// Instance overload â€” same as <see cref="AddClone(PARAM,int,int,string,Action{PARAM.Row}?)"/>
     /// but also records the edit for conflict detection.
     /// </summary>
     public PARAM.Row AddCloneTracked(PARAM p, int donorId, int newId, string name,
@@ -128,11 +128,15 @@ public sealed class ParamRepository
     }
 }
 
-/// <summary>ItemLotParam <c>lotItemCategory</c> bitfield values.</summary>
+/// <summary>
+/// ItemLotParam <c>lotItemCategory</c> bitfield values. These match the item
+/// category nibble used everywhere else in DS1 (inventory, FMG groups);
+/// ground truth: DarkSoulsItemRandomizer's ItemLotItemType.
+/// </summary>
 public static class LotCategory
 {
-    public const int Weapon    = 0x10000000;
-    public const int Protector = 0x20000000;  // armor
-    public const int Accessory = 0x30000000;  // rings
+    public const int Weapon    = 0x00000000;
+    public const int Protector = 0x10000000;  // armor
+    public const int Accessory = 0x20000000;  // rings
     public const int Goods     = 0x40000000;  // consumables / key items
 }
